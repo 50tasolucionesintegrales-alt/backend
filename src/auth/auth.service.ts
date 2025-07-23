@@ -3,6 +3,7 @@ import { UsersService } from '../users/users.service';
 import { checkPassword } from '../common/utils/crypto.util';
 import { LoginDto } from './dto/login.dto';
 import { generateJWT } from 'src/common/utils/jwt.util';
+import { Role } from 'src/common/enums/roles.enum';
 
 @Injectable()
 export class AuthService {
@@ -18,6 +19,8 @@ export class AuthService {
     const ok = await checkPassword(dto.password, user.password);
     if (!ok) throw new UnauthorizedException('Contraseña incorrecta');
 
+    if (user.rol === Role.Unassigned) throw new ForbiddenException('Rol pendiente de asignación');
+    
     const token = generateJWT({ sub: user.id, rol: user.rol });
 
     return {

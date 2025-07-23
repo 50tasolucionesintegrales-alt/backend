@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module';
 import { typeOrmConfig } from './config/typeorm.config';
 import { MailModule } from './mail/mail.module';
 import { AuthModule } from './auth/auth.module';
+import { CatalogModule } from './catalog/catalog.module';
 
 @Module({
   imports: [
@@ -19,7 +20,8 @@ import { AuthModule } from './auth/auth.module';
     }),
     UsersModule,
     MailModule,
-    AuthModule
+    AuthModule,
+    CatalogModule
   ],
   controllers: [AppController],
   providers: [AppService],

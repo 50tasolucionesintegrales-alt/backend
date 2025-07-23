@@ -1,10 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
 
-export enum Role {
-    ADMIN = 'admin',
-    COMPRADOR = 'comprador',
-    COTIZADOR = 'cotizador',
-}
+import { Role } from 'src/common/enums/roles.enum';
 
 @Entity()
 export class User {
@@ -27,7 +23,7 @@ export class User {
     @Column({ type: 'boolean', default: false })
     confirmed: boolean;
 
-    @Column({ type: 'enum', enum: Role})
+    @Column({ type: 'enum', enum: Role, default:Role.Unassigned})
     rol: Role;
 
     @Column({ type: 'varchar', name: 'google_id', nullable: true })

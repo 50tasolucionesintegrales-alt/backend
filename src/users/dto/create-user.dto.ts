@@ -1,5 +1,5 @@
 import {IsString, IsNotEmpty, IsEmail, MinLength, IsOptional, IsEnum } from 'class-validator'
-import { Role } from '../entities/user.entity';
+import { Role } from 'src/common/enums/roles.enum';
 
 export class CreateUserDto {
     @IsString({ message: 'El nombre no puede estar vacío' }) 
@@ -11,8 +11,4 @@ export class CreateUserDto {
 
     @IsString() @MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres' })
     password: string;
-
-    @IsOptional()
-    @IsEnum(Role)
-    rol?: Role; // → ADMIN | COMPRADOR | COTIZADOR
 }
