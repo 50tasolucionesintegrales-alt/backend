@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -19,8 +29,8 @@ import { IdValidationPipe } from 'src/common/pipes/id-validation/id-validation.p
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
-    private readonly mailService: MailService
-  ) { }
+    private readonly mailService: MailService,
+  ) {}
 
   @Post('register')
   async register(@Body() dto: CreateUserDto) {
@@ -40,23 +50,25 @@ export class UsersController {
   confirm(@Body() dto: ValidateTokenDto) {
     return this.usersService.confirmAccount(dto.token);
   }
-
 }
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('users/admin')            // prefijo claro
+@Controller('users/admin') // prefijo claro
 export class AdminUsersController {
   constructor(private readonly users: UsersService) {}
 
   @Get()
-  @Roles(Role.Admin)                  // solo admin autenticado
+  @Roles(Role.Admin) // solo admin autenticado
   findAllConfirmed() {
     return this.users.findConfirmedUnassigned();
   }
 
   @Patch(':id/role')
   @Roles(Role.Admin)
-  updateRole(@Param('id', IdValidationPipe) id:string, @Body() dto: UpdateRoleDto) {
+  updateRole(
+    @Param('id', IdValidationPipe) id: string,
+    @Body() dto: UpdateRoleDto,
+  ) {
     return this.users.setRole(id, dto.rol);
   }
 }

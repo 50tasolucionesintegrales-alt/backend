@@ -4,7 +4,7 @@ import { BadRequestException, Injectable, ParseIntPipe } from '@nestjs/common';
 export class TokenValidationPipe extends ParseIntPipe {
   constructor() {
     super({
-      exceptionFactory: () => new BadRequestException('Token no válido')
-    })
+      exceptionFactory: () => new BadRequestException('Token no válido'),
+    });
   }
 }

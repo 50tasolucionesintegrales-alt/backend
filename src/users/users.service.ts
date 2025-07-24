@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -11,8 +15,8 @@ import { Role } from 'src/common/enums/roles.enum';
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectRepository(User) private readonly userRepository: Repository<User>
-  ) { }
+    @InjectRepository(User) private readonly userRepository: Repository<User>,
+  ) {}
 
   /* ---------- Registro ---------- */
   async register(dto: CreateUserDto) {
@@ -30,7 +34,7 @@ export class UsersService {
     user.token = null;
     await this.userRepository.save(user);
 
-    return { message: "Cuenta confirmada correctamente" }
+    return { message: 'Cuenta confirmada correctamente' };
   }
 
   /* ---------- Validar token ---------- */
@@ -59,7 +63,10 @@ export class UsersService {
     if (!user) throw new NotFoundException('Usuario no encontrado');
     user.rol = rol;
     await this.userRepository.save(user);
-    return { message: 'Rol actualizado', usuario: { id: user.id, rol: user.rol } };
+    return {
+      message: 'Rol actualizado',
+      usuario: { id: user.id, rol: user.rol },
+    };
   }
 
   // users.service.ts
@@ -67,13 +74,11 @@ export class UsersService {
     return this.userRepository.find({
       where: {
         confirmed: true,
-        rol: Role.Unassigned,          // enum o null, según tu columna
+        rol: Role.Unassigned, // enum o null, según tu columna
       },
-      order: { createdAt: 'ASC' },     // opcional: ordena por fecha de alta
+      order: { createdAt: 'ASC' }, // opcional: ordena por fecha de alta
     });
   }
-
-
 
   //Crud general del servicio
   async findOne(id: string) {

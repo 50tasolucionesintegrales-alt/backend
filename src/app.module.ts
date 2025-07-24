@@ -7,21 +7,27 @@ import { UsersModule } from './users/users.module';
 import { typeOrmConfig } from './config/typeorm.config';
 import { MailModule } from './mail/mail.module';
 import { AuthModule } from './auth/auth.module';
-import { CatalogModule } from './catalog/catalog.module';
+import { ProductsModule } from './products/products.module';
+import { CategoriesModule } from './categories/categories.module';
+import { QuotesModule } from './quotes/quotes.module';
+import { ServicesModule } from './services/services.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true
+      isGlobal: true,
     }),
     TypeOrmModule.forRootAsync({
       useFactory: typeOrmConfig,
-      inject: [ConfigService]
+      inject: [ConfigService],
     }),
     UsersModule,
     MailModule,
     AuthModule,
-    CatalogModule
+    ProductsModule,
+    CategoriesModule,
+    QuotesModule,
+    ServicesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,4 +1,9 @@
-import {Injectable,NotFoundException,ForbiddenException,UnauthorizedException,} from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { checkPassword } from '../common/utils/crypto.util';
 import { LoginDto } from './dto/login.dto';
@@ -7,11 +12,9 @@ import { Role } from 'src/common/enums/roles.enum';
 
 @Injectable()
 export class AuthService {
-  constructor(
-    private readonly users: UsersService
-  ) { }
+  constructor(private readonly users: UsersService) {}
 
-  async login(dto:LoginDto) {
+  async login(dto: LoginDto) {
     const user = await this.users.findByEmail(dto.email);
     if (!user) throw new NotFoundException('El e-mail no existe');
     if (!user.confirmed) throw new ForbiddenException('Cuenta no confirmada');
@@ -19,12 +22,13 @@ export class AuthService {
     const ok = await checkPassword(dto.password, user.password);
     if (!ok) throw new UnauthorizedException('Contraseña incorrecta');
 
-    if (user.rol === Role.Unassigned) throw new ForbiddenException('Rol pendiente de asignación');
-    
+    if (user.rol === Role.Unassigned)
+      throw new ForbiddenException('Rol pendiente de asignación');
+
     const token = generateJWT({ sub: user.id, rol: user.rol });
 
     return {
-      message:"Autenticado...",
+      message: 'Autenticado...',
       token,
       usuario: {
         id: user.id,
