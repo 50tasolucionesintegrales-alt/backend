@@ -14,7 +14,7 @@ import { Service } from 'src/services/entities/service.entity';
 @Entity({ name: 'categories' })
 export class Category {
   @PrimaryGeneratedColumn({ type: 'bigint' })
-  id!: string; // Usa string para no perder precisión con bigint
+  id!: string;
 
   @Column({ type: 'varchar', length: 255 })
   @Index({ unique: true })
@@ -23,7 +23,7 @@ export class Category {
   @Column({ type: 'text', nullable: true })
   descripcion?: string;
 
-  /* ---------- Relaciones ---------- */
+  
   @OneToMany(() => Product, (product) => product.category, {
     cascade: ['remove'],
   })

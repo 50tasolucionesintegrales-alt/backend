@@ -15,7 +15,6 @@ export class Service {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id!: string;
 
-  /* -- FK a Category (reutilizamos la misma tabla) -- */
   @ManyToOne(
     () => Category,
     (c) => c.services,
@@ -24,7 +23,6 @@ export class Service {
   @JoinColumn({ name: 'category_id' })
   category!: Category;
 
-  /* -- FK opcional al usuario que lo creó -- */
   @ManyToOne(
     () => User,
     (u) => u.serviciosCreados,
@@ -44,9 +42,8 @@ export class Service {
   precioBase?: string;
 
   @Column({ type: 'int', nullable: true })
-  duracionMinutos?: number; // si es un servicio por sesión
+  duracionMinutos?: number;
 
-  /* -- Metadatos -- */
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 }
