@@ -7,10 +7,8 @@ import { UsersModule } from './users/users.module';
 import { typeOrmConfig } from './config/typeorm.config';
 import { MailModule } from './mail/mail.module';
 import { AuthModule } from './auth/auth.module';
-import { ProductsModule } from './products/products.module';
-import { CategoriesModule } from './categories/categories.module';
-import { QuotesModule } from './quotes/quotes.module';
-import { ServicesModule } from './services/services.module';
+import { CatalogModule } from './catalog/catalog.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -24,10 +22,8 @@ import { ServicesModule } from './services/services.module';
     UsersModule,
     MailModule,
     AuthModule,
-    ProductsModule,
-    CategoriesModule,
-    QuotesModule,
-    ServicesModule,
+    CatalogModule,
+    CloudinaryModule
   ],
   controllers: [AppController],
   providers: [AppService],
