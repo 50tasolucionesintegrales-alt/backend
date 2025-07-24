@@ -36,7 +36,7 @@ export class Product {
     },
   )
   @JoinColumn({ name: 'created_by' })
-  createdBy?: User;
+  createdBy?: User | null;
 
   /* -------- Campos propios -------- */
   @Column({ type: 'varchar', length: 255 })

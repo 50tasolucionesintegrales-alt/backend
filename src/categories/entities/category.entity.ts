@@ -28,9 +28,4 @@ export class Category {
     cascade: ['remove'],
   })
   products!: Product[];
-  
-  @OneToMany(() => Service, (s) => s.category, { 
-    cascade: ['remove'] 
-  })
-  services!: Service[];
 }

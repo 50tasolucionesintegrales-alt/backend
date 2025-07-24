@@ -8,6 +8,9 @@ import { typeOrmConfig } from './config/typeorm.config';
 import { MailModule } from './mail/mail.module';
 import { AuthModule } from './auth/auth.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { ProductsModule } from './products/products.module';
+import { CategoriesModule } from './categories/categories.module';
+import { ServicesModule } from './services/services.module';
 
 @Module({
   imports: [
@@ -21,6 +24,9 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
     UsersModule,
     MailModule,
     AuthModule,
+    ProductsModule,
+    CategoriesModule,
+    ServicesModule,
     CloudinaryModule
   ],
   controllers: [AppController],

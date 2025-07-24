@@ -7,7 +7,6 @@ import {
   JoinColumn,
   CreateDateColumn,
 } from 'typeorm';
-import { Category } from '../../categories/entities/category.entity';
 import { User } from '../../users/entities/user.entity';
 
 @Entity({ name: 'services' })
@@ -16,16 +15,7 @@ export class Service {
   id!: string;
 
   @ManyToOne(
-    () => Category,
-    (c) => c.services,
-    { eager: true, onDelete: 'CASCADE' },
-  )
-  @JoinColumn({ name: 'category_id' })
-  category!: Category;
-
-  @ManyToOne(
     () => User,
-    // (u) => u.serviciosCreados,
     { nullable: true, onDelete: 'SET NULL' },
   )
   @JoinColumn({ name: 'created_by' })
@@ -40,9 +30,6 @@ export class Service {
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   precioBase?: string;
-
-  @Column({ type: 'int', nullable: true })
-  duracionMinutos?: number;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
