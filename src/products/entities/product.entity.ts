@@ -30,7 +30,6 @@ export class Product {
   /* -------- FK a USERS (creador) -------- */
   @ManyToOne(
     () => User,
-    (u) => u.productosCreados,
     {
       nullable: true,
       onDelete: 'SET NULL',

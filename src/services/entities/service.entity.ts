@@ -25,7 +25,7 @@ export class Service {
 
   @ManyToOne(
     () => User,
-    (u) => u.serviciosCreados,
+    // (u) => u.serviciosCreados,
     { nullable: true, onDelete: 'SET NULL' },
   )
   @JoinColumn({ name: 'created_by' })
