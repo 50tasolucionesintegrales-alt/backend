@@ -1,9 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
-/**
- * Guard sencillo que delega en la estrategia 'jwt'.
- * Si el token es válido, deja pasar la petición; de lo contrario responde 401.
- */
+
 @Injectable()
-export class JwtAuthGuard extends AuthGuard('jwt') {}
+export class JwtAuthGuard extends AuthGuard('jwt') {
+    handleRequest(err: any, user: any, info: any, ctx: any) {
+        if (err || !user) {
+            // Puedes inspeccionar `info?.name` para mensajes más específicos
+            if (info?.name === 'TokenExpiredError') {
+                throw new UnauthorizedException('El token ha expirado');
+            }
+            throw new UnauthorizedException('Token no válido o inexistente'); // ← tu nuevo mensaje
+        }
+        return user;
+    }
+}
