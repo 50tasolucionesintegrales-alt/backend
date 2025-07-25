@@ -25,7 +25,7 @@ export class AuthService {
     if (user.rol === Role.Unassigned)
       throw new ForbiddenException('Rol pendiente de asignación');
 
-    const token = generateJWT({ sub: user.id, rol: user.rol });
+    const token = generateJWT({ id: user.id, rol: user.rol, nombre: user.nombre, email: user.email });
 
     return {
       message: 'Autenticado...',
