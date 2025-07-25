@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, UseGuards, Req, Delete } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { MailService } from 'src/mail/mail.service';
@@ -111,5 +111,12 @@ export class AdminUsersController {
     @Body() dto: UpdateRoleDto,
   ) {
     return this.users.setRole(id, dto.rol);
+  }
+
+   /** Eliminar usuario (no admin) */
+  @Delete(':id')
+  @Roles(Role.Admin)
+  deleteUser(@Param('id', IdValidationPipe) id: string) {
+    return this.users.deleteUser(id);
   }
 }

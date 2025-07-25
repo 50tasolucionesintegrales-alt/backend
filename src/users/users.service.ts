@@ -133,6 +133,21 @@ export class UsersService {
     });
   }
 
+  /* ───────── Eliminar usuario (solo admin) ───────── */
+async deleteUser(id: string) {
+  const user = await this.findOne(id);
+  if (!user) throw new NotFoundException('Usuario no encontrado');
+
+  if (user.rol === Role.Admin) {
+    throw new UnauthorizedException('No se puede eliminar un usuario admin');
+  }
+
+  await this.userRepository.remove(user);
+
+  return { message: 'Usuario eliminado'};
+}
+
+
   /* ───────── CRUD helpers ───────── */
   async findOne(id: string) {
     return this.userRepository.findOne({ where: { id } });

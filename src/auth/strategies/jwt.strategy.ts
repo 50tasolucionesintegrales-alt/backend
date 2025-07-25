@@ -1,27 +1,28 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+// src/auth/strategies/jwt.strategy.ts
+import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
-import { UsersService } from '../../users/users.service';
+import { AppJwtPayload } from 'src/common/utils/jwt.util';   // ← interfaz con sub, rol, email, nombre
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(
-    private readonly usersService: UsersService,
-    cfg: ConfigService,
-  ) {
-    const secret = cfg.get('JWT_SECRET');
+  constructor(cfg: ConfigService) {
+    const secret = cfg.get<string>('JWT_SECRET');
     if (!secret) throw new Error('Falta JWT_SECRET en variables de entorno');
 
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: secret as string, // ya garantizamos que no es undefined
+      secretOrKey: secret,
+      algorithms: ['HS256'],        // mismo algoritmo que usas al firmar
     });
   }
 
-  async validate(payload: { sub: string }) {
-    const user = await this.usersService.findOne(payload.sub);
-    if (!user) throw new UnauthorizedException('Token sin usuario válido');
-    return user; // será req.user
+  /**
+   * Passport llama a validate() si la firma es correcta.
+   * Simplemente devolvemos el payload; estará disponible en req.user.
+   */
+  async validate(payload: AppJwtPayload) {
+    return payload;                 // { sub, rol, email, nombre, iat, exp }
   }
 }
