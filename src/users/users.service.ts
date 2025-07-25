@@ -172,4 +172,12 @@ async deleteUser(id: string) {
     await this.userRepository.save(user);
     return user;
   }
+
+  async getRoleOnly(id: string): Promise<Role | null> {
+  const record = await this.userRepository.findOne({
+    where: { id },
+    select: ['rol'],          // ← solo la columna rol (rápido)
+  });
+  return record?.rol ?? null;
+}
 }
