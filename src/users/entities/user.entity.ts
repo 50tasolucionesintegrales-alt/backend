@@ -10,6 +10,7 @@ import {
 
 import { Role } from 'src/common/enums/roles.enum';
 import { Quote } from 'src/quotes/entities/quote.entity';
+import { PurchaseOrder } from 'src/orders/entities/purchase-order.entity';
 
 @Entity()
 export class User {
@@ -49,4 +50,7 @@ export class User {
 
   @OneToMany(() => Quote, (quote) => quote.user)
   quotes!: Quote[];
+
+  @OneToMany(() => PurchaseOrder, (order) => order.user)
+  purchaseOrders!: PurchaseOrder[];
 }

@@ -57,7 +57,8 @@ export class QuotesService {
       descripcion: description ?? null,
       tipo
     });
-    return this.quotesRepo.save(q);
+    const saved = await this.quotesRepo.save(q);
+    return { message: 'Borrador creado', quote: saved };
   }
 
   /* ───────── Agregar ítems ───────── */
@@ -107,10 +108,11 @@ export class QuotesService {
       await this.itemsRepo.save(item);
     }
 
-    return this.quotesRepo.findOne({
+    const updated = await this.quotesRepo.findOne({
       where: { id: quoteId },
       relations: ['items', 'items.product', 'items.service'],
     });
+    return { message: 'Ítems agregados/actualizados', quote: updated };
   }
 
   /* ───────── Actualizar ítem ───────── */
@@ -166,7 +168,8 @@ export class QuotesService {
       item.subtotal3 = subtotal;
     }
 
-    return this.itemsRepo.save(item);
+    const saved = await this.itemsRepo.save(item);
+    return { message: 'Ítem actualizado', item: saved };
   }
 
   /* ───────── Enviar cotización (genera PDFs) ───────── */
@@ -236,6 +239,17 @@ export class QuotesService {
     });
   }
 
+  /* 5‑B. Mis cotizaciones enviadas (nuevo) */
+  async listUserSent(userId: string) {
+    const quotes = await this.quotesRepo.find({
+      where: { status: 'sent', user: { id: userId } as any },
+      relations: ['items', 'items.product', 'items.service'],
+      order: { sentAt: 'DESC' },
+    });
+    quotes.forEach((q) => this.addSignedLinks(q));
+    return quotes;
+  }
+
   /* 3 ── reabrir para edición */
   async reopenQuote(id: string, user: { sub: string | number; roles?: any[] }) {
     const quote = await this.quotesRepo.findOne({
@@ -269,8 +283,15 @@ export class QuotesService {
     quote.pdfMargen2Id = null;
     quote.pdfMargen3Id = null;
 
-    return this.quotesRepo.save(quote);
+    const reopened = await this.quotesRepo.save(quote);
+    return { message: 'Cotización vuelta a borrador', quote: reopened };
   }
 
+  async deleteQuote(id: string) {
+  const quote = await this.quotesRepo.findOne({ where: { id } });
+  if (!quote) throw new NotFoundException('Cotización no encontrada');
 
+  await this.quotesRepo.delete(id);         // los items se borran por cascade
+  return { message: 'Cotización eliminada' };
+}
 }

@@ -12,6 +12,7 @@ import { ProductsModule } from './products/products.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ServicesModule } from './services/services.module';
 import { QuotesModule } from './quotes/quotes.module';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -29,7 +30,8 @@ import { QuotesModule } from './quotes/quotes.module';
     CategoriesModule,
     ServicesModule,
     CloudinaryModule,
-    QuotesModule
+    QuotesModule,
+    OrdersModule
   ],
   controllers: [AppController],
   providers: [AppService],

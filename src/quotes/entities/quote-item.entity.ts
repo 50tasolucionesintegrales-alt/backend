@@ -18,7 +18,7 @@ export class QuoteItem {
   id!: string;
 
   /* ---------- Relaciones ---------- */
-  @ManyToOne(() => Quote, (q) => q.items)
+  @ManyToOne(() => Quote, (q) => q.items, {onDelete: 'CASCADE'})
   @JoinColumn({ name: 'quote_id' })
   quote!: Quote;
 

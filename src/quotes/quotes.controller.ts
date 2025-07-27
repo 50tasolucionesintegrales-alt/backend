@@ -8,6 +8,7 @@ import {
   Body,
   Req,
   UseGuards,
+  Delete,
 } from '@nestjs/common';
 import { QuotesService } from './quotes.service';
 
@@ -91,5 +92,16 @@ export class QuotesController {
     return this.quotes.getOne(id);
   }
 
+  @Get('sent/mine')
+  @Roles(Role.Admin, Role.Cotizador)
+  listMySent(@Req() req) {
+    return this.quotes.listUserSent(req.user.sub);
+  }
+
+  @Delete(':id')
+  @Roles(Role.Admin)                          // ← solo administradores
+  remove(@Param('id', IdValidationPipe) id: string) {
+    return this.quotes.deleteQuote(id);
+  }
 }
 
