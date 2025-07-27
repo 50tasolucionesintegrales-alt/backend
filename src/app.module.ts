@@ -11,6 +11,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { ProductsModule } from './products/products.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ServicesModule } from './services/services.module';
+import { QuotesModule } from './quotes/quotes.module';
 
 @Module({
   imports: [
@@ -27,7 +28,8 @@ import { ServicesModule } from './services/services.module';
     ProductsModule,
     CategoriesModule,
     ServicesModule,
-    CloudinaryModule
+    CloudinaryModule,
+    QuotesModule
   ],
   controllers: [AppController],
   providers: [AppService],

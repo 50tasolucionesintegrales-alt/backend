@@ -1,42 +1,70 @@
+// src/quotes/quotes.controller.ts
 import {
   Controller,
-  Get,
   Post,
-  Body,
   Patch,
+  Get,
   Param,
-  Delete,
+  Body,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { QuotesService } from './quotes.service';
-import { CreateQuoteDto } from './dto/create-quote.dto';
-import { UpdateQuoteDto } from './dto/update-quote.dto';
 
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { Role } from 'src/common/enums/roles.enum';
+
+import { AddItemsDto } from './dto/add-items.dto';
+import { UpdateItemDto } from './dto/update-item.dto';
+import { IdValidationPipe } from 'src/common/pipes/id-validation/id-validation.pipe';
+import { CreateQuoteDto } from './dto/create-quote.dto';
+
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('quotes')
 export class QuotesController {
-  constructor(private readonly quotesService: QuotesService) {}
+  constructor(private readonly quotes: QuotesService) { }
 
+  /* 1️⃣  Crear borrador */
   @Post()
-  create(@Body() createQuoteDto: CreateQuoteDto) {
-    return this.quotesService.create(createQuoteDto);
+  @Roles(Role.Admin, Role.Cotizador)
+  createDraft(@Req() req, @Body() dto: CreateQuoteDto) {
+    return this.quotes.createDraft(req.user.sub, dto.tipo, dto.titulo, dto.descripcion);
   }
 
-  @Get()
-  findAll() {
-    return this.quotesService.findAll();
+  /* 2️⃣  Agregar ítems */
+  @Post(':id/items')
+  @Roles(Role.Admin, Role.Cotizador)
+  addItems(
+    @Param('id', IdValidationPipe) id: string,
+    @Body() dto: AddItemsDto,
+  ) {
+    return this.quotes.addItems(id, dto);
   }
 
+  /* 3️⃣  Actualizar ítem */
+  @Patch('items/:itemId')
+  @Roles(Role.Admin, Role.Cotizador)
+  updateItem(
+    @Param('itemId', IdValidationPipe) itemId: string,
+    @Body() dto: UpdateItemDto,
+  ) {
+    return this.quotes.updateItem(itemId, dto);
+  }
+
+  /* 4️⃣  Enviar (genera PDFs) */
+  @Post(':id/send')
+  @Roles(Role.Admin, Role.Cotizador)
+  send(@Param('id', IdValidationPipe) id: string) {
+    return this.quotes.sendQuote(id);
+  }
+
+  /* 5️⃣  Obtener una cotización */
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.quotesService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateQuoteDto: UpdateQuoteDto) {
-    return this.quotesService.update(+id, updateQuoteDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.quotesService.remove(+id);
+  @Roles(Role.Admin, Role.Cotizador)
+  findOne(@Param('id', IdValidationPipe) id: string) {
+    return this.quotes.getOne(id);
   }
 }
+

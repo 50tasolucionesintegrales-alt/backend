@@ -5,9 +5,11 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Index,
+  OneToMany,
 } from 'typeorm';
 
 import { Role } from 'src/common/enums/roles.enum';
+import { Quote } from 'src/quotes/entities/quote.entity';
 
 @Entity()
 export class User {
@@ -44,4 +46,7 @@ export class User {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @OneToMany(() => Quote, (quote) => quote.user)
+  quotes!: Quote[];
 }
