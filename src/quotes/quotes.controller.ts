@@ -26,6 +26,30 @@ import { CreateQuoteDto } from './dto/create-quote.dto';
 export class QuotesController {
   constructor(private readonly quotes: QuotesService) { }
 
+  /* ▶ 1. Todas las enviadas (ADMIN) */
+  @Get('sent')
+  @Roles(Role.Admin)
+  listSent() {
+    return this.quotes.listSent();
+  }
+
+  /* ▶ 2. Borradores del usuario */
+  @Get('drafts')
+  @Roles(Role.Admin, Role.Cotizador)
+  listDrafts(@Req() req) {
+    return this.quotes.listUserDrafts(req.user.sub);
+  }
+
+  /* ▶ 3. Reabrir cotización para editar */
+  @Patch(':id/reopen')
+  @Roles(Role.Admin, Role.Cotizador)
+  reopen(
+    @Param('id', IdValidationPipe) id: string,
+    @Req() req,
+  ) {
+    return this.quotes.reopenQuote(id, req.user);
+  }
+
   /* 1️⃣  Crear borrador */
   @Post()
   @Roles(Role.Admin, Role.Cotizador)
@@ -66,5 +90,6 @@ export class QuotesController {
   findOne(@Param('id', IdValidationPipe) id: string) {
     return this.quotes.getOne(id);
   }
+
 }
 

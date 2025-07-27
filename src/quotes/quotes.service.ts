@@ -16,6 +16,7 @@ import { UpdateItemDto } from './dto/update-item.dto';
 import { PdfService } from './pdf.service';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { Service } from 'src/services/entities/service.entity';
+import { Role } from 'src/common/enums/roles.enum';
 
 @Injectable()
 export class QuotesService {
@@ -49,7 +50,7 @@ export class QuotesService {
   }
 
   /* ───────── Crear borrador ───────── */
-  async createDraft(userId: string, tipo: 'productos' | 'servicios',title: string, description?: string, ) {
+  async createDraft(userId: string, tipo: 'productos' | 'servicios', title: string, description?: string,) {
     const q = this.quotesRepo.create({
       user: { id: userId } as any,
       titulo: title,
@@ -61,57 +62,56 @@ export class QuotesService {
 
   /* ───────── Agregar ítems ───────── */
   async addItems(quoteId: string, dto: AddItemsDto) {
-  const quote = await this.quotesRepo.findOne({
-    where: { id: quoteId },
-    relations: ['items'],
-  });
-  if (!quote) throw new NotFoundException('Cotización no encontrada');
-
-  for (const i of dto.items) {
-    /* 4.1 — Asegura que el ítem coincide con el tipo de la cotización */
-    if (
-      (quote.tipo === 'productos'  && i.tipo !== 'producto') ||
-      (quote.tipo === 'servicios' && i.tipo !== 'servicio')
-    ) {
-      throw new ForbiddenException(
-        `Esta cotización es de ${quote.tipo}; no puedes añadir un ${i.tipo}.`,
-      );
-    }
-
-    /* 4.2 — Cargar entidad correcta */
-    let producto: Product | null = null;
-    let servicio: Service | null = null;
-
-    if (i.tipo === 'producto') {
-      producto = await this.productRepo.findOne({ where: { id: String(i.productId) } });
-      if (!producto) throw new NotFoundException(`Producto ${i.productId} inexistente`);
-    } else {
-      servicio = await this.serviceRepo.findOne({ where: { id: String(i.serviceId) } });
-      if (!servicio) throw new NotFoundException(`Servicio ${i.serviceId} inexistente`);
-    }
-
-    /* 4.3 — Cálculos iniciales */
-    const costo = +i.costoUnitario.toFixed(2);
-    const subtotalInicial = +(costo * i.cantidad).toFixed(2);
-
-    const item = this.itemsRepo.create({
-      quote,
-      product: producto,
-      service: servicio,
-      cantidad: i.cantidad,
-      costo_unitario: costo,
-      subtotal1: subtotalInicial,
+    const quote = await this.quotesRepo.findOne({
+      where: { id: quoteId },
+      relations: ['items'],
     });
+    if (!quote) throw new NotFoundException('Cotización no encontrada');
 
-    await this.itemsRepo.save(item);
+    for (const i of dto.items) {
+      /* 4.1 — Asegura que el ítem coincide con el tipo de la cotización */
+      if (
+        (quote.tipo === 'productos' && i.tipo !== 'producto') ||
+        (quote.tipo === 'servicios' && i.tipo !== 'servicio')
+      ) {
+        throw new ForbiddenException(
+          `Esta cotización es de ${quote.tipo}; no puedes añadir un ${i.tipo}.`,
+        );
+      }
+
+      /* 4.2 — Cargar entidad correcta */
+      let producto: Product | null = null;
+      let servicio: Service | null = null;
+
+      if (i.tipo === 'producto') {
+        producto = await this.productRepo.findOne({ where: { id: String(i.productId) } });
+        if (!producto) throw new NotFoundException(`Producto ${i.productId} inexistente`);
+      } else {
+        servicio = await this.serviceRepo.findOne({ where: { id: String(i.serviceId) } });
+        if (!servicio) throw new NotFoundException(`Servicio ${i.serviceId} inexistente`);
+      }
+
+      /* 4.3 — Cálculos iniciales */
+      const costo = +i.costoUnitario.toFixed(2);
+      const subtotalInicial = +(costo * i.cantidad).toFixed(2);
+
+      const item = this.itemsRepo.create({
+        quote,
+        product: producto,
+        service: servicio,
+        cantidad: i.cantidad,
+        costo_unitario: costo,
+        subtotal1: subtotalInicial,
+      });
+
+      await this.itemsRepo.save(item);
+    }
+
+    return this.quotesRepo.findOne({
+      where: { id: quoteId },
+      relations: ['items', 'items.product', 'items.service'],
+    });
   }
-
-  return this.quotesRepo.findOne({
-    where: { id: quoteId },
-    relations: ['items', 'items.product', 'items.service'],
-  });
-}
-
 
   /* ───────── Actualizar ítem ───────── */
   async updateItem(itemId: string, dto: UpdateItemDto) {
@@ -214,5 +214,63 @@ export class QuotesService {
 
     return q;
   }
+
+  /* 1 ── listar todas las enviadas */
+  async listSent() {
+    return this.quotesRepo.find({
+      where: { status: 'sent' },
+      relations: ['items', 'items.product', 'items.service'],
+      order: { sentAt: 'DESC' },
+    });
+  }
+
+  /* 2 ── borradores de un usuario */
+  async listUserDrafts(userId: string) {
+    return this.quotesRepo.find({
+      where: {
+        status: 'draft',
+        user: { id: userId } as any,
+      },
+      relations: ['items', 'items.product', 'items.service'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  /* 3 ── reabrir para edición */
+  async reopenQuote(id: string, user: { sub: string | number; roles?: any[] }) {
+    const quote = await this.quotesRepo.findOne({
+      where: { id },
+      relations: ['user', 'items', 'items.product', 'items.service'],
+    });
+    if (!quote) throw new NotFoundException('Cotización no encontrada');
+
+    /* ---------- Permisos ---------- */
+    const isOwner =
+      quote.user && String(quote.user.id) === String(user.sub);
+
+    const roles: string[] = Array.isArray(user.roles) ? user.roles.map(String) : [];
+    const isAdmin = roles.some(
+      (r) =>
+        r === Role.Admin ||               // enum →
+        r.toLowerCase() === 'admin',       // string "Admin"
+    );
+
+    if (!isOwner && !isAdmin) {
+      throw new ForbiddenException('Sin permisos para editar esta cotización');
+    }
+
+    /* ---------- Ya es borrador ---------- */
+    if (quote.status === 'draft') return quote;
+
+    /* ---------- Volver a draft ---------- */
+    quote.status = 'draft';
+    quote.sentAt = null;
+    quote.pdfMargen1Id = null;
+    quote.pdfMargen2Id = null;
+    quote.pdfMargen3Id = null;
+
+    return this.quotesRepo.save(quote);
+  }
+
 
 }
