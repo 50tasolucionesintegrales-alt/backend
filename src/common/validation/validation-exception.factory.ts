@@ -1,4 +1,3 @@
-// src/common/validation/validation-exception.factory.ts
 import { BadRequestException } from '@nestjs/common';
 import { ValidationError } from 'class-validator';
 

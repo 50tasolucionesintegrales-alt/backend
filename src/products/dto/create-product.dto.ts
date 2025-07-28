@@ -1,10 +1,4 @@
-import {
-  IsString,
-  IsNumberString,
-  IsOptional,
-  IsUrl,
-  MaxLength,
-} from 'class-validator';
+import { IsString, IsNumberString, IsOptional, IsUrl, MaxLength } from 'class-validator';
 
 export class CreateProductDto {
   @IsString({ message: 'El nombre debe ser texto' })

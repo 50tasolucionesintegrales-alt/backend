@@ -1,8 +1,4 @@
-/* src/quotes/dto/add-items.dto.ts */
-import {
-    IsArray, ValidateNested, ArrayNotEmpty, IsEnum,
-    IsInt, IsPositive, IsNumber, ValidateIf,
-} from 'class-validator';
+import { IsArray, ValidateNested, ArrayNotEmpty, IsEnum, IsInt, IsPositive, IsNumber, ValidateIf } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class AddItemDto {

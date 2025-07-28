@@ -1,15 +1,10 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Service } from './entities/service.entity';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
-import { User } from '../users/entities/user.entity'; // ajusta ruta
-// o tu UsersService si prefieres validarlo ahí
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class ServicesService {
@@ -18,7 +13,7 @@ export class ServicesService {
     private readonly serviceRepo: Repository<Service>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>, // opcional si validas user
-  ) {}
+  ) { }
 
   // CREATE
   async create(dto: CreateServiceDto, userId: string) {

@@ -1,11 +1,4 @@
-/* src/quotes/entities/quote-item.entity.ts */
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Quote } from './quote.entity';
 import { Product } from 'src/products/entities/product.entity';
 import { DecimalTransformer } from 'src/common/transformers/decimal.transformer';
@@ -18,11 +11,11 @@ export class QuoteItem {
   id!: string;
 
   /* ---------- Relaciones ---------- */
-  @ManyToOne(() => Quote, (q) => q.items, {onDelete: 'CASCADE'})
+  @ManyToOne(() => Quote, (q) => q.items, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'quote_id' })
   quote!: Quote;
 
-  @ManyToOne(() => Product, { eager: true, nullable:true })
+  @ManyToOne(() => Product, { eager: true, nullable: true })
   @JoinColumn({ name: 'product_id' })
   product!: Product | null;
 

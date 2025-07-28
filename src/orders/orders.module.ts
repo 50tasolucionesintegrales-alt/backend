@@ -17,4 +17,4 @@ import { UsersModule } from 'src/users/users.module';
   controllers: [OrdersController],
   providers: [OrdersService],
 })
-export class OrdersModule {}
+export class OrdersModule { }

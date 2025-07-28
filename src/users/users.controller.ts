@@ -19,7 +19,7 @@ export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly mailService: MailService,
-  ) {}
+  ) { }
 
   @Post('register')
   async register(@Body() dto: CreateUserDto) {
@@ -89,7 +89,7 @@ export class UsersController {
 export class AdminUsersController {
   constructor(private readonly users: UsersService) { }
 
-    /** Confirmados pero sin rol */
+  /** Confirmados pero sin rol */
   @Get('unassigned')
   @Roles(Role.Admin)
   findUnassigned() {
@@ -113,7 +113,7 @@ export class AdminUsersController {
     return this.users.setRole(id, dto.rol);
   }
 
-   /** Eliminar usuario (no admin) */
+  /** Eliminar usuario (no admin) */
   @Delete(':id')
   @Roles(Role.Admin)
   deleteUser(@Param('id', IdValidationPipe) id: string) {

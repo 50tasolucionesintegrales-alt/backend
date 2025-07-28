@@ -134,18 +134,18 @@ export class UsersService {
   }
 
   /* ───────── Eliminar usuario (solo admin) ───────── */
-async deleteUser(id: string) {
-  const user = await this.findOne(id);
-  if (!user) throw new NotFoundException('Usuario no encontrado');
+  async deleteUser(id: string) {
+    const user = await this.findOne(id);
+    if (!user) throw new NotFoundException('Usuario no encontrado');
 
-  if (user.rol === Role.Admin) {
-    throw new UnauthorizedException('No se puede eliminar un usuario admin');
+    if (user.rol === Role.Admin) {
+      throw new UnauthorizedException('No se puede eliminar un usuario admin');
+    }
+
+    await this.userRepository.remove(user);
+
+    return { message: 'Usuario eliminado' };
   }
-
-  await this.userRepository.remove(user);
-
-  return { message: 'Usuario eliminado'};
-}
 
 
   /* ───────── CRUD helpers ───────── */
@@ -174,10 +174,10 @@ async deleteUser(id: string) {
   }
 
   async getRoleOnly(id: string): Promise<Role | null> {
-  const record = await this.userRepository.findOne({
-    where: { id },
-    select: ['rol'],          // ← solo la columna rol (rápido)
-  });
-  return record?.rol ?? null;
-}
+    const record = await this.userRepository.findOne({
+      where: { id },
+      select: ['rol'],          // ← solo la columna rol (rápido)
+    });
+    return record?.rol ?? null;
+  }
 }

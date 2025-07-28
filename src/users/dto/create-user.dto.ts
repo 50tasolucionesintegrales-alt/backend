@@ -1,12 +1,4 @@
-import {
-  IsString,
-  IsNotEmpty,
-  IsEmail,
-  MinLength,
-  IsOptional,
-  IsEnum,
-} from 'class-validator';
-import { Role } from 'src/common/enums/roles.enum';
+import { IsString, IsNotEmpty, IsEmail, MinLength } from 'class-validator';
 
 export class CreateUserDto {
   @IsString({ message: 'El nombre no puede estar vacío' })

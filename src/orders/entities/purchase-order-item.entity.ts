@@ -1,7 +1,4 @@
-/* src/orders/entities/purchase-order-item.entity.ts */
-import {
-    Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Product } from 'src/products/entities/product.entity';
 import { PurchaseOrder } from './purchase-order.entity';
 import { DecimalTransformer } from 'src/common/transformers/decimal.transformer';

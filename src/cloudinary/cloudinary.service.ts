@@ -10,10 +10,6 @@ export class CloudinaryService {
     @Inject(CLOUDINARY) private readonly cloudinary: typeof Cloudinary,
   ) { }
 
-  /**
-   * Sube una imagen a Cloudinary (desde buffer de Multer).
-   * folder: ej. 'products', 'evidences', 'avatars'
-   */
   async uploadImage(
     file: Express.Multer.File,
     folder: string,
@@ -24,10 +20,10 @@ export class CloudinaryService {
     if (!file) throw new BadRequestException('Archivo no recibido');
 
     if (!allowed.includes(file.mimetype))
-    throw new BadRequestException('Formato no permitido (solo JPG/PNG/WebP)');
+      throw new BadRequestException('Formato no permitido (solo JPG/PNG/WebP)');
 
-  if (file.size > maxBytes)
-    throw new BadRequestException(`Máximo ${maxBytes / 1_048_576} MB`);
+    if (file.size > maxBytes)
+      throw new BadRequestException(`Máximo ${maxBytes / 1_048_576} MB`);
 
     const stream = Readable.from(file.buffer);
     const options: any = {
@@ -105,11 +101,6 @@ export class CloudinaryService {
     return this.deleteByPublicId(publicId);
   }
 
-  /**
-   * Reemplaza una imagen:
-   * 1) si hay url previa, la elimina
-   * 2) sube la nueva
-   */
   async replaceImage(
     oldUrl: string | null,
     newFile: Express.Multer.File,
@@ -126,4 +117,10 @@ export class CloudinaryService {
     return this.uploadImage(newFile, folder, filename);
   }
 
+  async deleteRawByPublicId(publicId: string) {
+    return this.cloudinary.uploader.destroy(publicId, {
+      invalidate: true,
+      resource_type: 'raw',      // ← indispensable para PDF
+    });
+  }
 }

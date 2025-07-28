@@ -1,12 +1,5 @@
 import { Transform } from 'class-transformer';
-import {
-    IsOptional,
-    IsNumber,
-    Min,
-    IsEnum,
-    IsInt,
-    MinLength,
-} from 'class-validator';
+import { IsOptional, IsNumber, Min, IsInt } from 'class-validator';
 
 const toNum = () =>
     Transform(({ value }) => {

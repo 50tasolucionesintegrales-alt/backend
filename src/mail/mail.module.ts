@@ -5,15 +5,15 @@ import { MAILER_TRANSPORT } from './constants';
 import { MailService } from './mail.service';
 
 @Module({
-  imports: [ConfigModule], // ya es global, pero explícito
+  imports: [ConfigModule], 
   providers: [
     {
       provide: MAILER_TRANSPORT,
       inject: [ConfigService],
-      useFactory: mailerConfig, // delega a /config
+      useFactory: mailerConfig,
     },
     MailService,
   ],
   exports: [MailService],
 })
-export class MailModule {}
+export class MailModule { }

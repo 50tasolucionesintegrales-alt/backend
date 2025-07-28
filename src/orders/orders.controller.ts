@@ -127,5 +127,4 @@ export class OrdersController {
   remove(@Param('id', IdValidationPipe) id: string) {
     return this.orders.deleteOrder(id);
   }
-
 }

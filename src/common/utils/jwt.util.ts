@@ -1,4 +1,3 @@
-// src/common/utils/jwt.util.ts
 import * as jwt from 'jsonwebtoken';
 import { Secret } from 'jsonwebtoken';
 import { Role } from '../enums/roles.enum';

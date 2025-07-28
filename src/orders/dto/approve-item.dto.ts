@@ -5,5 +5,5 @@ export class ApproveItemDto {
     status!: 'approved' | 'rejected';
 
     @IsOptional() @IsString() @MaxLength(300)
-    reason?: string;    // obligatorio si rejected (valídalo en servicio)
+    reason?: string;
 }

@@ -1,15 +1,4 @@
-// src/quotes/quotes.controller.ts
-import {
-  Controller,
-  Post,
-  Patch,
-  Get,
-  Param,
-  Body,
-  Req,
-  UseGuards,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Post, Patch, Get, Param, Body, Req, UseGuards, Delete } from '@nestjs/common';
 import { QuotesService } from './quotes.service';
 
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';

@@ -1,14 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UseGuards,
-  Req,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { IdValidationPipe } from 'src/common/pipes/id-validation/id-validation.pipe';
 import { ServicesService } from './services.service';
@@ -18,7 +8,7 @@ import { UpdateServiceDto } from './dto/update-service.dto';
 @UseGuards(JwtAuthGuard)
 @Controller('services')
 export class ServicesController {
-  constructor(private readonly servicesService: ServicesService) {}
+  constructor(private readonly servicesService: ServicesService) { }
 
   @Post()
   create(@Body() dto: CreateServiceDto, @Req() req: any) {

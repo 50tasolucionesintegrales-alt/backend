@@ -50,7 +50,7 @@ export class CategoriesService {
   async remove(id: string) {
     const categoria = await this.findOne(id)
     await this.categoryRepo.delete(id)
-    return { message: 'Categoria eliminada' }
+    return { message: `Categoria ${categoria} eliminada` }
   }
 
   // Helpers

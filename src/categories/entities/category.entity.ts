@@ -1,16 +1,6 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  OneToMany,
-  Index,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, Index } from 'typeorm';
 import { Product } from '../../products/entities/product.entity';
-import { Service } from 'src/services/entities/service.entity';
 
-/**
- * Representa la tabla CATEGORIES del esquema.
- */
 @Entity({ name: 'categories' })
 export class Category {
   @PrimaryGeneratedColumn({ type: 'bigint' })
@@ -23,7 +13,7 @@ export class Category {
   @Column({ type: 'text', nullable: true })
   descripcion?: string;
 
-  
+
   @OneToMany(() => Product, (product) => product.category, {
     cascade: ['remove'],
   })

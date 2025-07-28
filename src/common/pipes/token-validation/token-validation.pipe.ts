@@ -1,4 +1,4 @@
-import {  BadRequestException, Injectable,PipeTransform,} from '@nestjs/common';
+import { BadRequestException, Injectable, PipeTransform, } from '@nestjs/common';
 
 @Injectable()
 export class TokenValidationPipe implements PipeTransform<string, string> {

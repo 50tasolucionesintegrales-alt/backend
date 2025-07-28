@@ -6,7 +6,6 @@ import { Product } from './entities/product.entity';
 import { Repository } from 'typeorm';
 import { Category } from 'src/categories/entities/category.entity';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
-import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
 
 @Injectable()
@@ -51,7 +50,7 @@ export class ProductsService {
     // Usuario creador
     if (userId) {
       const user = await this.userService.findOne(userId);
-      baseData.createdBy = user; 
+      baseData.createdBy = user;
     }
 
     const product = this.productRepo.create(baseData);
@@ -147,7 +146,4 @@ export class ProductsService {
 
     return product;
   }
-
-
-
 }

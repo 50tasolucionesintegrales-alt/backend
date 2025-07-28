@@ -19,4 +19,4 @@ import { Service } from 'src/services/entities/service.entity';
   controllers: [QuotesController],
   providers: [QuotesService, PdfService],
 })
-export class QuotesModule {}
+export class QuotesModule { }

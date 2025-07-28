@@ -1,13 +1,4 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  Index,
-  OneToMany,
-} from 'typeorm';
-
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index, OneToMany } from 'typeorm';
 import { Role } from 'src/common/enums/roles.enum';
 import { Quote } from 'src/quotes/entities/quote.entity';
 import { PurchaseOrder } from 'src/orders/entities/purchase-order.entity';

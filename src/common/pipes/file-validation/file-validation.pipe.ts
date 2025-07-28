@@ -10,7 +10,7 @@ export interface FileValidationOptions {
 export class FileValidationPipe implements PipeTransform {
   constructor(
     private readonly opts: FileValidationOptions = {},
-  ) {}
+  ) { }
 
   transform(file: Express.Multer.File) {
     const {

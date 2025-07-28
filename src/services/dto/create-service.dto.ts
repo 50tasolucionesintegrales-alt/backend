@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsNumber, IsInt, MaxLength, Min, IsNotEmpty } from 'class-validator';
+import { IsOptional, IsString, IsInt, Min, IsNotEmpty } from 'class-validator';
 
 export class CreateServiceDto {
   @IsNotEmpty({ message: 'El nombre no puede ir vacio' })

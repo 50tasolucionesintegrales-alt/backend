@@ -1,9 +1,9 @@
-import { IsIn, IsNotEmpty, IsOptional, IsString, Length, MaxLength } from 'class-validator';
+import { IsIn, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreateQuoteDto {
     @IsIn(['productos', 'servicios'])
     tipo!: 'productos' | 'servicios';
-    
+
     @IsString()
     @IsNotEmpty()
     @MaxLength(120, { message: 'El título no puede exceder 120 caracteres' })

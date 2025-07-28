@@ -1,4 +1,3 @@
-// src/quotes/pdf.service.ts
 import { Injectable } from '@nestjs/common';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { Quote } from './entities/quote.entity';

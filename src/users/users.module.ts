@@ -11,4 +11,4 @@ import { MailModule } from 'src/mail/mail.module';
   providers: [UsersService],
   exports: [UsersService],
 })
-export class UsersModule {}
+export class UsersModule { }

@@ -1,16 +1,9 @@
-// src/quotes/quotes.service.ts
-import {
-  Injectable,
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-
 import { Quote } from './entities/quote.entity';
 import { QuoteItem } from './entities/quote-item.entity';
 import { Product } from 'src/products/entities/product.entity';
-
 import { AddItemsDto } from './dto/add-items.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
 import { PdfService } from './pdf.service';
@@ -288,10 +281,20 @@ export class QuotesService {
   }
 
   async deleteQuote(id: string) {
-  const quote = await this.quotesRepo.findOne({ where: { id } });
-  if (!quote) throw new NotFoundException('Cotización no encontrada');
+    const quote = await this.quotesRepo.findOne({ where: { id } });
+    if (!quote) throw new NotFoundException('Cotización no encontrada');
 
-  await this.quotesRepo.delete(id);         // los items se borran por cascade
-  return { message: 'Cotización eliminada' };
-}
+    /* ── eliminar PDFs en Cloudinary ── */
+    const pdfIds = [quote.pdfMargen1Id, quote.pdfMargen2Id, quote.pdfMargen3Id]
+      .filter(Boolean) as string[];
+
+    for (const pid of pdfIds) {
+      try { await this.cloudinary.deleteRawByPublicId(pid); } catch { }
+    }
+
+    /* ── borrar cotización (items → cascade) ── */
+    await this.quotesRepo.delete(id);
+    return { message: 'Cotización eliminada' };
+  }
+
 }

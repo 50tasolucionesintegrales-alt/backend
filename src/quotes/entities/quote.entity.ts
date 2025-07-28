@@ -1,8 +1,4 @@
-/* src/quotes/entities/quote.entity.ts */
-import {
-  Column, CreateDateColumn, Entity, JoinColumn, ManyToOne,
-  OneToMany, PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { QuoteItem } from './quote-item.entity';
 import { User } from 'src/users/entities/user.entity';
 import { DecimalTransformer } from 'src/common/transformers/decimal.transformer';

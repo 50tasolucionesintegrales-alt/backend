@@ -1,5 +1,4 @@
-// quote-item-input.dto.ts
-import { IsInt, Min, IsNumber, MinLength } from 'class-validator';
+import { IsInt, Min, IsNumber } from 'class-validator';
 
 export class QuoteItemInput {
     @IsInt({ message: 'productId debe ser un número entero' })
