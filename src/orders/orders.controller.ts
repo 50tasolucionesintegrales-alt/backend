@@ -57,10 +57,18 @@ export class OrdersController {
     return this.orders.listUserDrafts(req.user.sub);
   }
 
-  @Get('sent')
+  /* Pendientes (Admin) */
+  @Get('pending')
   @Roles(Role.Admin)
-  listSent() {
-    return this.orders.listSent();
+  listPending() {
+    return this.orders.listPending();
+  }
+
+  /* Resueltas (Admin) */
+  @Get('resolved')
+  @Roles(Role.Admin)
+  listResolved() {
+    return this.orders.listResolved();
   }
 
   /* 6. Aprobación de ítem (Admin) */

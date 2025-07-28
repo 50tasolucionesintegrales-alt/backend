@@ -6,7 +6,7 @@ import { Product } from "src/products/entities/product.entity";
 import { CloudinaryService } from "src/cloudinary/cloudinary.service";
 import { CreateOrderDto } from "./dto/create-order.dto";
 import { AddOrderItemsDto } from "./dto/add-items.dto";
-import { Not, Repository } from "typeorm";
+import { In, Not, Repository } from "typeorm";
 import { ApproveItemDto } from "./dto/approve-item.dto";
 
 @Injectable()
@@ -22,6 +22,25 @@ export class OrdersService {
     const total = items.length;
     const approved = items.filter(i => i.status === 'approved').length;
     return +(approved / total * 100).toFixed(1);
+  }
+
+  async listPending() {
+    const orders = await this.ordersRepo.find({
+      where: { status: In(['sent', 'partially_approved']) },
+      relations: ['items', 'items.product'],
+      order: { sentAt: 'DESC' },
+    });
+    return orders;
+  }
+
+  /** 5‑C. Resueltas (Admin) */
+  async listResolved() {
+    const orders = await this.ordersRepo.find({
+      where: { status: In(['approved', 'rejected']) },
+      relations: ['items', 'items.product'],
+      order: { resolvedAt: 'DESC' },
+    });
+    return orders;
   }
 
   /* 1. Crear borrador */
@@ -98,7 +117,12 @@ export class OrdersService {
     if (item.status === 'approved')
       throw new ForbiddenException('Ítem aprobado; no se puede modificar');
 
-    const up = await this.cloudinary.uploadImage(file, 'evidences');
+    const up = await this.cloudinary.replaceImage(
+      item.evidenceUrl ?? null,
+      file,
+      'evidences',
+    );
+
     item.evidenceUrl = up.secure_url;
     item.status = 'pending';
     item.rejectReason = null;
@@ -133,13 +157,6 @@ export class OrdersService {
   listUserDrafts(userId: string) {
     return this.ordersRepo.find({
       where: { status: 'draft', user: { id: userId } as any },
-      relations: ['items', 'items.product'],
-    });
-  }
-
-  listSent() {
-    return this.ordersRepo.find({
-      where: { status: 'sent' },
       relations: ['items', 'items.product'],
     });
   }
@@ -251,6 +268,9 @@ export class OrdersService {
     if (item.order.status !== 'draft')
       throw new ForbiddenException('Orden no editable');
 
+    if (item.evidenceUrl) {
+      try { await this.cloudinary.deleteByUrl(item.evidenceUrl); } catch { }
+    }
     await this.itemsRepo.delete(itemId);
     return { message: 'Ítem eliminado' };
   }
@@ -291,8 +311,14 @@ export class OrdersService {
   }
 
   async deleteOrder(id: string) {
-    const order = await this.ordersRepo.findOne({ where: { id } });
+    const order = await this.ordersRepo.findOne({ where: { id }, relations: ['items'] });
     if (!order) throw new NotFoundException('Orden no encontrada');
+
+    for (const it of order.items) {
+      if (it.evidenceUrl) {
+        try { await this.cloudinary.deleteByUrl(it.evidenceUrl); } catch { }
+      }
+    }
 
     await this.ordersRepo.delete(id);          // FK items → onDelete: CASCADE
     return { message: 'Orden de compra eliminada' };

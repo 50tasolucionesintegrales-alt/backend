@@ -18,8 +18,16 @@ export class CloudinaryService {
     file: Express.Multer.File,
     folder: string,
     filename?: string,
+    maxBytes = 5 * 1024 * 1024,                     // 5 MB
+    allowed = ['image/jpeg', 'image/png', 'image/webp'],
   ): Promise<UploadApiResponse> {
     if (!file) throw new BadRequestException('Archivo no recibido');
+
+    if (!allowed.includes(file.mimetype))
+    throw new BadRequestException('Formato no permitido (solo JPG/PNG/WebP)');
+
+  if (file.size > maxBytes)
+    throw new BadRequestException(`Máximo ${maxBytes / 1_048_576} MB`);
 
     const stream = Readable.from(file.buffer);
     const options: any = {
