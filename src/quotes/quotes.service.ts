@@ -297,4 +297,17 @@ export class QuotesService {
     return { message: 'Cotización eliminada' };
   }
 
+  async removeItem(itemId: string) {
+    const item = await this.itemsRepo.findOne({
+      where: { id: itemId },
+      relations: ['quote'],
+    });
+    if (!item) throw new NotFoundException('Ítem no encontrado');
+
+    if (item.quote.status !== 'draft')
+      throw new ForbiddenException('Solo puede eliminarse en borrador');
+
+    await this.itemsRepo.delete(itemId);
+    return { message: 'Ítem eliminado' };
+  }
 }

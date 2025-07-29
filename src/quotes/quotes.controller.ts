@@ -67,6 +67,12 @@ export class QuotesController {
     return this.quotes.updateItem(itemId, dto);
   }
 
+  @Delete('items/:itemId')
+  @Roles(Role.Admin, Role.Cotizador)
+  removeItem(@Param('itemId', IdValidationPipe) itemId: string) {
+    return this.quotes.removeItem(itemId);
+  }
+
   /* 4️⃣  Enviar (genera PDFs) */
   @Post(':id/send')
   @Roles(Role.Admin, Role.Cotizador)
