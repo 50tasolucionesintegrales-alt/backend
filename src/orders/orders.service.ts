@@ -27,7 +27,7 @@ export class OrdersService {
   async listPending() {
     const orders = await this.ordersRepo.find({
       where: { status: In(['sent', 'partially_approved']) },
-      relations: ['items', 'items.product'],
+      relations: ['user','items', 'items.product'],
       order: { sentAt: 'DESC' },
     });
     return orders;
@@ -37,7 +37,7 @@ export class OrdersService {
   async listResolved() {
     const orders = await this.ordersRepo.find({
       where: { status: In(['approved', 'rejected']) },
-      relations: ['items', 'items.product'],
+      relations: ['user','items', 'items.product'],
       order: { resolvedAt: 'DESC' },
     });
     return orders;
