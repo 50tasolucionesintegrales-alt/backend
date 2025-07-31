@@ -213,11 +213,16 @@ export class QuotesService {
 
   /* 1 ── listar todas las enviadas */
   async listSent() {
-    return this.quotesRepo.find({
+    const quotes = await this.quotesRepo.find({
       where: { status: 'sent' },
       relations: ['items', 'items.product', 'items.service'],
       order: { sentAt: 'DESC' },
     });
+
+    // 👉 genera enlaces firmados válidos 1 h
+    quotes.forEach((q) => this.addSignedLinks(q));
+
+    return quotes;                        // o { message:'Enviadas', quotes }
   }
 
   /* 2 ── borradores de un usuario */
