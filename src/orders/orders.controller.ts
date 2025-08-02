@@ -9,20 +9,22 @@ import { IdValidationPipe } from "src/common/pipes/id-validation/id-validation.p
 import { AddOrderItemsDto } from "./dto/add-items.dto";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { ApproveItemDto } from "./dto/approve-item.dto";
+import { UpdateItemsDto } from "./dto/update-items.dto";
+import { FileValidationPipe } from "src/common/pipes/file-validation/file-validation.pipe";
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly orders: OrdersService) { }
 
-  /* 1. Crear borrador */
+  /* Crear borrador */
   @Post()
   @Roles(Role.Admin, Role.Cotizador)
   create(@Req() req, @Body() dto: CreateOrderDto) {
     return this.orders.createDraft(req.user.sub, dto);
   }
 
-  /* 2. Agregar ítems */
+  /* Agregar ítems */
   @Post(':id/items')
   @Roles(Role.Admin, Role.Cotizador)
   addItems(
@@ -32,7 +34,7 @@ export class OrdersController {
     return this.orders.addItems(id, dto);
   }
 
-  /* 3. Subir evidencia (multipart/form‑data) */
+  /* Subir evidencia (multipart/form‑data) */
   @Post('items/:itemId/evidence')
   @Roles(Role.Admin, Role.Cotizador)
   @UseInterceptors(FileInterceptor('file'))
@@ -43,14 +45,14 @@ export class OrdersController {
     return this.orders.uploadEvidence(itemId, file);
   }
 
-  /* 4. Enviar orden */
+  /* Enviar orden */
   @Post(':id/send')
   @Roles(Role.Admin, Role.Cotizador)
   send(@Param('id', IdValidationPipe) id: string) {
     return this.orders.sendOrder(id);
   }
 
-  /* 5. Listados */
+  /* Listados */
   @Get('drafts')
   @Roles(Role.Admin, Role.Cotizador)
   listDrafts(@Req() req) {
@@ -71,7 +73,14 @@ export class OrdersController {
     return this.orders.listResolved();
   }
 
-  /* 6. Aprobación de ítem (Admin) */
+   /* ▶ Mis órdenes enviadas */
+  @Get('sent/mine')
+  @Roles(Role.Admin, Role.Cotizador)
+  listMySent(@Req() req) {
+    return this.orders.listUserSent(req.user.sub);
+  }
+
+  /* Aprobación de ítem (Admin) */
   @Patch('items/:itemId/approve')
   @Roles(Role.Admin)
   approve(
@@ -81,18 +90,11 @@ export class OrdersController {
     return this.orders.approveItem(itemId, dto);
   }
 
-  /* 7. Obtener una orden */
+  /* Obtener una orden */
   @Get(':id')
   @Roles(Role.Admin, Role.Cotizador)
   findOne(@Param('id', IdValidationPipe) id: string) {
     return this.orders.getOne(id);
-  }
-
-  /* ▶ Mis órdenes enviadas */
-  @Get('sent/mine')
-  @Roles(Role.Admin, Role.Cotizador)
-  listMySent(@Req() req) {
-    return this.orders.listUserSent(req.user.sub);
   }
 
   /* actualizar un ítem */
@@ -100,7 +102,7 @@ export class OrdersController {
   @Roles(Role.Admin, Role.Cotizador)
   updateItem(
     @Param('itemId', IdValidationPipe) itemId: string,
-    @Body() dto: { cantidad: number; costoUnitario: number },
+    @Body() dto: UpdateItemsDto,
   ) {
     return this.orders.updateItem(itemId, dto.cantidad, dto.costoUnitario);
   }
