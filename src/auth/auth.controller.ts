@@ -1,10 +1,5 @@
-import {
-  Controller,
-  Post,
-  Body,
-  UsePipes,
-  ValidationPipe,
-} from '@nestjs/common';
+// src/auth/auth.controller.ts
+import { Controller, Post, Body, UsePipes, ValidationPipe, Req } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
 import { AuthService } from './auth.service';
 
@@ -14,7 +9,9 @@ export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   @Post('login')
-  login(@Body() dto: LoginDto) {
-    return this.auth.login(dto);
+  login(@Req() req, @Body() dto: LoginDto) {
+    const ua = (req.headers['user-agent'] as string) || undefined;
+    const ip = (req.ip as string) || undefined;
+    return this.auth.login(dto, ip, ua);
   }
 }

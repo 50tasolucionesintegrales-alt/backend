@@ -13,6 +13,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { ServicesModule } from './services/services.module';
 import { QuotesModule } from './quotes/quotes.module';
 import { OrdersModule } from './orders/orders.module';
+import { MetricsModule } from './metrics/metrics.module';
 
 @Module({
   imports: [
@@ -31,7 +32,8 @@ import { OrdersModule } from './orders/orders.module';
     ServicesModule,
     CloudinaryModule,
     QuotesModule,
-    OrdersModule
+    OrdersModule,
+    MetricsModule
   ],
   controllers: [AppController],
   providers: [AppService],
