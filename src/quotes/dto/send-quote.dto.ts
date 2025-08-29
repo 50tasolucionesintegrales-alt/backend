@@ -1,6 +1,7 @@
-import { IsBoolean } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsInt, Max, Min } from 'class-validator';
 
 export class SendQuoteDto {
-    @IsBoolean({ message: 'confirm debe ser booleano' })
-    confirm!: boolean;
+    @IsArray()
+    @ArrayNotEmpty()
+    empresas!: number[]; // valores entre 1 y 7
 }

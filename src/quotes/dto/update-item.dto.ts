@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsOptional, IsNumber, Min, IsInt } from 'class-validator';
+import { IsOptional, IsNumber, Min, IsInt, IsString, MaxLength } from 'class-validator';
 
 const toNum = () =>
     Transform(({ value }) => {
@@ -28,7 +28,32 @@ export class UpdateItemDto {
     margenPct3?: number;
 
     @IsOptional()
+    @IsNumber({}, { message: 'margenPct4 debe ser un número' })
+    @Min(0, { message: 'margenPct4 no puede ser negativo' })
+    margenPct4?: number;
+
+    @IsOptional()
+    @IsNumber({}, { message: 'margenPct5 dede ser negativo' })
+    @Min(0, { message: 'margenPct5 no puede ser negativo' })
+    margenPct5?: number;
+
+    @IsOptional()
+    @IsNumber({}, { message: 'margenPct6 debe ser un número' })
+    @Min(0, { message: 'margenPct6 no puede ser negativo' })
+    margenPct6?: number;
+
+    @IsOptional()
+    @IsNumber({}, { message: 'margenPct7 debe ser un número' })
+    @Min(0, { message: 'margenPct7 no puede ser negativo' })
+    margenPct7?: number;
+
+    @IsOptional()
     @IsInt({ message: 'La cantidad debe ser un entero' })
     @Min(1, { message: 'La cantidad mínima es 1' })
     cantidad?: number;
+
+    @IsOptional()
+    @IsString()
+    @MaxLength(120, { message: 'El texto no puede exceder 120 caracteres' })
+    unidad?: string;
 }
