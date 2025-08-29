@@ -3,7 +3,6 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { PurchaseOrder } from "./entities/purchase-order.entity";
 import { PurchaseOrderItem } from "./entities/purchase-order-item.entity";
 import { Product } from "src/products/entities/product.entity";
-import { CloudinaryService } from "src/cloudinary/cloudinary.service";
 import { CreateOrderDto } from "./dto/create-order.dto";
 import { AddOrderItemsDto } from "./dto/add-items.dto";
 import { In, Not, Repository } from "typeorm";
@@ -15,7 +14,6 @@ export class OrdersService {
     @InjectRepository(PurchaseOrder) private ordersRepo: Repository<PurchaseOrder>,
     @InjectRepository(PurchaseOrderItem) private itemsRepo: Repository<PurchaseOrderItem>,
     @InjectRepository(Product) private productRepo: Repository<Product>,
-    private cloudinary: CloudinaryService,
   ) { }
 
   private calcProgress(items: PurchaseOrderItem[]) {
@@ -106,29 +104,42 @@ export class OrdersService {
 
   /* 3. Subir evidencia (comprador) */
   async uploadEvidence(itemId: string, file: Express.Multer.File) {
-    const item = await this.itemsRepo.findOne({
-      where: { id: itemId },
-      relations: ['order'],
-    });
+    const item = await this.itemsRepo.findOne({ where: { id: itemId }, relations: ['order'] });
     if (!item) throw new NotFoundException('Item no encontrado');
+
     if (!['draft', 'sent', 'partially_approved'].includes(item.order.status))
       throw new ForbiddenException('Orden no editable');
 
     if (item.status === 'approved')
       throw new ForbiddenException('Ítem aprobado; no se puede modificar');
 
-    const up = await this.cloudinary.replaceImage(
-      item.evidenceUrl ?? null,
-      file,
-      'evidences',
-    );
+    if (!file?.buffer) throw new BadRequestException('Archivo inválido');
 
-    item.evidenceUrl = up.secure_url;
+    item.evidenceData = file.buffer;
+    item.evidenceMime = file.mimetype;
+    item.evidenceName = file.originalname?.slice(0, 255) || null;
+    item.evidenceSize = file.size ?? null;
+
     item.status = 'pending';
     item.rejectReason = null;
-    item.approvedAt = null
+    item.approvedAt = null;
+
     await this.itemsRepo.save(item);
-    return { message: 'Evidencia subida', item };
+    return { message: 'Evidencia subida', itemId: item.id, size: item.evidenceSize };
+  }
+
+  /* 3.b Obtener evidencia (para descargar/ver) */
+  async getEvidence(itemId: string) {
+    const item = await this.itemsRepo.findOne({ where: { id: itemId } });
+    if (!item) throw new NotFoundException('Item no encontrado');
+    if (!item.evidenceData) throw new NotFoundException('Sin evidencia para este ítem');
+
+    return {
+      buffer: item.evidenceData,
+      mime: item.evidenceMime,
+      name: item.evidenceName,
+      size: item.evidenceSize,
+    };
   }
 
   /* 4. Enviar orden (cuando TODOS los ítems tienen evidencia) */
@@ -141,7 +152,7 @@ export class OrdersService {
     if (!['draft', 'partially_approved', 'sent'].includes(order.status))
       throw new ForbiddenException('Orden no editable/enviable');
 
-    const lacking = order.items.filter((i) => !i.evidenceUrl);
+    const lacking = order.items.filter((i) => !i.evidenceData);
     if (lacking.length)
       throw new ForbiddenException('Todos los ítems requieren evidencia');
 
@@ -150,7 +161,7 @@ export class OrdersService {
     order.progressPct = this.calcProgress(order.items);
     order.total = order.items.reduce((a, it) => a + it.subtotal, 0);
     await this.ordersRepo.save(order);
-    return { message: 'Orden enviada', order };
+    return { message: 'Orden enviada'};
   }
 
   /* 5. Listados */
@@ -268,9 +279,6 @@ export class OrdersService {
     if (item.order.status !== 'draft')
       throw new ForbiddenException('Orden no editable');
 
-    if (item.evidenceUrl) {
-      try { await this.cloudinary.deleteByUrl(item.evidenceUrl); } catch { }
-    }
     await this.itemsRepo.delete(itemId);
     return { message: 'Ítem eliminado' };
   }
@@ -313,12 +321,6 @@ export class OrdersService {
   async deleteOrder(id: string) {
     const order = await this.ordersRepo.findOne({ where: { id }, relations: ['items'] });
     if (!order) throw new NotFoundException('Orden no encontrada');
-
-    for (const it of order.items) {
-      if (it.evidenceUrl) {
-        try { await this.cloudinary.deleteByUrl(it.evidenceUrl); } catch { }
-      }
-    }
 
     await this.ordersRepo.delete(id);          // FK items → onDelete: CASCADE
     return { message: 'Orden de compra eliminada' };

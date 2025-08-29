@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, Res, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
 import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guard";
 import { Roles } from "src/common/decorators/roles.decorator";
 import { Role } from "src/common/enums/roles.enum";
@@ -10,7 +10,8 @@ import { AddOrderItemsDto } from "./dto/add-items.dto";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { ApproveItemDto } from "./dto/approve-item.dto";
 import { UpdateItemsDto } from "./dto/update-items.dto";
-import { FileValidationPipe } from "src/common/pipes/file-validation/file-validation.pipe";
+import { Response } from "express";
+import { memoryStorage } from "multer";
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('orders')
@@ -37,12 +38,36 @@ export class OrdersController {
   /* Subir evidencia (multipart/form‑data) */
   @Post('items/:itemId/evidence')
   @Roles(Role.Admin, Role.Cotizador)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', {
+    storage: memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  }))
   upload(
     @Param('itemId', IdValidationPipe) itemId: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
+    // Validaciones simples de MIME
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+    if (!file || !allowed.includes(file.mimetype)) {
+      throw new Error('Formato no permitido. Usa JPG, PNG, WEBP, HEIC/HEIF');
+    }
     return this.orders.uploadEvidence(itemId, file);
+  }
+
+  /* Descargar/Ver evidencia (inline/attachment) */
+  @Get('items/:itemId/evidence')
+  @Roles(Role.Admin, Role.Cotizador)
+  async getEvidence(
+    @Param('itemId', IdValidationPipe) itemId: string,
+    @Query('disposition') disposition: 'inline' | 'attachment' = 'inline',
+    @Res() res: Response,
+  ) {
+    const ev = await this.orders.getEvidence(itemId);
+    res.setHeader('Content-Type', ev.mime || 'application/octet-stream');
+    res.setHeader('Content-Length', String(ev.size || ev.buffer.length));
+    const filename = ev.name || `evidence_${itemId}`;
+    res.setHeader('Content-Disposition', `${disposition}; filename="${filename}"`);
+    res.send(ev.buffer);
   }
 
   /* Enviar orden */
@@ -73,7 +98,7 @@ export class OrdersController {
     return this.orders.listResolved();
   }
 
-   /* ▶ Mis órdenes enviadas */
+  /* ▶ Mis órdenes enviadas */
   @Get('sent/mine')
   @Roles(Role.Admin, Role.Cotizador)
   listMySent(@Req() req) {

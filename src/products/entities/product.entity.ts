@@ -47,8 +47,17 @@ export class Product {
   @Column({ type: 'varchar', length: 512, nullable: true })
   link_compra?: string;
 
-  @Column({ type: 'varchar', length: 512, nullable: true })
-  image_url?: string;
+  @Column({ type: 'bytea', name: 'image_data', nullable: true })
+  imageData?: Buffer | null;
+
+  @Column({ type: 'varchar', length: 255, name: 'image_mime', nullable: true })
+  imageMime?: string | null;
+
+  @Column({ type: 'varchar', length: 255, name: 'image_name', nullable: true })
+  imageName?: string | null;
+
+  @Column({ type: 'int', name: 'image_size', nullable: true })
+  imageSize?: number | null;
 
   /* -------- Metadatos -------- */
   @CreateDateColumn({ name: 'created_at' })

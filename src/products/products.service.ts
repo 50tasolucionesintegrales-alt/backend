@@ -5,94 +5,82 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
 import { Repository } from 'typeorm';
 import { Category } from 'src/categories/entities/category.entity';
-import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class ProductsService {
   constructor(
-    @InjectRepository(Product)
-    private readonly productRepo: Repository<Product>,
-    @InjectRepository(Category)
-    private readonly categoryRepo: Repository<Category>,
+    @InjectRepository(Product) private readonly productRepo: Repository<Product>,
+    @InjectRepository(Category) private readonly categoryRepo: Repository<Category>,
     private readonly userService: UsersService,
-    private readonly cloudinaryService: CloudinaryService,
   ) { }
 
+  private assertAllowed(file?: Express.Multer.File) {
+    if (!file) return;
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+    if (!allowed.includes(file.mimetype)) {
+      throw new BadRequestException('Formato no permitido. Usa JPG, PNG, WEBP, HEIC/HEIF');
+    }
+    if (!file.buffer || file.size <= 0) {
+      throw new BadRequestException('Archivo inválido');
+    }
+  }
+
   // CRUD
-  async create(createProductDto: CreateProductDto, userId: string, file?: Express.Multer.File) {
-    // 1. Validar categoría
-    const category = await this.categoryRepo.findOneBy({
-      id: createProductDto.categoryId,
-    });
-    if (!category) {
-      throw new BadRequestException('La categoría no existe');
-    }
+  async create(dto: CreateProductDto, userId: string, file?: Express.Multer.File) {
+    const category = await this.categoryRepo.findOneBy({ id: dto.categoryId });
+    if (!category) throw new BadRequestException('La categoría no existe');
 
-    // 2. Subir imagen (si se manda)
-    let imageUrl = '';
-    if (file) {
-      const uploaded = await this.cloudinaryService.uploadImage(file, 'products');
-      imageUrl = uploaded.secure_url;
-    }
+    this.assertAllowed(file);
 
-    // 3. Armar datos base del producto
     const baseData: Partial<Product> = {
-      nombre: createProductDto.nombre,
-      descripcion: createProductDto.descripcion ?? '',
-      precio: createProductDto.precio,
-      especificaciones: createProductDto.especificaciones,
-      link_compra: createProductDto.link_compra,
-      image_url: imageUrl,
+      nombre: dto.nombre,
+      descripcion: dto.descripcion ?? '',
+      precio: dto.precio,
+      especificaciones: dto.especificaciones,
+      link_compra: dto.link_compra,
       category,
     };
 
-    // Usuario creador
     if (userId) {
       const user = await this.userService.findOne(userId);
-      baseData.createdBy = user;
+      baseData.createdBy = user ?? null;
+    }
+
+    if (file) {
+      baseData.imageData = file.buffer;
+      baseData.imageMime = file.mimetype;
+      baseData.imageName = file.originalname?.slice(0, 255) || null;
+      baseData.imageSize = file.size ?? null;
     }
 
     const product = this.productRepo.create(baseData);
-    const saved = await this.productRepo.save(product);
+    await this.productRepo.save(product);
 
-    // Vuelve a cargar con relaciones (createdBy no es eager)
-    return this.productRepo.findOne({
-      where: { id: saved.id },
-      relations: { createdBy: true, category: true },
-    });
+    return {message:"Producto Agregado"}
   }
 
-  async update(
-    id: string,
-    dto: UpdateProductDto,
-    file?: Express.Multer.File,
-  ) {
-    // 1. Traer el producto actual
+  async update(id: string, dto: UpdateProductDto, file?: Express.Multer.File) {
     const product = await this.productRepo.findOne({
       where: { id },
       relations: { category: true, createdBy: true },
     });
     if (!product) throw new NotFoundException('Producto no encontrado');
 
-    // 2. Cambiar categoría si viene
     if (dto.categoryId && dto.categoryId !== product.category.id) {
       const category = await this.categoryRepo.findOneBy({ id: dto.categoryId });
       if (!category) throw new BadRequestException('La categoría no existe');
       product.category = category;
     }
 
-    // 3. Reemplazar imagen si mandan una nueva
+    this.assertAllowed(file);
     if (file) {
-      const uploaded = await this.cloudinaryService.replaceImage(
-        product.image_url || null,
-        file,
-        'products',
-      );
-      product.image_url = uploaded.secure_url;
+      product.imageData = file.buffer;
+      product.imageMime = file.mimetype;
+      product.imageName = file.originalname?.slice(0, 255) || null;
+      product.imageSize = file.size ?? null;
     }
 
-    // 4. Asignar el resto de campos (sanitizando descripción)
     Object.assign(product, {
       nombre: dto.nombre ?? product.nombre,
       descripcion: dto.descripcion ?? product.descripcion ?? '',
@@ -101,13 +89,9 @@ export class ProductsService {
       link_compra: dto.link_compra ?? product.link_compra,
     });
 
-    const saved = await this.productRepo.save(product);
+    await this.productRepo.save(product);
 
-    // 5. Regresar con relaciones
-    return this.productRepo.findOne({
-      where: { id: saved.id },
-      relations: { createdBy: true, category: true },
-    });
+    return {message:"Producto Actualizado"}
   }
 
   async remove(id: string) {
@@ -115,16 +99,10 @@ export class ProductsService {
       where: { id },
     });
     if (!product) throw new NotFoundException('Producto no encontrado');
-
-    // borrar imagen en Cloudinary (no fallar si algo sale mal)
-    if (product.image_url) {
-      try {
-        await this.cloudinaryService.deleteByUrl(product.image_url);
-      } catch { }
-    }
-
+    
+    const nom = product.nombre
     await this.productRepo.delete(id); // o await this.productRepo.remove(product);
-    return { message: `Producto ${id} eliminado correctamente` };
+    return { message: `Producto ${nom} eliminado` };
   }
 
   async findAll() {
@@ -145,5 +123,18 @@ export class ProductsService {
     }
 
     return product;
+  }
+
+  async getImage(id: string) {
+    const product = await this.productRepo.findOne({ where: { id } });
+    if (!product) throw new NotFoundException('Producto no encontrado');
+    if (!product.imageData) throw new NotFoundException('Este producto no tiene imagen');
+
+    return {
+      buffer: product.imageData,
+      mime: product.imageMime,
+      name: product.imageName,
+      size: product.imageSize,
+    };
   }
 }

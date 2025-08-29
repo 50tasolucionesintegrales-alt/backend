@@ -1,4 +1,4 @@
-import {IsArray, ValidateNested, ArrayNotEmpty, IsEnum, IsInt, IsPositive, IsNumber, IsDefined, ValidateIf } from 'class-validator';
+import {IsArray, ValidateNested, ArrayNotEmpty, IsEnum, IsInt, IsPositive, IsNumber, IsDefined, ValidateIf, IsString, IsNotEmpty, MaxLength } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 
 export enum ItemType {
@@ -33,6 +33,11 @@ export class AddItemDto {
     @IsInt({ message: 'cantidad debe ser un entero válido' })
     @IsPositive({ message: 'cantidad debe ser mayor que 0' })
     cantidad!: number;
+
+    @IsString()
+    @IsNotEmpty({message: 'La unidad es requerida'})
+    @MaxLength(120, { message: 'El texto no puede exceder 120 caracteres' })
+    unidad?: string;
 
     @IsDefined({ message: 'costoUnitario es requerido' })
     @Type(() => Number)

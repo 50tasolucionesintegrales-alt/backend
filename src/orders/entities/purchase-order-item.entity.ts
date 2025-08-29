@@ -34,8 +34,17 @@ export class PurchaseOrderItem {
     subtotal!: number;
 
     /* Evidencia */
-    @Column({ type: 'varchar', length: 512, nullable: true })
-    evidenceUrl?: string | null;
+    @Column({ type: 'bytea', name: 'evidence_data', nullable: true })
+    evidenceData?: Buffer | null;
+
+    @Column({ type: 'varchar', length: 255, name: 'evidence_mime', nullable: true })
+    evidenceMime?: string | null;
+
+    @Column({ type: 'varchar', length: 255, name: 'evidence_name', nullable: true })
+    evidenceName?: string | null;
+
+    @Column({ type: 'int', name: 'evidence_size', nullable: true })
+    evidenceSize?: number | null;
 
     /* Estado del ítem en aprobación */
     @Column({

@@ -43,6 +43,9 @@ export class Quote {
   @Column({ type: 'text', nullable: true })
   descripcion?: string | null;
 
+  @Column('numeric', { precision: 5, scale: 2, name: 'iva_pct', default: 16, transformer: DecimalTransformer })
+  ivaPct!: number;
+
   /* Totales */
   @Column('decimal', {
     name: 'total_margen1', precision: 12, scale: 2,
@@ -62,15 +65,61 @@ export class Quote {
   })
   totalMargen3?: number | null;
 
-  /* URLs de PDFs */
-  @Column({ name: 'pdf_margen1_id', type: 'varchar', length: '255', nullable: true })
-  pdfMargen1Id?: string | null;
+  @Column('decimal', {
+    name: 'total_margen4', precision: 12, scale: 2,
+    nullable: true, transformer: DecimalTransformer
+  })
+  totalMargen4?: number | null;
 
-  @Column({ name: 'pdf_margen2_id', type: 'varchar', length: '255', nullable: true })
-  pdfMargen2Id?: string | null;
+  @Column('decimal', {
+    name: 'total_margen5', precision: 12, scale: 2,
+    nullable: true, transformer: DecimalTransformer
+  })
+  totalMargen5?: number | null;
 
-  @Column({ name: 'pdf_margen3_id', type: 'varchar', length: '255', nullable: true })
-  pdfMargen3Id?: string | null;
+  @Column('decimal', {
+    name: 'total_margen6', precision: 12, scale: 2,
+    nullable: true, transformer: DecimalTransformer
+  })
+  totalMargen6?: number | null;
+
+  @Column('decimal', {
+    name: 'total_margen7', precision: 12, scale: 2,
+    nullable: true, transformer: DecimalTransformer
+  })
+  totalMargen7?: number | null;
+
+  /* IVA*/
+  @Column('decimal', { name: 'total_iva1', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
+  totalIva1?: number | null;
+  @Column('decimal', { name: 'total_iva2', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
+  totalIva2?: number | null;
+  @Column('decimal', { name: 'total_iva3', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
+  totalIva3?: number | null;
+  @Column('decimal', { name: 'total_iva4', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
+  totalIva4?: number | null;
+  @Column('decimal', { name: 'total_iva5', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
+  totalIva5?: number | null;
+  @Column('decimal', { name: 'total_iva6', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
+  totalIva6?: number | null;
+  @Column('decimal', { name: 'total_iva7', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
+  totalIva7?: number | null;
+
+  /* Totales con IVA*/
+  @Column('decimal', { name: 'total_final1', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
+  totalFinal1?: number | null;
+  @Column('decimal', { name: 'total_final2', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
+  totalFinal2?: number | null;
+  @Column('decimal', { name: 'total_final3', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
+  totalFinal3?: number | null;
+  @Column('decimal', { name: 'total_final4', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
+  totalFinal4?: number | null;
+  @Column('decimal', { name: 'total_final5', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
+  totalFinal5?: number | null;
+  @Column('decimal', { name: 'total_final6', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
+  totalFinal6?: number | null;
+  @Column('decimal', { name: 'total_final7', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
+  totalFinal7?: number | null;
 
   /* ---------- Ítems ---------- */
   @OneToMany(() => QuoteItem, (qi) => qi.quote, { cascade: true })
