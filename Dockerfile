@@ -1,20 +1,21 @@
-# Imagen base con Node 18 completo
+# Usa Node 18
 FROM node:18
 
-# Crear directorio de trabajo
+# Carpeta de trabajo
 WORKDIR /app
 
-# Copiar archivos de dependencias
+# Copia package.json y package-lock.json
 COPY package*.json ./
 
-# Instalar dependencias
+# Instala dependencias incluyendo Nest CLI
 RUN npm install --production
+RUN npm install -g @nestjs/cli
 
-# Copiar todo el proyecto
+# Copia todo el código
 COPY . .
 
-# Exponer puerto 3000
+# Expone puerto
 EXPOSE 3000
 
-# Comando de inicio
-CMD ["npm", "run", "start"]
+# Comando para iniciar
+CMD ["nest", "start"]
