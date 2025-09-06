@@ -8,6 +8,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { FileValidationPipe } from 'src/common/pipes/file-validation/file-validation.pipe';
 import { memoryStorage } from 'multer';
 import { Response } from 'express';
+import { Express } from 'express';
 
 @UseGuards(JwtAuthGuard)
 @Controller('products')

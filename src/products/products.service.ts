@@ -6,6 +6,7 @@ import { Product } from './entities/product.entity';
 import { Repository } from 'typeorm';
 import { Category } from 'src/categories/entities/category.entity';
 import { UsersService } from 'src/users/users.service';
+import { Express } from 'express';
 
 @Injectable()
 export class ProductsService {

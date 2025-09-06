@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
+import { Express } from 'express';
 
 export interface FileValidationOptions {
   required?: boolean;
