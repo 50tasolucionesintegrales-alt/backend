@@ -3,6 +3,9 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { HttpExceptionZodFilter } from './common/filters/http-exception-zod.filter';
 import { validationExceptionFactory } from './common/validation/validation-exception.factory';
+import * as crypto from 'crypto';
+
+(global as any).crypto = crypto;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
