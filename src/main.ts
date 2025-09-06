@@ -5,7 +5,9 @@ import { HttpExceptionZodFilter } from './common/filters/http-exception-zod.filt
 import { validationExceptionFactory } from './common/validation/validation-exception.factory';
 import * as crypto from 'crypto';
 
-(global as any).crypto = crypto;
+if (!(global as any).crypto) {
+  (global as any).crypto = crypto;
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
