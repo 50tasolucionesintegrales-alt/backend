@@ -13,6 +13,7 @@ import { ServicesModule } from './services/services.module';
 import { QuotesModule } from './quotes/quotes.module';
 import { OrdersModule } from './orders/orders.module';
 import { MetricsModule } from './metrics/metrics.module';
+import { PdfModule } from './pdf/pdf.module';
 
 @Module({
   imports: [
@@ -31,7 +32,8 @@ import { MetricsModule } from './metrics/metrics.module';
     ServicesModule,
     QuotesModule,
     OrdersModule,
-    MetricsModule
+    MetricsModule,
+    PdfModule
   ],
   controllers: [AppController],
   providers: [AppService],

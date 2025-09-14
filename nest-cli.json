@@ -6,9 +6,8 @@
     "deleteOutDir": true
   },
   "assets": [
-    {
-      "include": "src/assets/**/*",
-      "outDir": "dist/assets"
-    }
-  ]
+    { "include": "pdf/templates/**/*", "outDir": "dist/pdf/templates" },
+    { "include": "pdf/assets/**/*", "outDir": "dist/pdf/assets" }
+  ],
+  "watchAssets": true
 }

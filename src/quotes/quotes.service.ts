@@ -6,7 +6,7 @@ import { QuoteItem } from './entities/quote-item.entity';
 import { Product } from 'src/products/entities/product.entity';
 import { AddItemsDto } from './dto/add-items.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
-import { PdfService } from './pdf.service';
+import { PdfService } from 'src/pdf/pdf.service';
 import { Service } from 'src/services/entities/service.entity';
 import { Role } from 'src/common/enums/roles.enum';
 import { SendQuoteDto } from './dto/send-quote.dto';

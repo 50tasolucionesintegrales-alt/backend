@@ -8,8 +8,9 @@ import { AddItemsDto } from './dto/add-items.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
 import { IdValidationPipe } from 'src/common/pipes/id-validation/id-validation.pipe';
 import { CreateQuoteDto } from './dto/create-quote.dto';
-import { PdfService } from './pdf.service';
 import { Response } from 'express';
+import { PdfService } from 'src/pdf/pdf.service';
+import { GeneratePdfDto } from './dto/generate-pdf.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('quotes')
@@ -85,19 +86,25 @@ export class QuotesController {
   }
 
   /* Descargar UN PDF (empresa=1..7) */
-  @Get(':id/pdf')
+  @Post(':id/pdf')
   @Roles(Role.Admin, Role.Cotizador)
-  async downloadOne(
+  async buildOne(
     @Param('id', IdValidationPipe) id: string,
-    @Query('empresa') empresa: string,
+    @Body() dto: GeneratePdfDto,
     @Res() res: Response,
   ) {
-    const m = Math.max(1, Math.min(7, Number(empresa) || 1)) as 1 | 2 | 3 | 4 | 5 | 6 | 7;
     const quote = await this.quotes.loadForPdf(id);
-    const buffer = await this.pdf.generateOneBuffer(quote, m);
+    const buffer = await this.pdf.generateOneBuffer(quote, dto.empresa, {
+      destinatario: dto.destinatario,
+      descripcion: dto.descripcion,
+      fecha: dto.fecha,
+    });
 
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="quote_${id}_m${m}.pdf"`);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="quote_${id}_m${dto.empresa}.pdf"`,
+    );
     res.send(buffer);
   }
 
