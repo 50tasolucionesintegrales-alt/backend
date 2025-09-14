@@ -1,0 +1,259 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>{{titulo}}</title>
+    <style>
+        :root {
+            --brand: #1167b1;
+            --ink: #1b1b1b;
+            --muted: #666;
+            --line: #d9d9d9;
+        }
+
+        @page {
+            size: A4;
+            margin: 16mm 16mm 34mm 16mm;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            color: var(--ink);
+        }
+
+        /* Header derecho (folio + fecha) */
+        .top {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .folio {
+            font-size: 11px;
+            color: #7a7a7a;
+            font-weight: 600;
+        }
+
+        .fecha {
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        /* Intro (partidas / importe) */
+        .intro {
+            margin-top: 12px;
+            line-height: 1.5;
+        }
+
+        .bold {
+            font-weight: 700;
+        }
+
+        /* Tabla: ITEM / UNIDAD / CANTIDAD / DESCRIPCIÓN / UNITARIO / SUBTOTAL */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+
+        thead th {
+            background: var(--brand);
+            color: #fff;
+            padding: 7px 8px;
+            font-weight: 700;
+            font-size: 12px;
+            border: 1px solid var(--brand);
+        }
+
+        tbody td {
+            border: 1px solid var(--line);
+            padding: 6px 8px;
+            font-size: 12px;
+            background: #fff;
+            vertical-align: top;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        /* Totales a la derecha (tarjeta) */
+        .totals {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+
+        .totals table {
+            width: 68mm;
+            border-collapse: collapse;
+        }
+
+        .totals td {
+            padding: 6px 8px;
+            border-left: 1px solid var(--line);
+            border-right: 1px solid var(--line);
+        }
+
+        .totals tr:first-child td {
+            border-top: 1px solid var(--line);
+        }
+
+        .totals tr:last-child td {
+            border-bottom: 1px solid var(--line);
+        }
+
+        .totals .label {
+            width: 50%;
+            font-weight: 700;
+            background: var(--brand);
+            color: #fff;
+        }
+
+        .totals .value {
+            text-align: right;
+        }
+
+        /* Condiciones */
+        .cond-title {
+            font-weight: 800;
+            margin: 16px 0 6px;
+        }
+
+        .cond-list {
+            margin: 0;
+            padding-left: 18px;
+            color: #333;
+        }
+
+        /* Firma centrada */
+        .firma {
+            margin-top: 24mm;
+            text-align: center;
+        }
+
+        .firma img {
+            height: 90px;
+            display: block;
+            margin: 0 auto 6px;
+        }
+
+        .firma .name {
+            font-weight: 800;
+        }
+
+        /* Footer imagen (banner) */
+        footer {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 10;
+        }
+
+        .footer-img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header: folio fijo + fecha dinámica -->
+    <div class="top">
+        <div>
+            <div class="folio">AOR-16.05.25.TLAX01</div>
+            <div class="fecha">Fecha: {{fecha}}</div>
+        </div>
+    </div>
+
+    <!-- Destinatario + presente -->
+    <div class="bold" style="margin-top:10px;">{{destinatario}}</div>
+    <div class="bold">PRESENTE.</div>
+
+    <!-- Intro (número de partidas / importe total) -->
+    <div class="intro">
+        <div class="bold">No. de partidas cotizadas: {{items.length}}</div>
+        <div><span class="bold">Importe Total:</span> {{money totales.total}}</div>
+    </div>
+
+    <!-- Texto libre -->
+    <div class="intro">
+        {{{descripcion}}}
+    </div>
+
+    <!-- TABLA (orden de columnas como en el PDF) -->
+    <table>
+        <thead>
+            <tr>
+                <th class="center" style="width:16mm;">ITEM</th>
+                <th class="center" style="width:22mm;">UNIDAD</th>
+                <th class="center" style="width:22mm;">CANTIDAD</th>
+                <th>DESCRIPCIÓN</th>
+                <th class="right" style="width:30mm;">UNITARIO</th>
+                <th class="right" style="width:30mm;">SUBTOTAL</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each items}}
+            <tr>
+                <td class="center">{{inc @index}}</td>
+                <td class="center">{{this.unidad}}</td>
+                <td class="center">{{this.cantidad}}</td>
+                <td>{{this.nombre}}</td>
+                <td class="right">{{money this.unitario}}</td>
+                <td class="right">{{money this.parcial}}</td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+
+    <!-- TOTALES (derecha) -->
+    <div class="totals">
+        <table>
+            <tr>
+                <td class="label">SUBTOTAL</td>
+                <td class="value">{{money totales.subtotal}}</td>
+            </tr>
+            <tr>
+                <td class="label">IVA ({{ivaPct}}%)</td>
+                <td class="value">{{money totales.iva}}</td>
+            </tr>
+            <tr>
+                <td class="label">TOTAL</td>
+                <td class="value">{{money totales.total}}</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Condiciones fijas -->
+    <div class="cond-title">CONDICIONES DE LA PROPOSICIÓN:</div>
+    <ul class="cond-list">
+        <li>La cotización se encuentra en Moneda Nacional.</li>
+        <li>La vigencia de la presente cotización es de 20 días hábiles.</li>
+        <li>La entrega de los bienes será dentro de los 7 días hábiles</li>
+    </ul>
+
+    <!-- Firma centrada (como en el original) -->
+    <div class="firma">
+        <div>Atentamente</div>
+        <img src="assets/emp4-firma.png" alt="firma">
+        <div class="name">Adrián Orihuela Rodríguez</div>
+    </div>
+
+    <!-- Footer imagen -->
+    <footer>
+        <img class="footer-img" src="assets/emp4.png" alt="footer">
+    </footer>
+
+</body>
+
+</html>

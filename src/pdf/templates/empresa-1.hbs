@@ -1,0 +1,310 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>{{titulo}}</title>
+    <style>
+        :root {
+            --brand: #c51b1b;
+            /* rojo GOLTECH */
+            --ink: #111;
+            --line: #d9d9d9;
+            --thead: #c51b1b;
+        }
+
+        /* Letter + reserva para footer del membrete */
+        @page {
+            size: Letter;
+            margin: 18mm 20mm 46mm 18mm;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            color: var(--ink);
+        }
+
+        /* ===== Membrete de fondo (sin recortes) ===== */
+        .bg-page {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .bg-page img {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            height: 100%;
+            /* llena alto de la hoja */
+            width: auto;
+            /* conserva proporción */
+            display: block;
+        }
+
+        /* Espacio de cabecera para que nada toque el logo del membrete */
+        .header-space {
+            height: 28mm;
+        }
+
+        /* ajusta a tu PNG si hiciera falta */
+
+        /* Folio centrado bajo el logo */
+        .folio {
+            text-align: center;
+            font-weight: 600;
+            color: #444;
+            margin: 2mm 0 3mm;
+        }
+
+        /* Fecha debajo del logo (derecha) */
+        .fecha {
+            text-align: right;
+            color: #333;
+            margin-bottom: 8mm;
+        }
+
+        /* Destinatario + PRESENTE */
+        .dest {
+            font-weight: 700;
+            line-height: 1.45;
+        }
+
+        .presente {
+            font-weight: 800;
+            margin-top: 2px;
+        }
+
+        /* Intro */
+        .intro {
+            margin-top: 10px;
+            line-height: 1.55;
+            color: #222;
+        }
+
+        .label {
+            font-weight: 700;
+        }
+
+        /* Contenedor de tabla para posicionar las “bolitas” */
+        .table-wrap {
+            position: relative;
+            margin-top: 12px;
+        }
+
+        /* Tabla */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            background: var(--thead);
+            color: #fff;
+            font-weight: 700;
+            border: 1px solid var(--thead);
+            padding: 8px;
+            font-size: 12px;
+            text-align: left;
+        }
+
+        tbody td {
+            border: 1px solid var(--line);
+            padding: 6px 8px;
+            font-size: 12px;
+            background: #fff;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        /* Bolitas junto a la tabla (como en el original) */
+        .dots {
+            position: absolute;
+            right: -8px;
+            /* fuera del borde de la tabla */
+            top: 10px;
+            /* a la altura del encabezado */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #0e5066;
+        }
+
+        .dot:nth-child(2) {
+            background: var(--brand);
+        }
+
+        .dot:nth-child(3) {
+            background: #0e5066;
+        }
+
+        /* Totales a la derecha */
+        .totals {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+
+        .totals table {
+            width: 70mm;
+            border-collapse: collapse;
+        }
+
+        .totals td {
+            padding: 6px 8px;
+            border-left: 1px solid var(--line);
+            border-right: 1px solid var(--line);
+        }
+
+        .totals tr:first-child td {
+            border-top: 1px solid var(--line);
+        }
+
+        .totals tr:last-child td {
+            border-bottom: 1px solid var(--line);
+        }
+
+        .totals .label {
+            font-weight: 700;
+            background: #f6f6f6;
+        }
+
+        .totals .value {
+            text-align: right;
+        }
+
+        /* Condiciones */
+        .cond-title {
+            font-weight: 800;
+            margin: 14px 0 6px;
+        }
+
+        .cond-list {
+            margin: 0;
+            padding-left: 18px;
+            color: #333;
+        }
+
+        /* Firma centrada y más abajo (pegada al pie) */
+        .firma {
+            margin-top: 22mm;
+            text-align: center;
+        }
+
+        .firma img {
+            height: 95px;
+            display: block;
+            margin: 0 auto 6px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Fondo -->
+    <div class="bg-page"><img src="assets/emp1.png" alt="membrete"></div>
+
+    <!-- Dejo aire para el logo del membrete -->
+    <div class="header-space"></div>
+
+    <!-- Folio (debajo del logo) -->
+    <div class="folio">Folio-INFONAVIT-050225-01</div>
+
+    <!-- Fecha (debajo del logo, a la derecha) -->
+    <div class="fecha">Pachuca de Soto, Hidalgo; a {{fecha}}</div>
+
+    <!-- Destinatario -->
+    <div class="dest">{{destinatario}}</div>
+    <div class="presente">PRESENTE.</div>
+
+    <!-- Texto previo -->
+    <div class="intro">
+        <div><span class="label">Solicitud de cotización:</span> Servicios generales</div>
+        <div><span class="label">No. de conceptos:</span> {{items.length}}</div>
+        <div><span class="label">Importe Total:</span> {{money totales.total}}</div>
+        {{#if importeLetra}}<div><span class="label">Importe en letra:</span> {{importeLetra}}</div>{{/if}}
+    </div>
+
+    <!-- Tabla + bolitas -->
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th class="center" style="width:16mm;">Concepto</th>
+                    <th>Descripción</th>
+                    <th class="center" style="width:22mm;">Unidad</th>
+                    <th class="center" style="width:22mm;">Cantidad</th>
+                    <th class="right" style="width:30mm;">Unitario</th>
+                    <th class="right" style="width:30mm;">Parcial</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each items}}
+                <tr>
+                    <td class="center">{{inc @index}}</td>
+                    <td>{{this.nombre}}</td>
+                    <td class="center">{{this.unidad}}</td>
+                    <td class="center">{{this.cantidad}}</td>
+                    <td class="right">{{money this.unitario}}</td>
+                    <td class="right">{{money this.parcial}}</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+
+        <!-- Bolitas -->
+        <div class="dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+        </div>
+    </div>
+
+    <!-- Totales -->
+    <div class="totals">
+        <table>
+            <tr>
+                <td class="label">Subtotal</td>
+                <td class="value">{{money totales.subtotal}}</td>
+            </tr>
+            <tr>
+                <td class="label">IVA ({{ivaPct}}%)</td>
+                <td class="value">{{money totales.iva}}</td>
+            </tr>
+            <tr>
+                <td class="label">Monto Total</td>
+                <td class="value">{{money totales.total}}</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Condiciones -->
+    <div class="cond-title">Condiciones:</div>
+    <ul class="cond-list">
+        <li>La presente cotización tiene una vigencia de 30 días hábiles.</li>
+        <li>El costo se encuentra en moneda nacional.</li>
+        <li>El pago se realizará de contado vía depósito o transferencia bancaria.</li>
+    </ul>
+
+    <!-- Firma centrada (más abajo) -->
+    <div class="firma">
+        <img src="assets/emp1-firma.png" alt="firma">
+    </div>
+
+</body>
+
+</html>

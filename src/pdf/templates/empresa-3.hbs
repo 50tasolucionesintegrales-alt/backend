@@ -1,0 +1,296 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>{{titulo}}</title>
+    <style>
+        :root {
+            --brand: #e66443;
+            /* naranja/coral */
+            --ink: #111;
+            --line: #e5d0c8;
+            --thead: #fbeeea;
+        }
+
+        /* LETTER, márgenes más relajados */
+        @page {
+            size: Letter;
+            margin: 16mm 16mm 28mm 16mm;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            color: var(--ink);
+        }
+
+        /* ===== Membrete fondo (sin recortar) ===== */
+        .bg-page {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .bg-page img {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: auto;
+            display: block;
+        }
+
+        /* Contenedor centrado y ancho cómodo */
+        .content {
+            max-width: 180mm;
+            margin: 0 auto;
+        }
+
+        .header-space {
+            height: 30mm;
+        }
+
+        /* aire para el membrete superior */
+
+        /* Fecha */
+        .fecha {
+            text-align: right;
+            color: #333;
+            margin-bottom: 8mm;
+        }
+
+        /* Destinatario */
+        .dest {
+            font-weight: 700;
+            line-height: 1.45;
+        }
+
+        .presente {
+            font-weight: 800;
+            margin-top: 2px;
+        }
+
+        /* Descripción */
+        .desc {
+            margin-top: 10px;
+            color: #222;
+            line-height: 1.55;
+        }
+
+        /* Tabla centrada y con más aire */
+        .table-wrap {
+            margin-top: 12mm;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            background: var(--brand);
+            color: #fff;
+            font-weight: 700;
+            border: 1px solid var(--brand);
+            padding: 9px 10px;
+            font-size: 12px;
+            text-align: left;
+        }
+
+        tbody td {
+            border: 1px solid var(--line);
+            padding: 7px 9px;
+            font-size: 12px;
+            background: #fff;
+            vertical-align: top;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        /* Totales (solo 3 filas) a la derecha */
+        .totals {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 12px;
+        }
+
+        .totals table {
+            width: 82mm;
+            border-collapse: collapse;
+        }
+
+        .totals td {
+            padding: 7px 9px;
+            border-left: 1px solid var(--line);
+            border-right: 1px solid var(--line);
+        }
+
+        .totals tr:first-child td {
+            border-top: 1px solid var(--line);
+        }
+
+        .totals tr:last-child td {
+            border-bottom: 1px solid var(--line);
+        }
+
+        .totals .label {
+            font-weight: 700;
+            background: #faf6f4;
+        }
+
+        .totals .value {
+            text-align: right;
+        }
+
+        /* Empuje para que la firma y condiciones bajen hacia el pie */
+        .after-sumas-spacer {
+            height: 26mm;
+        }
+
+        /* ajusta 22–32mm a gusto */
+
+        /* Firma + Condiciones (dos columnas) */
+        .sig-conds {
+            display: flex;
+            gap: 28px;
+            align-items: flex-start;
+            page-break-inside: avoid;
+        }
+
+        .sig-col {
+            width: 40%;
+        }
+
+        .conds-col {
+            flex: 1;
+        }
+
+        .atte {
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .firma-img {
+            height: 110px;
+            display: block;
+            margin: 6px 0;
+        }
+
+        .name {
+            font-weight: 800;
+        }
+
+        .cond-title {
+            font-weight: 800;
+            margin: 0 0 6px;
+        }
+
+        .cond-list {
+            margin: 0;
+            padding-left: 18px;
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Fondo -->
+    <div class="bg-page"><img src="assets/emp3.png" alt="membrete"></div>
+
+    <div class="content">
+        <div class="header-space"></div>
+
+        <!-- Fecha -->
+        <div class="fecha">{{fecha}}</div>
+
+        <!-- Destinatario -->
+        <div class="dest">{{destinatario}}</div>
+        <div class="presente">PRESENTE</div>
+
+        <!-- Descripción -->
+        <div class="desc">{{{descripcion}}}</div>
+
+        <!-- Tabla -->
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="center" style="width:14mm;">NO.</th>
+                        <th class="center" style="width:28mm;">UNIDAD<br>DE<br>MEDIDA</th>
+                        <th>DESCRIPCIÓN</th>
+                        <th class="center" style="width:22mm;">CANTIDAD</th>
+                        <th class="right" style="width:28mm;">PRECIO<br>UNITARIO</th>
+                        <th class="right" style="width:30mm;">SUBTOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each items}}
+                    <tr>
+                        <td class="center">{{inc @index}}</td>
+                        <td class="center">{{this.unidad}}</td>
+                        <td>{{this.nombre}}</td>
+                        <td class="center">{{this.cantidad}}</td>
+                        <td class="right">{{money this.unitario}}</td>
+                        <td class="right">{{money this.parcial}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Totales (sin “monto en letra”) -->
+        <div class="totals">
+            <table>
+                <tr>
+                    <td class="label">SUBTOTAL</td>
+                    <td class="value">{{money totales.subtotal}}</td>
+                </tr>
+                <tr>
+                    <td class="label">IVA ({{ivaPct}}%)</td>
+                    <td class="value">{{money totales.iva}}</td>
+                </tr>
+                <tr>
+                    <td class="label">MONTO TOTAL</td>
+                    <td class="value">{{money totales.total}}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Empuje hacia el pie -->
+        <div class="after-sumas-spacer"></div>
+
+        <!-- Firma + Condiciones -->
+        <div class="sig-conds">
+            <div class="sig-col">
+                <div class="atte">ATENTAMENTE</div>
+                <img class="firma-img" src="assets/emp3-firma.png" alt="firma">
+                <div class="name">C. ALEJANDRA GISELLE HERNANDEZ ISLAS</div>
+            </div>
+            <div class="conds-col">
+                <div class="cond-title">CONDICIONES GENERALES:</div>
+                <ul class="cond-list">
+                    <li>El servicio inicia el día hábil siguiente a la firma de contrato, con plazo máximo de 60 días
+                        hábiles.</li>
+                    <li>La entrega se realizará en el lugar indicado por la D.G. de Recursos Materiales, máximo un día
+                        hábil posterior al fallo.</li>
+                    <li>Pago: 40% de anticipo dentro de 20 días de la notificación y firma; 60% a la entrega total del
+                        servicio.</li>
+                    <li>Vigencia de la cotización: 60 días naturales; precios sujetos a cambios sin previo aviso.</li>
+                    <li>Con base en los anexos proporcionados en la solicitud de cotización.</li>
+                </ul>
+            </div>
+        </div>
+
+    </div><!-- /content -->
+</body>
+
+</html>

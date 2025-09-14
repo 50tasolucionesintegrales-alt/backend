@@ -6,8 +6,9 @@ import { UsersModule } from 'src/users/users.module';
 import { Quote } from './entities/quote.entity';
 import { QuoteItem } from './entities/quote-item.entity';
 import { Product } from 'src/products/entities/product.entity';
-import { PdfService } from './pdf.service';
+import { PdfService } from 'src/pdf/pdf.service';
 import { Service } from 'src/services/entities/service.entity';
+import { HtmlPdfService } from 'src/pdf/html-pdf.service';
 
 @Module({
   imports: [
@@ -15,6 +16,6 @@ import { Service } from 'src/services/entities/service.entity';
     UsersModule,
   ],
   controllers: [QuotesController],
-  providers: [QuotesService, PdfService],
+  providers: [QuotesService, PdfService, HtmlPdfService],
 })
 export class QuotesModule { }
