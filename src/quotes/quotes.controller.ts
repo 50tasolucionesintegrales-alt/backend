@@ -57,6 +57,7 @@ export class QuotesController {
     @Param('id', IdValidationPipe) id: string,
     @Body() dto: AddItemsDto,
   ) {
+    console.log({ dto });
     return this.quotes.addItems(id, dto);
   }
 
