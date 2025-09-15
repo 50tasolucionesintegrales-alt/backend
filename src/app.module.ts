@@ -13,6 +13,7 @@ import { QuotesModule } from './quotes/quotes.module';
 import { OrdersModule } from './orders/orders.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { typeOrmConfig } from './config/typeorm.config';
+import { TemplatesModule } from './templates/templates.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { typeOrmConfig } from './config/typeorm.config';
     QuotesModule,
     OrdersModule,
     MetricsModule,
+    TemplatesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
