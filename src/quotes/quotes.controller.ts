@@ -119,4 +119,3 @@ export class QuotesController {
     return this.quotes.deleteQuote(id);
   }
 }
-
