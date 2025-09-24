@@ -1,309 +1,159 @@
 <!doctype html>
 <html>
-
 <head>
-    <meta charset="utf-8">
-    <title>{{titulo}}</title>
-    <style>
-        :root {
-            --lilac: #a79bd4;
-            --ink: #111;
-            --line: #cfc6ee;
-            /* borde lila claro */
-            --thead: #efecfb;
-            /* fondo encabezado tabla */
-        }
+  <meta charset="utf-8">
+  <title>{{titulo}}</title>
+  <style>
+    :root{
+      --ink:#111;
+      --line:#d9d9d9;
+      --thead:#f0ecfb;     /* encabezado clarito */
+    }
 
-        /* === LETTER + márgenes ajustados para el membrete === */
-        @page {
-            size: Letter;
-            margin: 16mm 26mm 50mm 16mm;
-        }
+    /* Letter sin márgenes del navegador; dejamos bordes dentro del propio layout */
+    @page { size: Letter; margin: 0 0 0; }
+    body  { font-family: Arial, Helvetica, sans-serif; font-size:15px; color:var(--ink); }
 
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 12px;
-            color: var(--ink);
-            margin: 0;
-            padding: 0;
-            position: relative;
-        }
+    /* ===== Membrete de fondo (líneas moradas + “Michelle” abajo der.) ===== */
+    .bg-page { position:fixed; inset:0; z-index:-1; pointer-events:none; }
+    .bg-page img{
+      position:absolute; top:0; left:0;
+      width:100%; height:100%;
+      object-fit:cover;       /* NO se recorta feo; llena hoja */
+      display:block;
+    }
 
-        /* ===== Membrete como fondo fijo ===== */
-        .bg-page {
-            position: fixed;
-            top: 0;
-            right: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            pointer-events: none;
-            overflow: hidden;
-        }
+    /* Reservo aire arriba para que no pise el título del membrete */
+    .header-space{ height: 15mm; }
 
-        .bg-page img {
-            height: 100%;
-            position: absolute;
-            right: 0;
-            top: 0;
-        }
+    /* Bloques dinámicos */
+    .fecha{ text-align:right; color:#333; margin: 2mm 83px 42mm 20px; }
+    .dest{ font-weight:700; line-height:1.45; margin: 60px 83px 0 20px; }
+    .presente{ font-weight:800; margin: 4px 83px 0 20px; }
+    .intro{ margin: 10px 83px 0 20px; line-height:1.55; color:#222; }
+    .label{ font-weight:700; }
 
-        /* Contenedor principal para el contenido */
-        .content {
-            position: relative;
-            z-index: 1;
-        }
+    /* Tabla */
+    .table-wrap{ position:relative; margin: 10px 83px 0 20px; }
+    table{ width:100%; border-collapse:collapse; }
+    thead th{
+      color:#2a2740; font-weight:700;
+      border:1px solid #aca4cb; padding:8px; font-size:12px; text-align:left;
+    }
+    tbody td{
+      border:1px solid #aca4cb; padding:6px 8px; font-size:12px; background:#fff; vertical-align:top;
+    }
+    .center{ text-align:center; } .right{ text-align:right; }
 
-        /* Encabezado */
-        .top {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 10px;
-        }
+    /* Totales */
+    .totals{ display:flex; justify-content:flex-end; margin: 10px 83px 0 20px; }
+    .totals table{ width:70mm; border-collapse:collapse; }
+    .totals td{ padding:6px 8px; border-left:1px solid #aca4cb; border-right:1px solid #aca4cb; }
+    .totals tr:first-child td{ border-top:1px solid #aca4cb; }
+    .totals tr:last-child  td{ border-bottom:1px solid #aca4cb; }
+    .totals .label{ font-weight:700; }
+    .totals .value{ text-align:right; }
 
-        .fecha {
-            color: #333;
-        }
-
-        /* Título centrado */
-        .title {
-            font-weight: 800;
-            text-align: center;
-            margin: 10px 0 8px;
-            font-size: 16px;
-        }
-
-        /* Destinatario */
-        .dest {
-            margin-top: 8px;
-            font-weight: 700;
-            line-height: 1.35;
-        }
-
-        .presente {
-            font-weight: 800;
-            margin-top: 2px;
-        }
-
-        /* Resumen opcional */
-        .resume {
-            margin-top: 8px;
-            color: #222;
-            line-height: 1.5;
-        }
-
-        .label {
-            font-weight: 700;
-        }
-
-        /* Descripción */
-        .desc {
-            margin-top: 10px;
-            color: #222;
-        }
-
-        /* ===== Firma (arriba de la tabla, alineada a la derecha) ===== */
-        .sig {
-            margin-top: 20px;
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        .sig-inner {
-            text-align: right;
-        }
-
-        .sig-inner .atte {
-            font-weight: 700;
-            margin-bottom: 2px;
-        }
-
-        .sig-inner img {
-            height: 110px;
-            display: block;
-            margin: 0 0 4px auto;
-        }
-
-        .sig-inner .name {
-            font-weight: 700;
-        }
-
-        /* Tabla */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 12px;
-        }
-
-        thead th {
-            background: var(--thead);
-            color: #2a2740;
-            border: 1px solid var(--line);
-            padding: 7px 9px;
-            font-size: 12px;
-            text-align: left;
-            font-weight: 700;
-        }
-
-        tbody td {
-            border: 1px solid var(--line);
-            padding: 6px 8px;
-            font-size: 12px;
-            background: #fff;
-            vertical-align: top;
-        }
-
-        .center {
-            text-align: center;
-        }
-
-        .right {
-            text-align: right;
-        }
-
-        /* Totales (derecha) */
-        .grand {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 15px;
-        }
-
-        .grand table {
-            width: 68mm;
-            border-collapse: collapse;
-        }
-
-        .grand td {
-            padding: 6px 8px;
-            border-left: 1px solid var(--line);
-            border-right: 1px solid var(--line);
-        }
-
-        .grand tr:first-child td {
-            border-top: 1px solid var(--line);
-        }
-
-        .grand tr:last-child td {
-            border-bottom: 1px solid var(--line);
-        }
-
-        .grand .label {
-            font-weight: 700;
-        }
-
-        .grand .value {
-            text-align: right;
-        }
-
-        /* Términos */
-        .terms-title {
-            font-weight: 800;
-            margin: 16px 0 6px;
-        }
-
-        .terms {
-            margin: 0;
-            padding-left: 18px;
-            color: #333;
-        }
-    </style>
+    /* Paginación: rompe después de cada página menos la última */
+    .page{ page-break-after: always; }
+    .page:last-child{ page-break-after: auto; }
+  </style>
 </head>
-
 <body>
-    <!-- Fondo / membrete -->
-    <div class="bg-page">
-        <img src="assets/emp6.png" alt="membrete">
-    </div>
 
-    <div class="content">
-        <!-- Fecha (arriba derecha) -->
-        <div class="top">
-            <div class="fecha">Zempoala, Hidalgo, a {{fecha}}</div>
-        </div>
+  <!-- Fondo -->
+  <div class="bg-page"><img src="assets/emp6.png" alt="membrete"></div>
 
-        <!-- Título -->
-        <div class="title">Solicitud de Cotización</div>
+  <!-- Aire para no pisar el título del membrete -->
+  <div class="header-space"></div>
 
-        <!-- Destinatario -->
-        <div class="dest">{{destinatario}}</div>
-        <div class="presente">Presente.</div>
+  <!-- Fecha (solo la fecha; el lugar está en el membrete) -->
+  <div class="fecha">Zempoala, Hidalgo, a {{fecha}}</div>
 
-        <!-- Resumen (si lo mandas) -->
-        <div class="resume">
-            {{#if requisicion}}
-            <div><span class="label">Requisición:</span> {{requisicion}}</div>
-            {{/if}}
-            <div><span class="label">Subtotal:</span> {{money totales.subtotal}}</div>
-            <div><span class="label">Total:</span> {{money totales.total}}</div>
-            {{#if totalEnLetra}}
-            <div><span class="label">Total en letra:</span> {{totalEnLetra}}</div>
-            {{/if}}
-        </div>
+  <!-- Destinatario y PRESENTE -->
+  <div class="dest">{{destinatario}}</div>
+  <div class="presente">Presente.</div>
 
-        <!-- Descripción -->
-        <div class="desc">{{{descripcion}}}</div>
+  <!-- Texto de cortesía antes de la tabla -->
+  <div class="intro">
+    {{{descripcion}}}
+  </div>
 
-        <!-- Firma arriba de la tabla -->
-        <div class="sig">
-            <div class="sig-inner">
-                <div class="atte">Atentamente</div>
-                <img src="assets/emp6-firma.png" alt="firma">
-                <div class="name">Michelle Rodríguez Tlaxcalteca</div>
-            </div>
-        </div>
-
-        <!-- TABLA -->
+  {{!-- ======== MODO PAGINADO (si el servicio ya manda itemsPages) ======== --}}
+  {{#if itemsPages}}
+    {{#each itemsPages}}
+      <div class="table-wrap page">
         <table>
-            <thead>
-                <tr>
-                    <th class="center" style="width:16mm;">No.</th>
-                    <th>Especificaciones</th>
-                    <th class="center" style="width:24mm;">Cantidad</th>
-                    <th class="right" style="width:30mm;">Precio unitario</th>
-                    <th class="right" style="width:30mm;">Subtotal</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{#each items}}
-                <tr>
-                    <td class="center">{{inc @index}}</td>
-                    <td>{{this.nombre}}</td>
-                    <td class="center">{{this.cantidad}}</td>
-                    <td class="right">{{money this.unitario}}</td>
-                    <td class="right">{{money this.parcial}}</td>
-                </tr>
-                {{/each}}
-            </tbody>
+          <thead>
+            <tr>
+              <th class="center" style="width:16mm;">No.</th>
+              <th>Especificaciones</th>
+              <th class="center" style="width:22mm;">Cantidad</th>
+              <th class="right"  style="width:30mm;">Precio unitario</th>
+              <th class="right"  style="width:30mm;">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each this}}
+            <tr>
+              <td class="center">{{inc @index}}</td>
+              <td>{{nombre}}</td>
+              <td class="center">{{cantidad}}</td>
+              <td class="right">{{money unitario}}</td>
+              <td class="right">{{money parcial}}</td>
+            </tr>
+            {{/each}}
+          </tbody>
         </table>
 
-        <!-- TOTALES -->
-        <div class="grand">
-            <table>
-                <tr>
-                    <td class="label">Subtotal</td>
-                    <td class="value">{{money totales.subtotal}}</td>
-                </tr>
-                <tr>
-                    <td class="label">IVA ({{ivaPct}}%)</td>
-                    <td class="value">{{money totales.iva}}</td>
-                </tr>
-                <tr>
-                    <td class="label">Total</td>
-                    <td class="value">{{money totales.total}}</td>
-                </tr>
-            </table>
+        {{!-- Totales solo en la ÚLTIMA página --}}
+        {{#if @last}}
+        <div class="totals">
+          <table>
+            <tr><td class="label">Subtotal</td><td class="value">{{money totales.subtotal}}</td></tr>
+            <tr><td class="label">IVA ({{ivaPct}}%)</td><td class="value">{{money totales.iva}}</td></tr>
+            <tr><td class="label">Total</td><td class="value">{{money totales.total}}</td></tr>
+          </table>
         </div>
+        {{/if}}
+      </div>
+    {{/each}}
 
-        <!-- Términos -->
-        <div class="terms-title">Términos:</div>
-        <ul class="terms">
-            <li>El importe total ya contiene el impuesto al valor agregado (IVA)</li>
-            <li>La cotización se presenta en moneda nacional</li>
-            <li>Las condiciones de pago serán: contado</li>
-            <li>La vigencia de la cotización es de 20 días hábiles</li>
-            <li>La entrega de los bienes se realizará a los 10 días naturales</li>
-        </ul>
+  {{!-- ======== MODO SIMPLE (sin paginar) ======== --}}
+  {{else}}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="center" style="width:16mm;">No.</th>
+            <th>Especificaciones</th>
+            <th class="center" style="width:22mm;">Cantidad</th>
+            <th class="right"  style="width:30mm;">Precio unitario</th>
+            <th class="right"  style="width:30mm;">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each items}}
+          <tr>
+            <td class="center">{{inc @index}}</td>
+            <td>{{this.nombre}}</td>
+            <td class="center">{{this.cantidad}}</td>
+            <td class="right">{{money this.unitario}}</td>
+            <td class="right">{{money this.parcial}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
     </div>
-</body>
 
+    <div class="totals">
+      <table>
+        <tr><td class="label">Subtotal</td><td class="value">{{money totales.subtotal}}</td></tr>
+        <tr><td class="label">IVA ({{ivaPct}}%)</td><td class="value">{{money totales.iva}}</td></tr>
+        <tr><td class="label">Total</td><td class="value">{{money totales.total}}</td></tr>
+      </table>
+    </div>
+  {{/if}}
+
+</body>
 </html>

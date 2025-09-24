@@ -1,274 +1,135 @@
 <!doctype html>
 <html>
-
 <head>
-    <meta charset="utf-8">
-    <title>{{titulo}}</title>
-    <style>
-        :root {
-            --navy: #213a57;
-            /* azul del encabezado/tabla de tu PDF */
-            --ink: #111;
-            --line: #d7dee6;
-            --thead: #213a57;
-        }
+  <meta charset="utf-8">
+  <title>{{titulo}}</title>
+  <style>
+    :root{ --brand:#213a57; --ink:#111; --line:#d9d9d9; --thead:#213a57; }
 
-        /* Letter + reserva para el pie del membrete (contacto) */
-        @page {
-            size: Letter;
-            margin: 18mm 20mm 40mm 18mm;
-        }
+    /* Usa las mismas medidas del formato 1 */
+    @page { size: Letter; margin: 0 7mm 0; }
+    body  { font-family: Arial, Helvetica, sans-serif; font-size:12px; color:var(--ink); }
 
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 12px;
-            color: var(--ink);
-        }
+    /* ===== Fondo / membrete ===== */
+    .bg-page { position:fixed; inset:0; z-index:-1; pointer-events:none; }
+    .bg-page img{
+      position:absolute; top:0; left:0;
+      width:100%; height:100%;
+      object-fit:cover;             /* para calcar el PNG completo */
+      display:block;
+    }
 
-        /* ===== Membrete de fondo (sin recortarse) ===== */
-        .bg-page {
-            position: fixed;
-            inset: 0;
-            z-index: -1;
-            pointer-events: none;
-        }
+    /* Resguarda el bloque superior del membrete (logo/folio) */
+    .header-space{ height:36mm; }   /* igual que el formato 1 */
 
-        .bg-page img {
-            position: absolute;
-            left: 0;
-            top: 0;
-            /* este membrete va “anclado” arriba-izq */
-            height: 100%;
-            width: auto;
-            /* NO recorta: ajusta por altura */
-            display: block;
-        }
+    /* Solo dinámico */
+    .fecha{ text-align:right; color:#333; margin:10px 5px 20px; }
+    .dest{ font-weight:700; line-height:1.45; margin:12px 5px 0; }
+    .presente{ font-weight:800; margin:10px 5px 0; }
+    .intro{ margin:10px 5px 0; line-height:1.55; color:#222; }
+    .label{ font-weight:700; }
 
-        /* Dejo un colchón para el logo/titular del membrete */
-        .header-space {
-            height: 30mm;
-        }
+    /* Contenedor de tabla */
+    .table-wrap{ position:relative; margin:12px 5px 0; }
 
-        /* ajusta 28–34mm según tu PNG */
+    /* ===== Paginación estable ===== */
+    table { width:100%; border-collapse:collapse; page-break-inside:auto; }
+    thead { display: table-header-group; }      /* repite header al saltar */
+    tr     { page-break-inside: avoid; break-inside: avoid; }
+    td, th { page-break-inside: avoid; break-inside: avoid; }
+    .keep  { page-break-inside: avoid; break-inside: avoid; }
+    .pb-before{ page-break-before: always; break-before: page; }
 
-        /* Folio (arriba-dcha, bajo el logo) */
-        .folio {
-            text-align: right;
-            color: #6b7682;
-            font-weight: 600;
-            margin: 2mm 0 2mm;
-        }
+    thead th{
+      background:var(--thead); color:#fff; font-weight:700;
+      border:1px solid var(--thead); padding:8px; font-size:12px; text-align:left;
+    }
+    tbody td{ border:1px solid var(--line); padding:6px 8px; font-size:12px; background:#fff; }
+    .center{ text-align:center; } .right{ text-align:right; }
 
-        /* Fecha (debajo del folio, a la derecha) */
-        .fecha {
-            text-align: right;
-            color: #333;
-            margin-bottom: 8mm;
-        }
-
-        /* Destinatario + PRESENTE */
-        .dest {
-            font-weight: 700;
-            line-height: 1.45;
-        }
-
-        .presente {
-            font-weight: 800;
-            margin-top: 2px;
-        }
-
-        /* Texto/descripcion antes de la tabla */
-        .desc {
-            margin-top: 10px;
-            color: #222;
-            line-height: 1.55;
-        }
-
-        /* Contenedor de la tabla para posicionar totales al costado si se requiere */
-        .table-wrap {
-            margin-top: 12px;
-            position: relative;
-        }
-
-        /* Tabla principal */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        thead th {
-            background: var(--thead);
-            color: #fff;
-            font-weight: 700;
-            border: 1px solid var(--thead);
-            padding: 8px;
-            font-size: 12px;
-            text-align: left;
-        }
-
-        tbody td {
-            border: 1px solid var(--line);
-            padding: 6px 8px;
-            font-size: 12px;
-            background: #fff;
-        }
-
-        .center {
-            text-align: center;
-        }
-
-        .right {
-            text-align: right;
-        }
-
-        /* Totales a la derecha (bloque compacto de 3 filas) */
-        .totals {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 10px;
-        }
-
-        .totals table {
-            width: 70mm;
-            border-collapse: collapse;
-        }
-
-        .totals td {
-            padding: 6px 8px;
-            border-left: 1px solid var(--line);
-            border-right: 1px solid var(--line);
-        }
-
-        .totals tr:first-child td {
-            border-top: 1px solid var(--line);
-        }
-
-        .totals tr:last-child td {
-            border-bottom: 1px solid var(--line);
-        }
-
-        .totals .label {
-            font-weight: 700;
-            background: #eef2f6;
-        }
-
-        .totals .value {
-            text-align: right;
-        }
-
-        /* Importe en letra */
-        .enletra {
-            margin-top: 12px;
-        }
-
-        /* Condiciones */
-        .cond-title {
-            font-weight: 800;
-            margin: 16px 0 6px;
-        }
-
-        .cond-list {
-            margin: 0;
-            padding-left: 18px;
-            color: #333;
-        }
-
-        /* Firma centrada, más pegada al pie del membrete */
-        .firma {
-            margin-top: 18mm;
-            text-align: center;
-        }
-
-        .firma img {
-            height: 95px;
-            display: block;
-            margin: 0 auto;
-        }
-    </style>
+    /* Totales a la derecha */
+    .totals{ display:flex; justify-content:flex-end; margin:10px 15px 0; }
+    .totals table{ width:70mm; border-collapse:collapse; }
+    .totals td{ padding:6px 8px; border-left:1px solid var(--line); border-right:1px solid var(--line); }
+    .totals tr:first-child td{ border-top:1px solid var(--line); }
+    .totals tr:last-child  td{ border-bottom:1px solid var(--line); }
+    .totals .label{ font-weight:700; background:#f6f6f6; }
+    .totals .value{ text-align:right; }
+  </style>
 </head>
-
 <body>
 
-    <!-- Fondo / membrete -->
-    <div class="bg-page"><img src="assets/emp2.png" alt="membrete"></div>
+  <!-- Fondo -->
+  <div class="bg-page"><img src="assets/emp2.png" alt="membrete"></div>
 
-    <!-- Aire para el titular del membrete -->
-    <div class="header-space"></div>
+  <!-- Aire para el encabezado del membrete -->
+  <div class="header-space"></div>
 
-    <!-- Folio y fecha (ambos van debajo del logo, como en el original) -->
-    <div class="folio">COTAB-01-180325-GEH</div>
-    <div class="fecha">Pachuca de Soto, Hidalgo a {{fecha}}</div>
+  <!-- Solo la fecha (el lugar está en el diseño) -->
+  <div class="fecha">Pachuca de Soto, Hidalgo a {{fecha}}</div>
 
-    <!-- Destinatario -->
-    <div class="dest">{{destinatario}}</div>
-    <div class="presente">Presente.</div>
+  <!-- A quién va dirigido -->
+  <div class="dest">{{destinatario}}</div>
+  <div class="presente">PRESENTE.</div>
 
-    <!-- Descripción dinámica -->
-    <div class="desc">{{{descripcion}}}</div>
+  <!-- Descripción (tu párrafo previo) -->
+  <div class="intro">{{{descripcion}}}</div>
 
-    <!-- Tabla -->
-    <div class="table-wrap">
-        <table>
-            <thead>
-                <tr>
-                    <th class="center" style="width:18mm;">Número</th>
+  <!-- ===== TABLA con salto al ítem #11 ===== -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="center" style="width:16mm;">Número</th>
+          <th>Descripción</th>
+          <th class="center" style="width:22mm;">Cantidad</th>
+          <th class="center" style="width:22mm;">Unidad</th>
+          <th class="right"  style="width:30mm;">Precio Unitario</th>
+          <th class="right"  style="width:30mm;">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each items}}
+          {{!-- Corta justo antes del 11º (index 10) y repite encabezado en la nueva página --}}
+          {{#if (eq @index 10)}}
+            </tbody></table></div>
+            <div class="pb-before"></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th class="center" style="width:16mm;">Número</th>
                     <th>Descripción</th>
-                    <th class="right" style="width:24mm;">Cantidad</th>
+                    <th class="center" style="width:22mm;">Cantidad</th>
                     <th class="center" style="width:22mm;">Unidad</th>
-                    <th class="right" style="width:28mm;">Precio<br>Unitario</th>
-                    <th class="right" style="width:30mm;">Subtotal</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{#each items}}
-                <tr>
-                    <td class="center">{{inc @index}}</td>
-                    <td>{{this.nombre}}</td>
-                    <td class="right">{{this.cantidad}}</td>
-                    <td class="center">{{this.unidad}}</td>
-                    <td class="right">{{money this.unitario}}</td>
-                    <td class="right">{{money this.parcial}}</td>
-                </tr>
-                {{/each}}
-            </tbody>
-        </table>
-    </div>
+                    <th class="right"  style="width:30mm;">Precio Unitario</th>
+                    <th class="right"  style="width:30mm;">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+          {{/if}}
 
-    <!-- Totales -->
-    <div class="totals">
-        <table>
-            <tr>
-                <td class="label">Subtotal</td>
-                <td class="value">{{money totales.subtotal}}</td>
-            </tr>
-            <tr>
-                <td class="label">IVA ({{ivaPct}}%)</td>
-                <td class="value">{{money totales.iva}}</td>
-            </tr>
-            <tr>
-                <td class="label">Total</td>
-                <td class="value">{{money totales.total}}</td>
-            </tr>
-        </table>
-    </div>
+          <tr>
+            <td class="center">{{inc @index}}</td>
+            <td>{{this.nombre}}</td>
+            <td class="center">{{this.cantidad}}</td>
+            <td class="center">{{this.unidad}}</td>
+            <td class="right">{{money this.unitario}}</td>
+            <td class="right">{{money this.parcial}}</td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
 
-    <!-- Importe en letra (opcional) -->
-    {{#if totalEnLetra}}
-    <div class="enletra"><b>Importe total cotizado con letra:</b> {{totalEnLetra}}</div>
-    {{/if}}
-
-    <!-- Condiciones -->
-    <div class="cond-title">Condiciones generales:</div>
-    <ul class="cond-list">
-        <li>La cotización tiene una vigencia de 30 días hábiles</li>
-        <li>La cotización se presenta en moneda nacional</li>
-    </ul>
-
-    <!-- Firma centrada -->
-    <div class="firma">
-        <img src="assets/emp2-firma.png" alt="firma">
-    </div>
+  <!-- Totales (bloque indivisible) -->
+  <div class="totals keep">
+    <table>
+      <tr><td class="label">Subtotal</td><td class="value">{{money totales.subtotal}}</td></tr>
+      <tr><td class="label">IVA ({{ivaPct}}%)</td><td class="value">{{money totales.iva}}</td></tr>
+      <tr><td class="label">Total</td><td class="value">{{money totales.total}}</td></tr>
+    </table>
+  </div>
 
 </body>
-
 </html>

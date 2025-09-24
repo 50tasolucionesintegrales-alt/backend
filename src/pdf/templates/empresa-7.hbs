@@ -1,306 +1,185 @@
 <!doctype html>
 <html>
-
 <head>
-    <meta charset="utf-8">
-    <title>{{titulo}}</title>
-    <style>
-        :root {
-            --brand: #4c1d95;
-            /* morado CHALOR */
-            --ink: #111;
-            --line: #d8d8e5;
-            --thead: #4c1d95;
-        }
+  <meta charset="utf-8">
+  <title>{{titulo}}</title>
+  <style>
+    :root{
+      --ink:#111;
+      --line:#c9ced8;     /* gris de rejilla */
+      --thead:#5b3ca5;    /* morado CHALOR */
+      --theadText:#ffffff;
+      --muted:#333;
+    }
 
-        /* LETTER + dejo margen inferior para el pie del membrete */
-        @page {
-            size: Letter;
-            margin: 16mm 18mm 40mm 18mm;
-        }
+    /* Letter, con márgenes igual que el formato 1 para consistencia */
+    @page { size: Letter; margin: 0 0 0; }
+    body  { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: var(--ink); }
 
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 12px;
-            color: var(--ink);
-        }
+    /* ===== Membrete (fondo) ===== */
+    .bg-page{ position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+    .bg-page img{
+      position: absolute; top:0; left:0; width:100%; height:100%;
+      object-fit: cover; display:block;
+    }
 
-        /* ===== Membrete de fondo (sin recortes) ===== */
-        .bg-page {
-            position: fixed;
-            inset: 0;
-            z-index: -1;
-            pointer-events: none;
-        }
+    /* Reservas para que el contenido no pise el logo y la caja inferior del membrete */
+    .header-space { height: 38mm; }     /* arriba (logo + títulos) */
+    .bottom-space { height: 64mm; }     /* abajo (términos + tarjeta firma) */
 
-        .bg-page img {
-            position: absolute;
-            right: 0;
-            bottom: 0;
-            height: 100%;
-            width: auto;
-            display: block;
-        }
+    /* Encabezado dinámico (fecha y destinatario) */
+    .fecha { margin: 0 13mm 6mm; color:#333; }
+    .dest  { margin: 0 13mm 0; font-weight: 700; line-height: 1.45; text-align: end; }
 
-        /* Contenido centrado */
-        .content {
-            max-width: 182mm;
-            margin: 0 auto;
-        }
+    .intro  { margin: 8mm 13mm 0; color:#222; line-height: 1.55; }
+    .label  { font-weight: 700; }
 
-        .header-space {
-            height: 30mm;
-        }
+    /* ===== TABLA (diseño estilo imagen) ===== */
+    .table-wrap{ position: relative; margin: 8mm 5mm 0; }
 
-        /* Fecha */
-        .fecha {
-            color: #333;
-            margin-bottom: 6mm;
-        }
+    table{
+      width:100%;
+      border-collapse: collapse;         /* rejilla continua como la muestra */
+      table-layout: fixed;
+      background:#fff;
+      border:0.5px solid #000;      /* marco exterior como en la imagen */
+    }
 
-        /* Destinatario + PRESENTE */
-        .dest {
-            font-weight: 700;
-            line-height: 1.45;
-        }
+    /* Encabezados morados */
+    thead th{
+      background: var(--thead);
+      color: v#fff;
+      border:0.5px solid #000;
+      color: black;
+      font-weight: 700;
+      padding: 7px 8px;
+      font-size: 12px;
+      line-height: 1.2;
+      text-align: left;
+      vertical-align: middle;
+    }
 
-        .presente {
-            font-weight: 800;
-            margin-top: 2px;
-        }
+    /* Celdas del cuerpo con rejilla gris */
+    tbody td{
+      padding: 6px 8px;
+      border:0.5px solid #000;
+      font-size: 12px;
+      line-height: 1.35;
+      background: #ffffff;
+      vertical-align: top;
+    }
 
-        /* Descripción */
-        .desc {
-            margin-top: 10px;
-            color: #222;
-            line-height: 1.55;
-        }
+    /* Alternado sutil (opcional) */
+    tbody tr:nth-child(odd) td{ background:#fbfcfe; }
 
-        /* ===== Tabla ===== */
-        .table-wrap {
-            margin-top: 10mm;
-            position: relative;
-        }
+    /* Alineaciones */
+    .center{ text-align: center; }
+    .right { text-align: right;  }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+    /* Anchos (ajustados al quitar Marca) */
+    .col-num   { width: 12mm; }
+    .col-prod  { width: auto; }
+    .col-cant  { width: 22mm; }
+    .col-unid  { width: 22mm; }
+    .col-unit  { width: 30mm; }
+    .col-sub   { width: 30mm; }
 
-        thead th {
-            background: var(--thead);
-            color: #fff;
-            font-weight: 700;
-            border: 1px solid var(--thead);
-            padding: 8px;
-            font-size: 12px;
-            text-align: left;
-        }
+    /* Fila “divisoria” que fuerza salto de página tras el ítem 10 */
+    .page-break{ height:0; padding:0; border:0; page-break-after: always; }
 
-        tbody td {
-            border: 1px solid var(--line);
-            padding: 6px 8px;
-            font-size: 12px;
-            background: #fff;
-            vertical-align: top;
-        }
+    /* Totales (bloque derecho con líneas) */
+    .totals-wrap{ margin: 8mm 5mm 0; }
+    .hr-thin{ border: 0; border-top: 1px solid var(--line); margin: 4mm 0 2mm; }
+    .totals{
+      margin-left: auto; width: 72mm; border-collapse: collapse;
+    }
+    .totals td{
+      padding: 6px 8px;
+      border-left: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      background: #fff;
+      font-size: 12px;
+    }
+    .totals tr:first-child td{ border-top: 1px solid var(--line); }
+    .totals tr:last-child  td{ border-bottom: 1px solid var(--line); }
+    .totals .label{ font-weight: 700; }
+    .totals .value{ text-align: right; }
 
-        .center {
-            text-align: center;
-        }
+    /* “Monto total en letra” centrado */
+    .en-letra{ margin: 6mm 18mm 0 18mm; text-align: center; font-weight: 700; }
 
-        .right {
-            text-align: right;
-        }
-
-        /* Anchos similares al PDF */
-        .col-idx {
-            width: 12mm;
-        }
-
-        .col-marca {
-            width: 24mm;
-        }
-
-        .col-cant {
-            width: 22mm;
-        }
-
-        .col-uni {
-            width: 20mm;
-        }
-
-        .col-unit {
-            width: 28mm;
-        }
-
-        .col-subt {
-            width: 30mm;
-        }
-
-        /* ===== Totales a la derecha ===== */
-        .totals {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 10px;
-        }
-
-        .totals table {
-            width: 72mm;
-            border-collapse: collapse;
-        }
-
-        .totals td {
-            padding: 6px 8px;
-            border-left: 1px solid var(--line);
-            border-right: 1px solid var(--line);
-        }
-
-        .totals tr:first-child td {
-            border-top: 1px solid var(--line);
-        }
-
-        .totals tr:last-child td {
-            border-bottom: 1px solid var(--line);
-        }
-
-        .totals .label {
-            font-weight: 700;
-            background: #f7f5fb;
-        }
-
-        .totals .value {
-            text-align: right;
-        }
-
-        /* ===== Términos + Firma (dos columnas) ===== */
-        .tc-row {
-            display: grid;
-            grid-template-columns: 1fr 34%;
-            /* <- antes 42% */
-            gap: 14px;
-            align-items: start;
-            margin-top: 12px;
-            page-break-inside: avoid;
-        }
-
-        .tc-box,
-        .firma-box {
-            border: 1px solid #bfb9d9;
-            padding: 10px;
-            background: #fff;
-        }
-
-        .tc-title {
-            font-weight: 800;
-            margin: 0 0 6px;
-        }
-
-        .tc-list {
-            margin: 0;
-            padding-left: 18px;
-            color: #333;
-        }
-
-        .firma-box {
-            text-align: center;
-        }
-
-        .firma-img {
-            width: 70mm;
-            /* <- tamaño controlado */
-            max-width: 100%;
-            height: auto;
-            display: block;
-            margin: 0 auto;
-        }
-    </style>
+    /* Pie */
+    .spacer{ height: 6mm; }
+  </style>
 </head>
-
 <body>
 
-    <!-- Fondo -->
-    <div class="bg-page"><img src="assets/emp7.png" alt="membrete"></div>
+  <!-- Fondo con membrete -->
+  <div class="bg-page"><img src="assets/emp7.png" alt="membrete"></div>
 
-    <div class="content">
-        <div class="header-space"></div>
+  <!-- Reservas -->
+  <div class="header-space"></div>
 
-        <!-- Fecha -->
-        <div class="fecha">{{fecha}}</div>
+  <!-- Destinatario -->
+  <div class="dest">{{destinatario}}</div>
 
-        <!-- Destinatario -->
-        <div class="dest">{{destinatario}}</div>
-        <div class="presente">PRESENTE.</div>
+  <!-- Fecha -->
+  <div class="fecha">{{fecha}}</div>
 
-        <!-- Descripción -->
-        <div class="desc">{{{descripcion}}}</div>
+  <!-- Párrafo / descripción -->
+  <div class="intro">Cotización: {{{titulo}}}</div>
+  <div class="intro">{{{descripcion}}}</div>
 
-        <!-- Tabla -->
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th class="center col-idx">#</th>
-                        <th>Producto</th>
-                        <th class="center col-marca">Marca</th>
-                        <th class="center col-cant">Cantidad</th>
-                        <th class="center col-uni">Unidad</th>
-                        <th class="right  col-unit">Precio Unitario</th>
-                        <th class="right  col-subt">Subtotal</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{#each items}}
-                    <tr>
-                        <td class="center">{{inc @index}}</td>
-                        <td>{{this.nombre}}</td>
-                        <td class="center">{{this.marca}}</td>
-                        <td class="center">{{this.cantidad}}</td>
-                        <td class="center">{{this.unidad}}</td>
-                        <td class="right">{{money this.unitario}}</td>
-                        <td class="right">{{money this.parcial}}</td>
-                    </tr>
-                    {{/each}}
-                </tbody>
-            </table>
-        </div>
+  <!-- Tabla (sin columna Marca) -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="center col-num">#</th>
+          <th class="col-prod">Producto</th>
+          <th class="center col-cant">Cantidad</th>
+          <th class="center col-unid">Unidad</th>
+          <th class="right  col-unit">Precio Unitario</th>
+          <th class="right  col-sub">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each items}}
+          <tr>
+            <td class="center col-num">{{inc @index}}</td>
+            <td class="col-prod">{{this.nombre}}</td>
+            <td class="center col-cant">{{this.cantidad}}</td>
+            <td class="center col-unid">{{this.unidad}}</td>
+            <td class="right  col-unit">{{money this.unitario}}</td>
+            <td class="right  col-sub">{{money this.parcial}}</td>
+          </tr>
 
-        <!-- Totales -->
-        <div class="totals">
-            <table>
-                <tr>
-                    <td class="label">Subtotal</td>
-                    <td class="value">{{money totales.subtotal}}</td>
-                </tr>
-                <tr>
-                    <td class="label">I.V.A. ({{ivaPct}}%)</td>
-                    <td class="value">{{money totales.iva}}</td>
-                </tr>
-                <tr>
-                    <td class="label">Importe Total</td>
-                    <td class="value">{{money totales.total}}</td>
-                </tr>
-            </table>
-        </div>
+          {{!-- Salto de página tras el ítem 10 (índice 9) --}}
+          {{#if (eq @index 9)}}
+            <tr class="page-break"><td colspan="6"></td></tr>
+          {{/if}}
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
 
-        <!-- Términos & Firma (dos columnas) -->
-        <div class="tc-row">
-            <div class="tc-box">
-                <div class="tc-title">Términos y Condiciones</div>
-                <ul class="tc-list">
-                    <li>La vigencia de la cotización es de 90 días naturales</li>
-                    <li>Montos en moneda nacional</li>
-                    <li>El pago debe ser realizado mediante transferencia</li>
-                    <li>La entrega de los bienes se realizará a los 05 días hábiles</li>
-                </ul>
-            </div>
-            <div class="firma-box">
-                <img class="firma-img" src="assets/emp7-firma.png" alt="firma y sello">
-            </div>
-        </div>
+  <!-- Totales -->
+  <div class="totals-wrap">
+    <hr class="hr-thin">
+    <table class="totals">
+      <tr><td class="label">Subtotal</td>     <td class="value">{{money totales.subtotal}}</td></tr>
+      <tr><td class="label">I.V.A.</td>        <td class="value">{{money totales.iva}}</td></tr>
+      <tr><td class="label">Importe Total</td> <td class="value">{{money totales.total}}</td></tr>
+    </table>
+  </div>
 
-    </div><!-- /content -->
+  {{#if totalEnLetra}}
+    <div class="en-letra">(Monto Total en letra: {{totalEnLetra}})</div>
+  {{/if}}
+
+  <!-- Aire para no invadir el bloque de términos + tarjeta/firma del PNG -->
+  <div class="bottom-space"></div>
+  <div class="spacer"></div>
 
 </body>
-
 </html>

@@ -1,258 +1,100 @@
 <!doctype html>
 <html>
-
 <head>
-    <meta charset="utf-8">
-    <title>{{titulo}}</title>
-    <style>
-        :root {
-            --gold: #b79b66;
-            --ink: #111;
-            --line: #d9d9d9;
-            --thead: #f3f3f3;
-        }
+  <meta charset="utf-8">
+  <title>{{titulo}}</title>
+  <style>
+    :root{ --brand:#b79b66; --ink:#111; --line:#d9d9d9; --thead:#f3f3f3; }
 
-        @page {
-            size: A4;
-            margin: 16mm 18mm 42mm 18mm;
-        }
+    /* Carta; mismo marco que emp-1 */
+    @page { size: Letter; margin: 0 0 0; }
+    body  { font-family: Arial, Helvetica, sans-serif; font-size:12px; color:var(--ink); }
 
-        /* 👈 margen inferior amplio para footer */
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 12px;
-            color: var(--ink);
-        }
+    /* Fondo con el membrete completo */
+    .bg-page{ position:fixed; inset:0; z-index:-1; pointer-events:none; }
+    .bg-page img{
+      position:absolute; top:0; left:0;
+      width:100%; height:100%; object-fit:cover; display:block;
+    }
 
-        /* Header */
-        .header-img {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
+    .header-space{ height:36mm; }
 
-        /* Fecha */
-        .fecha {
-            text-align: right;
-            color: #333;
-            margin-top: 10px;
-        }
+    .fecha{ text-align:right; color:#333; margin:10px 40px 20px; }
+    .dest{ font-weight:700; line-height:1.45; margin:12px 40px 0; }
+    .presente{ font-weight:800; margin:10px 40px 0; }
+    .intro{ margin:10px 40px 0; line-height:1.55; color:#222; }
+    .label{ font-weight:700; }
 
-        /* Destinatario */
-        .dest {
-            margin-top: 14px;
-            font-weight: 700;
-        }
+    .table-wrap{ position:relative; margin:12px 40px 0; }
+    table{ width:100%; border-collapse:collapse; }
+    thead th{
+      color:#222; font-weight:700;
+      border:1px solid #a28344 ; padding:8px; font-size:12px; text-align:left;
+    }
+    tbody td{
+      border:1px solid #a28344; padding:6px 8px; font-size:12px;
+    }
+    .center{ text-align:center; } .right{ text-align:right; }
 
-        .presente {
-            font-weight: 800;
-            margin-top: 2px;
-        }
+    /* Paginación: salto cada 10 filas (sin helpers) */
+    tbody tr:nth-child(10n):not(:last-child){ page-break-after: always; }
 
-        /* Descripción */
-        .desc {
-            margin-top: 12px;
-            line-height: 1.55;
-            color: #202020;
-        }
-
-        /* Tabla */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 12px;
-        }
-
-        thead th {
-            background: var(--thead);
-            color: #222;
-            font-weight: 700;
-            border: 1px solid var(--line);
-            padding: 7px 9px;
-            font-size: 12px;
-            text-align: left;
-        }
-
-        tbody td {
-            border: 1px solid var(--line);
-            padding: 6px 8px;
-            font-size: 12px;
-            background: #fff;
-        }
-
-        .center {
-            text-align: center;
-        }
-
-        .right {
-            text-align: right;
-        }
-
-        /* Totales */
-        .totals {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 8px;
-        }
-
-        .totals table {
-            width: 66mm;
-            border-collapse: collapse;
-        }
-
-        .totals td {
-            padding: 6px 8px;
-            border-left: 1px solid var(--line);
-            border-right: 1px solid var(--line);
-        }
-
-        .totals tr:first-child td {
-            border-top: 1px solid var(--line);
-        }
-
-        .totals tr:last-child td {
-            border-bottom: 1px solid var(--line);
-        }
-
-        .totals .label {
-            font-weight: 700;
-        }
-
-        .totals .value {
-            text-align: right;
-        }
-
-        /* Firma + Condiciones */
-        .sig-conds {
-            display: flex;
-            gap: 24px;
-            align-items: flex-start;
-            margin-top: 18px;
-        }
-
-        .sig-col {
-            width: 42%;
-        }
-
-        .conds-col {
-            flex: 1;
-        }
-
-        .firma img {
-            height: 96px;
-            display: block;
-        }
-
-        .cond-title {
-            font-weight: 800;
-            margin: 0 0 6px;
-        }
-
-        .cond-list {
-            margin: 0;
-            padding-left: 18px;
-            color: #333;
-        }
-
-        /* Footer contacto (imagen completa) */
-        footer {
-            position: fixed;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            z-index: 10;
-        }
-
-        .footer-img {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-    </style>
+    .totals{ display:flex; justify-content:flex-end; margin:10px 40px 0; }
+    .totals table{ width:70mm; border-collapse:collapse; }
+    .totals td{ padding:6px 8px; border-left:1px solid #a28344; border-right:1px solid #a28344; }
+    .totals tr:first-child td{ border-top:1px solid #a28344; }
+    .totals tr:last-child  td{ border-bottom:1px solid #a28344; }
+    .totals .label{ font-weight:700; background:#f6f6f6; }
+    .totals .value{ text-align:right; }
+  </style>
 </head>
-
 <body>
 
-    <!-- HEADER -->
-    <img class="header-img" src="assets/emp5.png" alt="header">
+  <div class="bg-page"><img src="assets/emp5.png" alt="membrete"></div>
 
-    <!-- FECHA -->
-    <div class="fecha">Mineral de la Reforma, Hidalgo, a {{fecha}}</div>
+  <div class="header-space"></div>
 
-    <!-- DESTINATARIO -->
-    <div class="dest">{{destinatario}}</div>
-    <div class="presente">PRESENTE.</div>
+  <div class="fecha">Mineral de la Reforma, Hidalgo, a {{fecha}}</div>
 
-    <!-- DESCRIPCIÓN -->
-    <div class="desc">{{{descripcion}}}</div>
+  <div class="dest">{{destinatario}}</div>
+  <div class="presente">PRESENTE.</div>
 
-    <!-- TABLA DINÁMICA -->
+  <div class="intro">{{{descripcion}}}</div>
+
+  <div class="table-wrap">
     <table>
-        <thead>
-            <tr>
-                <th class="center" style="width:16mm;">No.</th>
-                <th>Descripción</th>
-                <th class="right" style="width:24mm;">Cantidad</th>
-                <th class="center" style="width:24mm;">Medida</th>
-                <th class="right" style="width:30mm;">Precio Unitario</th>
-                <th class="right" style="width:30mm;">Subtotal</th>
-            </tr>
-        </thead>
-        <tbody>
-            {{#each items}}
-            <tr>
-                <td class="center">{{inc @index}}</td>
-                <td>{{this.nombre}}</td>
-                <td class="right">{{this.cantidad}}</td>
-                <td class="center">{{this.unidad}}</td>
-                <td class="right">{{money this.unitario}}</td>
-                <td class="right">{{money this.parcial}}</td>
-            </tr>
-            {{/each}}
-        </tbody>
+      <thead>
+        <tr>
+          <th class="center" style="width:16mm;">No.</th>
+          <th>Descripción</th>
+          <th class="center" style="width:22mm;">Cantidad</th>
+          <th class="center" style="width:22mm;">Medida</th>
+          <th class="right"  style="width:30mm;">Precio Unitario</th>
+          <th class="right"  style="width:30mm;">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each items}}
+        <tr>
+          <td class="center">{{inc @index}}</td>
+          <td>{{this.nombre}}</td>
+          <td class="center">{{this.cantidad}}</td>
+          <td class="center">{{this.unidad}}</td>
+          <td class="right">{{money this.unitario}}</td>
+          <td class="right">{{money this.parcial}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
     </table>
+  </div>
 
-    <!-- TOTALES -->
-    <div class="totals">
-        <table>
-            <tr>
-                <td class="label">Subtotal</td>
-                <td class="value">{{money totales.subtotal}}</td>
-            </tr>
-            <tr>
-                <td class="label">IVA ({{ivaPct}}%)</td>
-                <td class="value">{{money totales.iva}}</td>
-            </tr>
-            <tr>
-                <td class="label">Total</td>
-                <td class="value">{{money totales.total}}</td>
-            </tr>
-        </table>
-    </div>
-
-    <!-- FIRMA + CONDICIONES -->
-    <div class="sig-conds">
-        <div class="sig-col">
-            <div class="firma">
-                <img src="assets/emp5-firma.png" alt="firma">
-            </div>
-        </div>
-        <div class="conds-col">
-            <div class="cond-title">Condiciones</div>
-            <ul class="cond-list">
-                <li>La entrega de los bienes se realizará a los 10 días hábiles después del pedido.</li>
-                <li>La vigencia de la cotización es de 20 días naturales.</li>
-                <li>El pago será de: Contado.</li>
-                <li>La cotización se presenta en Moneda Nacional.</li>
-            </ul>
-        </div>
-    </div>
-
-    <!-- FOOTER CONTACTO -->
-    <footer>
-        <img class="footer-img" src="assets/emp5-footer.png" alt="footer">
-    </footer>
+  <div class="totals">
+    <table>
+      <tr><td class="label">Subtotal</td><td class="value">{{money totales.subtotal}}</td></tr>
+      <tr><td class="label">IVA ({{ivaPct}}%)</td><td class="value">{{money totales.iva}}</td></tr>
+      <tr><td class="label">Total</td><td class="value">{{money totales.total}}</td></tr>
+    </table>
+  </div>
 
 </body>
-
 </html>
