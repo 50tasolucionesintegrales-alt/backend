@@ -14,6 +14,7 @@ import { QuotesModule } from './quotes/quotes.module';
 import { OrdersModule } from './orders/orders.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { PdfModule } from './pdf/pdf.module';
+import { TemplatesModule } from './templates/templates.module';
 
 @Module({
   imports: [
@@ -33,7 +34,8 @@ import { PdfModule } from './pdf/pdf.module';
     QuotesModule,
     OrdersModule,
     MetricsModule,
-    PdfModule
+    PdfModule,
+    TemplatesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
