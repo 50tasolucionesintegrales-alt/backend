@@ -13,6 +13,9 @@ RUN npm install
 # Copia todo el código
 COPY . .
 
+# Instala navegadores de Playwright
+RUN npx playwright install --with-deps
+
 # Compila TypeScript a JavaScript
 RUN npm run build
 
