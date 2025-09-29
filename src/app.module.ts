@@ -4,7 +4,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
-import { typeOrmConfig } from './config/typeorm.config';
 import { MailModule } from './mail/mail.module';
 import { AuthModule } from './auth/auth.module';
 import { ProductsModule } from './products/products.module';
@@ -13,15 +12,21 @@ import { ServicesModule } from './services/services.module';
 import { QuotesModule } from './quotes/quotes.module';
 import { OrdersModule } from './orders/orders.module';
 import { MetricsModule } from './metrics/metrics.module';
-import { PdfModule } from './pdf/pdf.module';
+import { typeOrmConfig } from './config/typeorm.config';
+import { TemplatesModule } from './templates/templates.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
+    ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
-      useFactory: typeOrmConfig,
+      useFactory: (configService: ConfigService) => ({
+        ...typeOrmConfig(configService),
+        extra: {
+          ssl: {
+            rejectUnauthorized: false,
+          },
+        },
+      }),
       inject: [ConfigService],
     }),
     UsersModule,
@@ -33,9 +38,9 @@ import { PdfModule } from './pdf/pdf.module';
     QuotesModule,
     OrdersModule,
     MetricsModule,
-    PdfModule
+    TemplatesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}
