@@ -1,2 +1,7 @@
 # Fuerza CRLF al almacenar en el repo
 * text eol=crlf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.svg -text
