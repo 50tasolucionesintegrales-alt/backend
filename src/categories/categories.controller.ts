@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+// categories.controller.ts
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -8,16 +9,21 @@ import { IdValidationPipe } from 'src/common/pipes/id-validation/id-validation.p
 @UseGuards(JwtAuthGuard)
 @Controller('categories')
 export class CategoriesController {
-  constructor(private readonly categoriesService: CategoriesService) { }
+  constructor(private readonly categoriesService: CategoriesService) {}
 
   @Post()
-  create(@Body() createCategoryDto: CreateCategoryDto) {
-    return this.categoriesService.create(createCategoryDto);
+  create(@Body() dto: CreateCategoryDto) {
+    return this.categoriesService.create(dto);
   }
 
   @Get()
   findAll() {
     return this.categoriesService.findAll();
+  }
+
+  @Get('search')
+  search(@Query('q') q: string) {
+    return this.categoriesService.searchByName(q ?? '');
   }
 
   @Get(':id')
@@ -26,11 +32,8 @@ export class CategoriesController {
   }
 
   @Patch(':id')
-  update(
-    @Param('id', IdValidationPipe) id: string,
-    @Body() updateCategoryDto: UpdateCategoryDto,
-  ) {
-    return this.categoriesService.update(id, updateCategoryDto);
+  update(@Param('id', IdValidationPipe) id: string, @Body() dto: UpdateCategoryDto) {
+    return this.categoriesService.update(id, dto);
   }
 
   @Delete(':id')

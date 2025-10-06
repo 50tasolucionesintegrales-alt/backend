@@ -1,3 +1,4 @@
+// entities/category.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, Index } from 'typeorm';
 import { Product } from '../../products/entities/product.entity';
 
@@ -7,15 +8,15 @@ export class Category {
   id!: string;
 
   @Column({ type: 'varchar', length: 255 })
-  @Index({ unique: true })
   nombre!: string;
+
+  @Column({ type: 'varchar', length: 255 })
+  @Index({ unique: true })
+  nombre_norm!: string;           // ← único y normalizado
 
   @Column({ type: 'text', nullable: true })
   descripcion?: string;
 
-
-  @OneToMany(() => Product, (product) => product.category, {
-    cascade: ['remove'],
-  })
+  @OneToMany(() => Product, (product) => product.category, { cascade: ['remove'] })
   products!: Product[];
 }

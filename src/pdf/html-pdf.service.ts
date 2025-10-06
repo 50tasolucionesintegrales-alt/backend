@@ -10,6 +10,8 @@ hbs.registerHelper('money', (n: any) => {
     return `$${num.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 });
 hbs.registerHelper('eq', (a: any, b: any) => a === b);
+hbs.registerHelper('or', (a: any, b: any) => !!(a || b));
+
 
 function resolveBaseDir() {
     // __dirname en prod: .../dist/pdf

@@ -39,7 +39,7 @@
     .keep  { page-break-inside: avoid; break-inside: avoid; }
     .pb-before{ page-break-before: always; break-before: page; }
 
-    /* Encabezado estilo claro con borde punteado (similar al original) */
+    /* Encabezado estilo claro con borde */
     thead th{
       background:var(--thead);
       color:#333;
@@ -75,15 +75,25 @@
   <!-- Aire superior del membrete -->
   <div class="header-space"></div>
 
-  <!-- Solo la fecha (lo demás ya vive en el PNG) -->
-  <div class="fecha">Mineral de la Reforma, Hgo., a {{fecha}}</div>
+  <!-- Lugar + fecha -->
+  <div class="fecha">{{lugar}}; a {{fecha}}</div>
 
   <!-- A quién va dirigido -->
   <div class="dest">{{destinatario}}</div>
-  <div class="presente">PRESENTE.</div>
+  <div class="presente">{{presente}}</div>
 
-  <!-- Texto/introducción -->
-  <div class="intro">{{{descripcion}}}</div>
+  <!-- Intro SIN mover la tabla -->
+  <div class="intro">
+    <div><span class="label">Folio:</span> {{folio}}</div>
+    <div><span class="label">Solicitud de cotización:</span> {{titulo}}</div>
+    <div><span class="label">No. de conceptos:</span> {{items.length}}</div>
+    <div><span class="label">Importe Total:</span> {{money totales.total}}</div>
+  </div>
+
+  <!-- Texto/introducción adicional -->
+  <div class="intro">
+    {{{descripcion}}}
+  </div>
 
   <!-- ===== TABLA (No., Unidad de medida, Descripción, Cantidad, Precio unitario, Subtotal) ===== -->
   <div class="table-wrap">
@@ -140,6 +150,30 @@
       <tr><td class="label">Monto Total</td><td class="value">{{money totales.total}}</td></tr>
     </table>
   </div>
+
+  <!-- Cantidad en letra -->
+  <div style="margin:6px 15px 0; font-size:12px;">
+    <span class="label">Cantidad con letra:</span> {{totalEnLetra}}
+  </div>
+
+  {{#if (or condiciones incluirFirma)}}
+    <div class="pb-before"></div> <!-- nueva página -->
+
+    {{#if condiciones}}
+      <div style="margin:10px 15px 0;">
+        <div class="label" style="margin-bottom:6px;">Condiciones generales</div>
+        <div style="line-height:1.55; color:#222;">
+          {{{condiciones}}}
+        </div>
+      </div>
+    {{/if}}
+
+    {{#if incluirFirma}}
+      <div style="margin:30mm 15px 0; text-align:left;">
+        <img src="{{firmaUrl}}" alt="firma" style="height:45px; display:block; margin-bottom:6px;">
+      </div>
+    {{/if}}
+  {{/if}}
 
 </body>
 </html>

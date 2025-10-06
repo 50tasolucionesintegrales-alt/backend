@@ -30,14 +30,18 @@
     thead th{
       color:#222; font-weight:700;
       border:1px solid #a28344 ; padding:8px; font-size:12px; text-align:left;
+      background: var(--thead);
     }
     tbody td{
-      border:1px solid #a28344; padding:6px 8px; font-size:12px;
+      border:1px solid #a28344; padding:6px 8px; font-size:12px; background:#fff;
     }
     .center{ text-align:center; } .right{ text-align:right; }
 
-    /* Paginación: salto cada 10 filas (sin helpers) */
-    tbody tr:nth-child(10n):not(:last-child){ page-break-after: always; }
+    /* Paginación controlada con corte manual */
+    thead { display: table-header-group; }
+    tr, td, th { page-break-inside: avoid; break-inside: avoid; }
+    .keep  { page-break-inside: avoid; break-inside: avoid; }
+    .pb-before{ page-break-before: always; break-before: page; }
 
     .totals{ display:flex; justify-content:flex-end; margin:10px 40px 0; }
     .totals table{ width:70mm; border-collapse:collapse; }
@@ -54,10 +58,19 @@
 
   <div class="header-space"></div>
 
-  <div class="fecha">Mineral de la Reforma, Hidalgo, a {{fecha}}</div>
+  <!-- Lugar + fecha -->
+  <div class="fecha">{{lugar}}; a {{fecha}}</div>
 
   <div class="dest">{{destinatario}}</div>
-  <div class="presente">PRESENTE.</div>
+  <div class="presente">{{presente}}</div>
+
+  <!-- Intro SIN mover la tabla -->
+  <div class="intro">
+    <div><span class="label">Folio:</span> {{folio}}</div>
+    <div><span class="label">Solicitud de cotización:</span> {{titulo}}</div>
+    <div><span class="label">No. de conceptos:</span> {{items.length}}</div>
+    <div><span class="label">Importe Total:</span> {{money totales.total}}</div>
+  </div>
 
   <div class="intro">{{{descripcion}}}</div>
 
@@ -75,26 +88,69 @@
       </thead>
       <tbody>
         {{#each items}}
-        <tr>
-          <td class="center">{{inc @index}}</td>
-          <td>{{this.nombre}}</td>
-          <td class="center">{{this.cantidad}}</td>
-          <td class="center">{{this.unidad}}</td>
-          <td class="right">{{money this.unitario}}</td>
-          <td class="right">{{money this.parcial}}</td>
-        </tr>
+          {{!-- Corte justo antes del ítem #11 (index 10) --}}
+          {{#if (eq @index 10)}}
+            </tbody></table></div>
+            <div class="pb-before"></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th class="center" style="width:16mm;">No.</th>
+                    <th>Descripción</th>
+                    <th class="center" style="width:22mm;">Cantidad</th>
+                    <th class="center" style="width:22mm;">Medida</th>
+                    <th class="right"  style="width:30mm;">Precio Unitario</th>
+                    <th class="right"  style="width:30mm;">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+          {{/if}}
+
+          <tr>
+            <td class="center">{{inc @index}}</td>
+            <td>{{this.nombre}}</td>
+            <td class="center">{{this.cantidad}}</td>
+            <td class="center">{{this.unidad}}</td>
+            <td class="right">{{money this.unitario}}</td>
+            <td class="right">{{money this.parcial}}</td>
+          </tr>
         {{/each}}
       </tbody>
     </table>
   </div>
 
-  <div class="totals">
+  <div class="totals keep">
     <table>
       <tr><td class="label">Subtotal</td><td class="value">{{money totales.subtotal}}</td></tr>
       <tr><td class="label">IVA ({{ivaPct}}%)</td><td class="value">{{money totales.iva}}</td></tr>
       <tr><td class="label">Total</td><td class="value">{{money totales.total}}</td></tr>
     </table>
   </div>
+
+  <!-- Cantidad en letra -->
+  <div class="intro" style="margin-top:6px;">
+    <span class="label">Cantidad con letra:</span> {{totalEnLetra}}
+  </div>
+
+  {{#if (or condiciones incluirFirma)}}
+    <div class="pb-before"></div> <!-- nueva página para no mover el layout principal -->
+
+    {{#if condiciones}}
+      <div class="intro" style="margin-top:10px;">
+        <div class="label" style="margin-bottom:6px;">Condiciones generales</div>
+        <div style="line-height:1.55; color:#222;">
+          {{{condiciones}}}
+        </div>
+      </div>
+    {{/if}}
+
+    {{#if incluirFirma}}
+      <div style="margin:30mm 40px 0; text-align:left;">
+        <img src="{{firmaUrl}}" alt="firma" style="height:45px; display:block; margin-bottom:6px;">
+      </div>
+    {{/if}}
+  {{/if}}
 
 </body>
 </html>

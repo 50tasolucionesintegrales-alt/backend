@@ -12,7 +12,7 @@
       --muted:#333;
     }
 
-    /* Letter, con márgenes igual que el formato 1 para consistencia */
+    /* Letter, sin márgenes del navegador (consistente con los otros) */
     @page { size: Letter; margin: 0 0 0; }
     body  { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: var(--ink); }
 
@@ -23,34 +23,34 @@
       object-fit: cover; display:block;
     }
 
-    /* Reservas para que el contenido no pise el logo y la caja inferior del membrete */
+    /* Reservas para no pisar logo y caja inferior del membrete */
     .header-space { height: 38mm; }     /* arriba (logo + títulos) */
-    .bottom-space { height: 64mm; }     /* abajo (términos + tarjeta firma) */
+    .bottom-space { height: 64mm; }     /* abajo (términos + tarjeta firma en PNG) */
 
-    /* Encabezado dinámico (fecha y destinatario) */
-    .fecha { margin: 0 13mm 6mm; color:#333; }
+    /* Encabezado dinámico */
+    .fecha { margin: 0 13mm 6mm; color:#333; text-align:right; }
     .dest  { margin: 0 13mm 0; font-weight: 700; line-height: 1.45; text-align: end; }
+    .presente { margin: 2mm 13mm 0; font-weight:800; text-align:end; }
 
-    .intro  { margin: 8mm 13mm 0; color:#222; line-height: 1.55; }
+    .intro  { margin: 6mm 13mm 0; color:#222; line-height: 1.55; }
     .label  { font-weight: 700; }
 
-    /* ===== TABLA (diseño estilo imagen) ===== */
+    /* ===== TABLA ===== */
     .table-wrap{ position: relative; margin: 8mm 5mm 0; }
 
     table{
       width:100%;
-      border-collapse: collapse;         /* rejilla continua como la muestra */
+      border-collapse: collapse;        /* rejilla continua */
       table-layout: fixed;
       background:#fff;
-      border:0.5px solid #000;      /* marco exterior como en la imagen */
+      border:0.5px solid #000;          /* marco exterior */
     }
 
     /* Encabezados morados */
     thead th{
       background: var(--thead);
-      color: v#fff;
+      color: #fff;
       border:0.5px solid #000;
-      color: black;
       font-weight: 700;
       padding: 7px 8px;
       font-size: 12px;
@@ -59,7 +59,7 @@
       vertical-align: middle;
     }
 
-    /* Celdas del cuerpo con rejilla gris */
+    /* Celdas del cuerpo con rejilla */
     tbody td{
       padding: 6px 8px;
       border:0.5px solid #000;
@@ -76,7 +76,7 @@
     .center{ text-align: center; }
     .right { text-align: right;  }
 
-    /* Anchos (ajustados al quitar Marca) */
+    /* Anchos */
     .col-num   { width: 12mm; }
     .col-prod  { width: auto; }
     .col-cant  { width: 22mm; }
@@ -84,10 +84,14 @@
     .col-unit  { width: 30mm; }
     .col-sub   { width: 30mm; }
 
+    /* Repetición de encabezado al partir y control de cortes */
+    thead { display: table-header-group; }
+    tr, td, th { page-break-inside: avoid; break-inside: avoid; }
+
     /* Fila “divisoria” que fuerza salto de página tras el ítem 10 */
     .page-break{ height:0; padding:0; border:0; page-break-after: always; }
 
-    /* Totales (bloque derecho con líneas) */
+    /* Totales */
     .totals-wrap{ margin: 8mm 5mm 0; }
     .hr-thin{ border: 0; border-top: 1px solid var(--line); margin: 4mm 0 2mm; }
     .totals{
@@ -108,8 +112,8 @@
     /* “Monto total en letra” centrado */
     .en-letra{ margin: 6mm 18mm 0 18mm; text-align: center; font-weight: 700; }
 
-    /* Pie */
-    .spacer{ height: 6mm; }
+    /* Nueva página utilitaria */
+    .pb-before{ page-break-before: always; break-before: page; }
   </style>
 </head>
 <body>
@@ -117,20 +121,26 @@
   <!-- Fondo con membrete -->
   <div class="bg-page"><img src="assets/emp7.png" alt="membrete"></div>
 
-  <!-- Reservas -->
+  <!-- Reservas superiores -->
   <div class="header-space"></div>
 
-  <!-- Destinatario -->
+  <!-- Encabezado dinámico -->
   <div class="dest">{{destinatario}}</div>
+  <div class="presente">{{presente}}</div>
+  <div class="fecha">{{lugar}}; a {{fecha}}</div>
 
-  <!-- Fecha -->
-  <div class="fecha">{{fecha}}</div>
+  <!-- Intro (sin mover tabla) -->
+  <div class="intro">
+    <div><span class="label">Folio:</span> {{folio}}</div>
+    <div><span class="label">Cotización:</span> {{titulo}}</div>
+    <div><span class="label">No. de conceptos:</span> {{items.length}}</div>
+    <div><span class="label">Importe Total:</span> {{money totales.total}}</div>
+  </div>
 
   <!-- Párrafo / descripción -->
-  <div class="intro">Cotización: {{{titulo}}}</div>
   <div class="intro">{{{descripcion}}}</div>
 
-  <!-- Tabla (sin columna Marca) -->
+  <!-- Tabla -->
   <div class="table-wrap">
     <table>
       <thead>
@@ -168,7 +178,7 @@
     <hr class="hr-thin">
     <table class="totals">
       <tr><td class="label">Subtotal</td>     <td class="value">{{money totales.subtotal}}</td></tr>
-      <tr><td class="label">I.V.A.</td>        <td class="value">{{money totales.iva}}</td></tr>
+      <tr><td class="label">IVA ({{ivaPct}}%)</td><td class="value">{{money totales.iva}}</td></tr>
       <tr><td class="label">Importe Total</td> <td class="value">{{money totales.total}}</td></tr>
     </table>
   </div>
@@ -177,9 +187,27 @@
     <div class="en-letra">(Monto Total en letra: {{totalEnLetra}})</div>
   {{/if}}
 
-  <!-- Aire para no invadir el bloque de términos + tarjeta/firma del PNG -->
+  {{#if (or condiciones incluirFirma)}}
+    <div class="pb-before"></div> <!-- nueva página para no invadir el pie del PNG -->
+
+    {{#if condiciones}}
+      <div class="intro" style="margin-top:6mm;">
+        <div class="label" style="margin-bottom:6px;">Condiciones generales</div>
+        <div style="line-height:1.55; color:#222;">
+          {{{condiciones}}}
+        </div>
+      </div>
+    {{/if}}
+
+    {{#if incluirFirma}}
+      <div style="margin:28mm 13mm 0 13mm; text-align:left;">
+        <img src="{{firmaUrl}}" alt="firma" style="height:45px; display:block; margin-bottom:6px;">
+      </div>
+    {{/if}}
+  {{/if}}
+
+  <!-- Aire inferior del membrete -->
   <div class="bottom-space"></div>
-  <div class="spacer"></div>
 
 </body>
 </html>

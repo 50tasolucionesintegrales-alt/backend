@@ -6,8 +6,8 @@
   <style>
     :root{
       --brand:#245fa7;   /* azul del formato */
-      --ink:#111; 
-      --line:#cfd7e3; 
+      --ink:#111;
+      --line:#cfd7e3;
       --thead:#245fa7;   /* encabezado de la tabla */
       --theadText:#ffffff;
     }
@@ -41,6 +41,7 @@
     table { width:100%; border-collapse:collapse; page-break-inside:auto; }
     thead { display: table-header-group; }
     tr, td, th { page-break-inside: avoid; break-inside: avoid; }
+    .keep{ page-break-inside: avoid; break-inside: avoid; }
     .pb-before{ page-break-before: always; break-before: page; }
 
     /* Encabezado tipo original (franja azul) */
@@ -78,14 +79,22 @@
   <!-- Zona libre para el logo del membrete -->
   <div class="header-space"></div>
 
-  <!-- Fecha (va a la derecha) -->
-  <div class="fecha">Fecha: {{fecha}}</div>
+  <!-- Lugar + Fecha (derecha) -->
+  <div class="fecha">{{lugar}}; a {{fecha}}</div>
 
   <!-- A quién va dirigido -->
   <div class="dest">{{destinatario}}</div>
-  <div class="presente">PRESENTE.</div>
+  <div class="presente">{{presente}}</div>
 
-  <!-- Introducción (si la necesitas) -->
+  <!-- Intro SIN mover la tabla -->
+  <div class="intro">
+    <div><span class="label">Folio:</span> {{folio}}</div>
+    <div><span class="label">Solicitud de cotización:</span> {{titulo}}</div>
+    <div><span class="label">No. de conceptos:</span> {{items.length}}</div>
+    <div><span class="label">Importe Total:</span> {{money totales.total}}</div>
+  </div>
+
+  <!-- Descripción -->
   <div class="intro">{{{descripcion}}}</div>
 
   <!-- ===== TABLA ===== -->
@@ -136,13 +145,37 @@
   </div>
 
   <!-- Totales -->
-  <div class="totals">
+  <div class="totals keep">
     <table>
       <tr><td class="label">SUBTOTAL</td><td class="value">{{money totales.subtotal}}</td></tr>
       <tr><td class="label">IVA ({{ivaPct}}%)</td><td class="value">{{money totales.iva}}</td></tr>
       <tr><td class="label">TOTAL</td><td class="value">{{money totales.total}}</td></tr>
     </table>
   </div>
+
+  <!-- Cantidad en letra -->
+  <div class="intro" style="margin-top:6px;">
+    <span class="label">Cantidad con letra:</span> {{totalEnLetra}}
+  </div>
+
+  {{#if (or condiciones incluirFirma)}}
+    <div class="pb-before"></div> <!-- nueva página para no mover el layout principal -->
+
+    {{#if condiciones}}
+      <div class="intro" style="margin-top:10px;">
+        <div class="label" style="margin-bottom:6px;">Condiciones generales</div>
+        <div style="line-height:1.55; color:#222;">
+          {{{condiciones}}}
+        </div>
+      </div>
+    {{/if}}
+
+    {{#if incluirFirma}}
+      <div style="margin:30mm 55px 0; text-align:left;">
+        <img src="{{firmaUrl}}" alt="firma" style="height:45px; display:block; margin-bottom:6px;">
+      </div>
+    {{/if}}
+  {{/if}}
 
 </body>
 </html>
