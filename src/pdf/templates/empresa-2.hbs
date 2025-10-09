@@ -4,11 +4,31 @@
   <meta charset="utf-8">
   <title>{{titulo}}</title>
   <style>
-    :root{ --brand:#213a57; --ink:#111; --line:#d9d9d9; --thead:#213a57; }
+    :root{ --brand:#213a57; --ink:#111; --line:#d9d9d9; --thead: #0c2c44 ; }
 
     /* Misma caja que el formato 1, solo con margen lateral 7mm */
     @page { size: Letter; margin: 0 7mm 0; }
-    body  { font-family: Arial, Helvetica, sans-serif; font-size:12px; color:var(--ink); }
+    /* Century Gothic Regular */
+    @font-face{
+      font-family: "Century Gothic";
+      src: url("assets/fonts/centurygothic.ttf") format("truetype");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    /* Century Gothic Bold */
+    @font-face{
+      font-family: "Century Gothic";
+      src: url("assets/fonts/centurygothic_bold.ttf") format("truetype");
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    /* úsala en todo el documento */
+    body{ font-family: "Century Gothic", Arial, Helvetica, sans-serif; }
+
 
     /* ===== Fondo / membrete ===== */
     .bg-page { position:fixed; inset:0; z-index:-1; pointer-events:none; }
@@ -20,14 +40,15 @@
     }
 
     /* Resguarda el bloque superior del membrete (logo/folio en la imagen) */
-    .header-space{ height:36mm; }   /* igual que formato 1 */
+    .header-space{ height:10mm; }   /* igual que formato 1 */
 
     /* Dinámico */
-    .fecha{ text-align:right; color:#333; margin:10px 5px 20px; }
-    .dest{ font-weight:700; line-height:1.45; margin:12px 5px 0; }
+    .fecha{ text-align:right; color:#333; margin:70px 5px 20px; font-weight:bold; }
+    .dest{ font-weight:800; line-height:1.45; margin:12px 5px 0; }
     .presente{ font-weight:800; margin:10px 5px 0; }
     .intro{ margin:10px 5px 0; line-height:1.55; color:#222; }
-    .label{ font-weight:700; }
+    .label{ font-weight:400; }
+    .folio{ font-weight:800; margin:12px 5px 0; text-align:right; }
 
     /* Contenedor de tabla */
     .table-wrap{ position:relative; margin:12px 5px 0; }
@@ -65,20 +86,15 @@
   <!-- Aire para el encabezado del membrete -->
   <div class="header-space"></div>
 
+  <!-- Folio -->
+  <div class="folio">{{folio}}</div>
+
   <!-- Lugar + fecha -->
-  <div class="fecha">{{lugar}}; a {{fecha}}</div>
+  <div class="fecha">{{lugar}}, a {{fecha}}</div>
 
   <!-- A quién va dirigido -->
   <div class="dest">{{destinatario}}</div>
   <div class="presente">{{presente}}</div>
-
-  <!-- Datos intro SIN mover la tabla -->
-  <div class="intro">
-    <div><span class="label">Folio:</span> {{folio}}</div>
-    <div><span class="label">Solicitud de cotización:</span> {{titulo}}</div>
-    <div><span class="label">No. de conceptos:</span> {{items.length}}</div>
-    <div><span class="label">Importe Total:</span> {{money totales.total}}</div>
-  </div>
 
   <!-- Descripción -->
   <div class="intro" style="margin-top:10px;">
@@ -143,12 +159,10 @@
 
   <!-- Cantidad en letra (línea adicional, sin tocar la tabla) -->
   <div style="margin:6px 5px 0; font-size:12px;">
-    <span class="label">Cantidad con letra:</span> {{totalEnLetra}}
+    <span class="label" style="font-weight:bold;">Importe total cotizado con letra: ({{totalEnLetra}})</span> 
   </div>
 
   {{#if (or condiciones incluirFirma)}}
-    <div class="pb-before"></div> <!-- nueva página -->
-
     {{#if condiciones}}
       <div style="margin:10px 5px 0;">
         <div class="label" style="margin-bottom:6px;">Condiciones generales</div>
@@ -159,8 +173,8 @@
     {{/if}}
 
     {{#if incluirFirma}}
-      <div style="margin:30mm 5px 0; text-align:left;">
-        <img src="{{firmaUrl}}" alt="firma" style="height:45px; display:block; margin-bottom:6px;">
+      <div style="margin:53mm 0 0; text-align:center;">
+        <img src="{{firmaUrl}}" alt="firma" style="height:115px; display:inline-block; margin-bottom:6px; margin-right:90px;">
       </div>
     {{/if}}
   {{/if}}

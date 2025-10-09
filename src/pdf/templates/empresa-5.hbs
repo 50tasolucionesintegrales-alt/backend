@@ -4,56 +4,113 @@
   <meta charset="utf-8">
   <title>{{titulo}}</title>
   <style>
-    :root{ --brand:#b79b66; --ink:#111; --line:#d9d9d9; --thead:#f3f3f3; }
-
-    /* Carta; mismo marco que emp-1 */
-    @page { size: Letter; margin: 0 0 0; }
-    body  { font-family: Arial, Helvetica, sans-serif; font-size:12px; color:var(--ink); }
-
-    /* Fondo con el membrete completo */
-    .bg-page{ position:fixed; inset:0; z-index:-1; pointer-events:none; }
-    .bg-page img{
-      position:absolute; top:0; left:0;
-      width:100%; height:100%; object-fit:cover; display:block;
+    :root{
+      --brand:#b79b66;         /* acento */
+      --border:#a28344;        /* dorado líneas */
+      --ink:#111;
+      --thead:#f3f3f3;         /* encabezado tabla claro */
     }
 
-    .header-space{ height:36mm; }
+    @page { size: Letter; margin: 0; }
 
-    .fecha{ text-align:right; color:#333; margin:10px 40px 20px; }
-    .dest{ font-weight:700; line-height:1.45; margin:12px 40px 0; }
-    .presente{ font-weight:800; margin:10px 40px 0; }
-    .intro{ margin:10px 40px 0; line-height:1.55; color:#222; }
+    /* Century Gothic local */
+    @font-face{
+      font-family: "Century Gothic";
+      src: url("assets/fonts/centurygothic.ttf") format("truetype");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face{
+      font-family: "Century Gothic";
+      src: url("assets/fonts/centurygothic_bold.ttf") format("truetype");
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    body{
+      font-family: "Century Gothic", Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      color: var(--ink);
+    }
+
+    /* ===== Fondo / membrete ===== */
+    .bg-page{ position:fixed; inset:0; z-index:-1; pointer-events:none; }
+    .bg-page img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+    /* Deja respirar el encabezado (logo + línea dorada) */
+    .header-space{ height:32mm; }
+
+    .fecha{ text-align:right; color:#333; margin:10px 15mm 16px; }
+    .dest{ font-weight:700; line-height:1.45; margin:0 15mm; }
+    .presente{ font-weight:800; margin:6px 15mm 0; }
+    .intro{ margin:10px 15mm 0; line-height:1.55; color:#222; }
     .label{ font-weight:700; }
 
-    .table-wrap{ position:relative; margin:12px 40px 0; }
-    table{ width:100%; border-collapse:collapse; }
+    /* ===== Tabla ===== */
+    .table-wrap{ position:relative; margin:12px 12mm 0; }
+    table{ width:96%; margin:0 auto; border-collapse:collapse; page-break-inside:auto; }
+    thead{ display:table-header-group; }
+    tr, td, th{ page-break-inside:avoid; break-inside:avoid; }
+
     thead th{
-      color:#222; font-weight:700;
-      border:1px solid #a28344 ; padding:8px; font-size:12px; text-align:left;
       background: var(--thead);
+      color:#222;
+      font-weight:700;
+      border:1px solid var(--border);
+      padding:8px;
+      font-size:12px;
+      text-align:left;
+      vertical-align:middle;
     }
     tbody td{
-      border:1px solid #a28344; padding:6px 8px; font-size:12px; background:#fff;
+      border:1px solid var(--border);
+      padding:6px 8px;
+      font-size:12px;
+      background:#fff;
+      vertical-align:top;
     }
-    .center{ text-align:center; } .right{ text-align:right; }
+    .center{ text-align:center; }
+    .right { text-align:right; }
 
-    /* Paginación controlada con corte manual */
-    thead { display: table-header-group; }
-    tr, td, th { page-break-inside: avoid; break-inside: avoid; }
-    .keep  { page-break-inside: avoid; break-inside: avoid; }
-    .pb-before{ page-break-before: always; break-before: page; }
+    /* ===== Totales en 3 columnas (Subtotal/IVA/Total + Monto en letra) ===== */
+    .totals3{
+      width:96%;
+      margin:14px auto 0;          /* mismo ancho/centrado que la tabla */
+    }
+    .totals3 table{
+      border-collapse:collapse;
+      width:120mm;                 /* ancho del bloque de totales */
+      justify-content: flex-end;
+      background:#fff;
+    }
+    .totals3 td{
+      border:1px solid var(--border);
+      padding:6px 8px;
+      font-size:12px;
+      vertical-align:top;
+    }
+    .totals3 .lbl{ font-weight:700; background:#f6f3ee; }
+    .totals3 .val{ text-align:right; white-space:nowrap; }
+    .totals3 .letra{ width:70mm; } /* ajusta si quieres más/menos ancho */
+    .totals3 .letra .title{ font-weight:700; margin-bottom:4px; }
 
-    .totals{ display:flex; justify-content:flex-end; margin:10px 40px 0; }
-    .totals table{ width:70mm; border-collapse:collapse; }
-    .totals td{ padding:6px 8px; border-left:1px solid #a28344; border-right:1px solid #a28344; }
-    .totals tr:first-child td{ border-top:1px solid #a28344; }
-    .totals tr:last-child  td{ border-bottom:1px solid #a28344; }
-    .totals .label{ font-weight:700; background:#f6f6f6; }
-    .totals .value{ text-align:right; }
+    /* ===== Firma (manteniendo tus cambios) ===== */
+    .firma{
+      text-align:left;
+      margin-top:100mm;
+      margin-left:60px;
+    }
+    .firma img{
+      height:75px;
+      display:inline-block;
+    }
   </style>
 </head>
 <body>
 
+  <!-- Fondo -->
   <div class="bg-page"><img src="assets/emp5.png" alt="membrete"></div>
 
   <div class="header-space"></div>
@@ -61,19 +118,19 @@
   <!-- Lugar + fecha -->
   <div class="fecha">{{lugar}}; a {{fecha}}</div>
 
+  <!-- Dirigido a -->
   <div class="dest">{{destinatario}}</div>
   <div class="presente">{{presente}}</div>
 
-  <!-- Intro SIN mover la tabla -->
+  <!-- Solicitud -->
   <div class="intro">
-    <div><span class="label">Folio:</span> {{folio}}</div>
-    <div><span class="label">Solicitud de cotización:</span> {{titulo}}</div>
-    <div><span class="label">No. de conceptos:</span> {{items.length}}</div>
-    <div><span class="label">Importe Total:</span> {{money totales.total}}</div>
+    <span class="label">Solicitud:</span> {{titulo}}
   </div>
 
+  <!-- Texto -->
   <div class="intro">{{{descripcion}}}</div>
 
+  <!-- ===== TABLA ===== -->
   <div class="table-wrap">
     <table>
       <thead>
@@ -88,10 +145,9 @@
       </thead>
       <tbody>
         {{#each items}}
-          {{!-- Corte justo antes del ítem #11 (index 10) --}}
           {{#if (eq @index 10)}}
             </tbody></table></div>
-            <div class="pb-before"></div>
+            <div style="page-break-before:always;"></div>
             <div class="table-wrap">
               <table>
                 <thead>
@@ -120,36 +176,33 @@
     </table>
   </div>
 
-  <div class="totals keep">
+  <!-- ===== Totales 3 columnas al borde derecho ===== -->
+  <div class="totals3 keep">
     <table>
-      <tr><td class="label">Subtotal</td><td class="value">{{money totales.subtotal}}</td></tr>
-      <tr><td class="label">IVA ({{ivaPct}}%)</td><td class="value">{{money totales.iva}}</td></tr>
-      <tr><td class="label">Total</td><td class="value">{{money totales.total}}</td></tr>
+      <tr>
+        <td class="letra" rowspan="3">
+          <div class="title">Monto total en letra:</div>
+          <div>{{totalEnLetra}}</div>
+        </td>
+        <td class="lbl">Subtotal</td>
+        <td class="val">{{money totales.subtotal}}</td>
+      </tr>
+      <tr>
+        <td class="lbl">IVA ({{ivaPct}}%)</td>
+        <td class="val">{{money totales.iva}}</td>
+      </tr>
+      <tr>
+        <td class="lbl">Total</td>
+        <td class="val">{{money totales.total}}</td>
+      </tr>
     </table>
   </div>
 
-  <!-- Cantidad en letra -->
-  <div class="intro" style="margin-top:6px;">
-    <span class="label">Cantidad con letra:</span> {{totalEnLetra}}
+  <!-- ===== Firma opcional ===== -->
+  {{#if incluirFirma}}
+  <div class="firma">
+    <img src="{{firmaUrl}}" alt="firma">
   </div>
-
-  {{#if (or condiciones incluirFirma)}}
-    <div class="pb-before"></div> <!-- nueva página para no mover el layout principal -->
-
-    {{#if condiciones}}
-      <div class="intro" style="margin-top:10px;">
-        <div class="label" style="margin-bottom:6px;">Condiciones generales</div>
-        <div style="line-height:1.55; color:#222;">
-          {{{condiciones}}}
-        </div>
-      </div>
-    {{/if}}
-
-    {{#if incluirFirma}}
-      <div style="margin:30mm 40px 0; text-align:left;">
-        <img src="{{firmaUrl}}" alt="firma" style="height:45px; display:block; margin-bottom:6px;">
-      </div>
-    {{/if}}
   {{/if}}
 
 </body>
