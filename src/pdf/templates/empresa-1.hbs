@@ -1,72 +1,176 @@
 <!doctype html>
 <html>
+
 <head>
   <meta charset="utf-8">
   <title>{{titulo}}</title>
   <style>
-    :root{ --brand:#c51b1b; --ink:#111; --line:#d9d9d9; --thead:#c51b1b; }
-    /* Dejo tus márgenes tal cual */
-    @page { size: Letter; margin: 0 10mm 0; }
-    body  { font-family: Arial, Helvetica, sans-serif; font-size:12px; color:var(--ink); }
-
-    /* Fondo (tu membrete completo) */
-    .bg-page { position:fixed; inset:0; z-index:-1; pointer-events:none; }
-    .bg-page img{
-      position:absolute; top:0; left:0;
-      width:100%; height:100%;
-      object-fit:cover; display:block;
+    :root {
+      --brand: #c51b1b;
+      --ink: #111;
+      --line: #d9d9d9;
+      --thead: #c51b1b;
     }
 
-    /* Aire superior para no pisar el logo/folio del membrete */
-    .header-space{ height:36mm; }
+    @page {
+      size: Letter;
+      margin: 0 10mm 0;
+    }
 
-    /* Dinámico */
-    .fecha{ text-align:right; color:#333; margin:10px 15px 20px; }
-    .dest{ font-weight:700; line-height:1.45; margin:12px 15px 0; }
-    .presente{ font-weight:800; margin:10px 15px 0; }
-    .intro{ margin:10px 15px 0; line-height:1.55; color:#222; }
-    .label{ font-weight:700; }
+    @font-face {
+      font-family: "InterVar";
+      src: url("assets/fonts/Inter-VariableFont.ttf") format("truetype-variations");
+      font-weight: 100 900;  /* acepta todo el rango */
+      font-style: normal;
+      font-display: swap;
+    }
+
+    body {
+      font-family: "InterVar", Arial, Helvetica, sans-serif;
+      font-size: 12px;
+    }
+
+    .bg-page {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .bg-page img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .header-space {
+      height: 23mm;
+    }
+
+    .fecha {
+      text-align: right;
+      color: #333;
+      margin: 50px 15px 20px;
+    }
+
+    .dest {
+      font-weight: 700;
+      line-height: 1.45;
+      margin: 12px 15px 0;
+    }
+
+    .presente {
+      font-weight: 800;
+      margin: 10px 15px 0;
+    }
+
+    .intro {
+      margin: 10px 15px 0;
+      line-height: 1.55;
+      color: #222;
+    }
+
+    .label {
+      font-weight: 700;
+    }
+
+    .folio {
+      text-align: center;
+      font-weight: 800;
+      margin: 12px 15px 0;
+      font-size: 14px;
+      color:#143444;
+    }
 
     /* Tabla */
-    .table-wrap{ position:relative; margin:12px 15px 0; }
-
-    /* ===== Paginación estable ===== */
-    table { width:100%; border-collapse:collapse; page-break-inside:auto; }
-    thead { display: table-header-group; }   /* repite encabezado */
-    tr     { page-break-inside: avoid; break-inside: avoid; }
-    td, th { page-break-inside: avoid; break-inside: avoid; }
-    .keep  { page-break-inside: avoid; break-inside: avoid; }
-    .pb-before{ page-break-before: always; break-before: page; }
-
-    thead th{
-      background:var(--thead); color:#fff; font-weight:700;
-      border:1px solid var(--thead); padding:8px; font-size:12px; text-align:left;
+    .table-wrap {
+      position: relative;
+      margin: 12px 15px 0;
     }
-    tbody td{ border:1px solid var(--line); padding:6px 8px; font-size:12px; background:#fff; }
-    .center{ text-align:center; } .right{ text-align:right; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      page-break-inside: auto;
+    }
+
+    thead {
+      display: table-header-group;
+    }
+
+    tr,
+    td,
+    th {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .pb-before {
+      page-break-before: always;
+      break-before: page;
+    }
+
+    thead th {
+      background: var(--thead);
+      color: #fff;
+      font-weight: 700;
+      border: 1px solid var(--thead);
+      padding: 8px;
+      font-size: 12px;
+      text-align: left;
+    }
+
+    tbody td {
+      border: 1px solid var(--line);
+      padding: 6px 8px;
+      font-size: 12px;
+      background: #fff;
+    }
+
+    .center { text-align: center; }
+    .right { text-align: right; }
 
     /* Totales */
-    .totals{ display:flex; justify-content:flex-end; margin:10px 15px 0; }
-    .totals table{ width:70mm; border-collapse:collapse; }
-    .totals td{ padding:6px 8px; border-left:1px solid var(--line); border-right:1px solid var(--line); }
-    .totals tr:first-child td{ border-top:1px solid var(--line); }
-    .totals tr:last-child  td{ border-bottom:1px solid var(--line); }
-    .totals .label{ font-weight:700; background:#f6f6f6; }
-    .totals .value{ text-align:right; }
+    .totals {
+      display: flex;
+      justify-content: flex-end;
+      margin: 10px 15px 0;
+    }
+
+    .totals table {
+      width: 70mm;
+      border-collapse: collapse;
+    }
+
+    .totals td {
+      padding: 6px 8px;
+      border-left: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+    }
+
+    .totals tr:first-child td { border-top: 1px solid var(--line); }
+    .totals tr:last-child td { border-bottom: 1px solid var(--line); }
+
+    .totals .label { font-weight: 700; background: #f6f6f6; }
+    .totals .value { text-align: right; }
   </style>
 </head>
+
 <body>
 
   <div class="bg-page"><img src="assets/emp1.png" alt="membrete"></div>
 
   <div class="header-space"></div>
 
-  <!-- Solo la fecha, el lugar ya viene del fondo -->
-  <div class="fecha">Pachuca de Soto, Hidalgo; a {{fecha}}</div>
+  <div class="folio">{{folio}}</div>
+
+  <!-- Lugar + fecha -->
+  <div class="fecha">{{lugar}}; a {{fecha}}</div>
 
   <div class="dest">{{destinatario}}</div>
-  <div class="presente">PRESENTE.</div>
-
+  <div class="presente">{{presente}}</div>
+  
   <div class="intro">
     <div><span class="label">Solicitud de cotización:</span> {{titulo}}</div>
     <div><span class="label">No. de conceptos:</span> {{items.length}}</div>
@@ -77,7 +181,7 @@
     {{{descripcion}}}
   </div>
 
-  <!-- ===== TABLA: corta a nueva página justo antes del ítem #11 ===== -->
+  <!-- TABLA -->
   <div class="table-wrap">
     <table>
       <thead>
@@ -86,45 +190,26 @@
           <th>Descripción</th>
           <th class="center" style="width:22mm;">Unidad</th>
           <th class="center" style="width:22mm;">Cantidad</th>
-          <th class="right"  style="width:30mm;">Unitario</th>
-          <th class="right"  style="width:30mm;">Parcial</th>
+          <th class="right" style="width:30mm;">Unitario</th>
+          <th class="right" style="width:30mm;">Parcial</th>
         </tr>
       </thead>
       <tbody>
         {{#each items}}
-          {{!-- Si estamos en el índice 10 (el ítem #11), cerramos tabla y abrimos otra con header nuevo en la siguiente página --}}
-          {{#if (eq @index 10)}}
-            </tbody></table></div>
-            <div class="pb-before"></div>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th class="center" style="width:16mm;">Concepto</th>
-                    <th>Descripción</th>
-                    <th class="center" style="width:22mm;">Unidad</th>
-                    <th class="center" style="width:22mm;">Cantidad</th>
-                    <th class="right"  style="width:30mm;">Unitario</th>
-                    <th class="right"  style="width:30mm;">Parcial</th>
-                  </tr>
-                </thead>
-                <tbody>
-          {{/if}}
-
-          <tr>
-            <td class="center">{{inc @index}}</td>
-            <td>{{this.nombre}}</td>
-            <td class="center">{{this.unidad}}</td>
-            <td class="center">{{this.cantidad}}</td>
-            <td class="right">{{money this.unitario}}</td>
-            <td class="right">{{money this.parcial}}</td>
-          </tr>
+        <tr>
+          <td class="center">{{inc @index}}</td>
+          <td>{{this.nombre}}</td>
+          <td class="center">{{this.unidad}}</td>
+          <td class="center">{{this.cantidad}}</td>
+          <td class="right">{{money this.unitario}}</td>
+          <td class="right">{{money this.parcial}}</td>
+        </tr>
         {{/each}}
       </tbody>
     </table>
   </div>
 
-  <!-- Totales (bloque indivisible) -->
+  <!-- Totales -->
   <div class="totals keep">
     <table>
       <tr><td class="label">Subtotal</td><td class="value">{{money totales.subtotal}}</td></tr>
@@ -132,6 +217,29 @@
       <tr><td class="label">Monto Total</td><td class="value">{{money totales.total}}</td></tr>
     </table>
   </div>
+
+  <!-- Cantidad en letra -->
+  <div style="margin:12px 15px 0; font-size:12px; font-weight:600; color:#000;">
+    <span class="label">Importe en letra:</span> {{totalEnLetra}}
+  </div>
+
+  {{#if (or condiciones incluirFirma)}}
+  {{#if condiciones}}
+  <div style="margin:25px 15px 0;">
+    <div style="margin-bottom:6px; color:#143444; font-weight:800;">Condiciones</div>
+    <div style="line-height:1.55; color:#000;">
+      {{{condiciones}}}
+    </div>
+  </div>
+  {{/if}}
+
+  {{#if incluirFirma}}
+  <div style="margin:50mm 0 0; text-align:center;">
+    <img src="{{firmaUrl}}" alt="firma" style="height:90px; display:inline-block; margin-bottom:6px;">
+  </div>
+  {{/if}}
+  {{/if}}
+
 
 </body>
 </html>

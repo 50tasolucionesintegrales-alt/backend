@@ -4,30 +4,51 @@
   <meta charset="utf-8">
   <title>{{titulo}}</title>
   <style>
-    :root{ --brand:#213a57; --ink:#111; --line:#d9d9d9; --thead:#213a57; }
+    :root{ --brand:#213a57; --ink:#111; --line:#d9d9d9; --thead: #0c2c44 ; }
 
-    /* Usa las mismas medidas del formato 1 */
+    /* Misma caja que el formato 1, solo con margen lateral 7mm */
     @page { size: Letter; margin: 0 7mm 0; }
-    body  { font-family: Arial, Helvetica, sans-serif; font-size:12px; color:var(--ink); }
+    /* Century Gothic Regular */
+    @font-face{
+      font-family: "Century Gothic";
+      src: url("assets/fonts/centurygothic.ttf") format("truetype");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    /* Century Gothic Bold */
+    @font-face{
+      font-family: "Century Gothic";
+      src: url("assets/fonts/centurygothic_bold.ttf") format("truetype");
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    /* úsala en todo el documento */
+    body{ font-family: "Century Gothic", Arial, Helvetica, sans-serif; }
+
 
     /* ===== Fondo / membrete ===== */
     .bg-page { position:fixed; inset:0; z-index:-1; pointer-events:none; }
     .bg-page img{
       position:absolute; top:0; left:0;
       width:100%; height:100%;
-      object-fit:cover;             /* para calcar el PNG completo */
+      object-fit:cover;
       display:block;
     }
 
-    /* Resguarda el bloque superior del membrete (logo/folio) */
-    .header-space{ height:36mm; }   /* igual que el formato 1 */
+    /* Resguarda el bloque superior del membrete (logo/folio en la imagen) */
+    .header-space{ height:10mm; }   /* igual que formato 1 */
 
-    /* Solo dinámico */
-    .fecha{ text-align:right; color:#333; margin:10px 5px 20px; }
-    .dest{ font-weight:700; line-height:1.45; margin:12px 5px 0; }
+    /* Dinámico */
+    .fecha{ text-align:right; color:#333; margin:70px 5px 20px; font-weight:bold; }
+    .dest{ font-weight:800; line-height:1.45; margin:12px 5px 0; }
     .presente{ font-weight:800; margin:10px 5px 0; }
     .intro{ margin:10px 5px 0; line-height:1.55; color:#222; }
-    .label{ font-weight:700; }
+    .label{ font-weight:400; }
+    .folio{ font-weight:800; margin:12px 5px 0; text-align:right; }
 
     /* Contenedor de tabla */
     .table-wrap{ position:relative; margin:12px 5px 0; }
@@ -65,15 +86,20 @@
   <!-- Aire para el encabezado del membrete -->
   <div class="header-space"></div>
 
-  <!-- Solo la fecha (el lugar está en el diseño) -->
-  <div class="fecha">Pachuca de Soto, Hidalgo a {{fecha}}</div>
+  <!-- Folio -->
+  <div class="folio">{{folio}}</div>
+
+  <!-- Lugar + fecha -->
+  <div class="fecha">{{lugar}}, a {{fecha}}</div>
 
   <!-- A quién va dirigido -->
   <div class="dest">{{destinatario}}</div>
-  <div class="presente">PRESENTE.</div>
+  <div class="presente">{{presente}}</div>
 
-  <!-- Descripción (tu párrafo previo) -->
-  <div class="intro">{{{descripcion}}}</div>
+  <!-- Descripción -->
+  <div class="intro" style="margin-top:10px;">
+    {{{descripcion}}}
+  </div>
 
   <!-- ===== TABLA con salto al ítem #11 ===== -->
   <div class="table-wrap">
@@ -85,7 +111,7 @@
           <th class="center" style="width:22mm;">Cantidad</th>
           <th class="center" style="width:22mm;">Unidad</th>
           <th class="right"  style="width:30mm;">Precio Unitario</th>
-          <th class="right"  style="width:30mm;">Subtotal</th>
+          <th class="right  " style="width:30mm;">Subtotal</th>
         </tr>
       </thead>
       <tbody>
@@ -103,7 +129,7 @@
                     <th class="center" style="width:22mm;">Cantidad</th>
                     <th class="center" style="width:22mm;">Unidad</th>
                     <th class="right"  style="width:30mm;">Precio Unitario</th>
-                    <th class="right"  style="width:30mm;">Subtotal</th>
+                    <th class="right  " style="width:30mm;">Subtotal</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -130,6 +156,28 @@
       <tr><td class="label">Total</td><td class="value">{{money totales.total}}</td></tr>
     </table>
   </div>
+
+  <!-- Cantidad en letra (línea adicional, sin tocar la tabla) -->
+  <div style="margin:6px 5px 0; font-size:12px;">
+    <span class="label" style="font-weight:bold;">Importe total cotizado con letra: ({{totalEnLetra}})</span> 
+  </div>
+
+  {{#if (or condiciones incluirFirma)}}
+    {{#if condiciones}}
+      <div style="margin:10px 5px 0;">
+        <div class="label" style="margin-bottom:6px;">Condiciones generales</div>
+        <div style="line-height:1.55; color:#222;">
+          {{{condiciones}}}
+        </div>
+      </div>
+    {{/if}}
+
+    {{#if incluirFirma}}
+      <div style="margin:53mm 0 0; text-align:center;">
+        <img src="{{firmaUrl}}" alt="firma" style="height:115px; display:inline-block; margin-bottom:6px; margin-right:90px;">
+      </div>
+    {{/if}}
+  {{/if}}
 
 </body>
 </html>

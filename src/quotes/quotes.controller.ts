@@ -98,6 +98,11 @@ export class QuotesController {
       destinatario: dto.destinatario,
       descripcion: dto.descripcion,
       fecha: dto.fecha,
+      folio: dto.folio,
+      lugar: dto.lugar,
+      presente: dto.presente,
+      condiciones: dto.condiciones,
+      incluirFirma: dto.incluirFirma,
     });
 
     res.setHeader('Content-Type', 'application/pdf');
