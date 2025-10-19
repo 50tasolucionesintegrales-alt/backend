@@ -102,6 +102,33 @@ export class QuoteItem {
   })
   margenPct7?: number | null;
 
+  @Column('numeric', {
+    precision: 5,
+    scale: 2,
+    name: 'margen_pct8',
+    nullable: true,
+    transformer: DecimalTransformer,
+  })
+  margenPct8?: number | null;
+
+  @Column('numeric', {
+    precision: 5,
+    scale: 2,
+    name: 'margen_pct9',
+    nullable: true,
+    transformer: DecimalTransformer,
+  })
+  margenPct9?: number | null;
+
+  @Column('numeric', {
+    precision: 5,
+    scale: 2,
+    name: 'margen_pct10',
+    nullable: true,
+    transformer: DecimalTransformer,
+  })
+  margenPct10?: number | null;
+
   /* ---------- Precios finales ---------- */
   @Column('decimal', {
     precision: 10,
@@ -166,6 +193,33 @@ export class QuoteItem {
   })
   precioFinal7?: number | null;
 
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    name: 'precio_final8',
+    nullable: true,
+    transformer: DecimalTransformer,
+  })
+  precioFinal8?: number | null;
+
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    name: 'precio_final9',
+    nullable: true,
+    transformer: DecimalTransformer,
+  })
+  precioFinal9?: number | null;
+
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    name: 'precio_final10',
+    nullable: true,
+    transformer: DecimalTransformer,
+  })
+  precioFinal10?: number | null;
+
   /* ---------- Subtotales ---------- */
   @Column('decimal', {
     precision: 10,
@@ -222,4 +276,28 @@ export class QuoteItem {
     transformer: DecimalTransformer,
   })
   subtotal7?: number | null;
+
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    nullable: true,
+    transformer: DecimalTransformer,
+  })
+  subtotal8?: number | null;
+
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    nullable: true,
+    transformer: DecimalTransformer,
+  })
+  subtotal9?: number | null;
+
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    nullable: true,
+    transformer: DecimalTransformer,
+  })
+  subtotal10?: number | null;
 }

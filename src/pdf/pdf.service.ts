@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { HtmlPdfService } from './html-pdf.service';
 import { Quote } from 'src/quotes/entities/quote.entity';
 
-type Emp = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+type Emp = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 
 type MetaIn = {
   destinatario: string;
@@ -13,6 +13,7 @@ type MetaIn = {
   presente?: string;
   condiciones?: string;
   incluirFirma?: boolean;
+  firmanteNombre?: string;
 };
 
 const FIRMA_BY_EMPRESA: Record<Emp, string> = {
@@ -23,6 +24,9 @@ const FIRMA_BY_EMPRESA: Record<Emp, string> = {
   5: 'assets/firma_emp5.png',
   6: 'assets/firma_emp6.png',
   7: 'assets/firma_emp7.png',
+  8: 'assets/firma_emp8.png',
+  9: 'assets/firma_emp9.png',
+  10: 'assets/firma_emp10.png',
 };
 
 const FIRMA_FALLBACK = 'assets/firma.png';
@@ -43,6 +47,7 @@ export class PdfService {
     const presente = (meta.presente?.trim() || 'PRESENTE.');
     const condiciones = meta.condiciones ?? '';
     const incluirFirma = meta.incluirFirma ?? false;
+    const firmanteNombre = meta.firmanteNombre?.trim() || '';
 
     // Total en letra (MXN)
     const totalEnLetra = this.numeroEnLetrasMXN(subtotales.total);
@@ -63,6 +68,7 @@ export class PdfService {
       condiciones,
       incluirFirma,
       firmaUrl,
+      firmanteNombre,
       items,
       ivaPct,
       totales: {
@@ -86,6 +92,9 @@ export class PdfService {
       5: { color: '#DB2777', logo: 'assets/emp5.png' },
       6: { color: '#CA8A04', logo: 'assets/emp6.png' },
       7: { color: '#1F2937', logo: 'assets/emp7.png' },
+      8: { color: '#1F2937', logo: 'assets/emp8.png' },
+      9: { color: '#1F2937', logo: 'assets/emp9.png' },
+      10: { color: '#1F2937', logo: 'assets/emp10.png' },
     };
     return map[empresa];
   }

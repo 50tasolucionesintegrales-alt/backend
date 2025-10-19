@@ -1,6 +1,5 @@
 <!doctype html>
 <html>
-
 <head>
   <meta charset="utf-8">
   <title>{{titulo}}</title>
@@ -12,7 +11,7 @@
       --thead: #c51b1b;
     }
 
-    /* Dejo tus márgenes tal cual */
+    /* Márgenes */
     @page {
       size: Letter;
       margin: 0 10mm 0;
@@ -24,7 +23,7 @@
       color: var(--ink);
     }
 
-    /* Fondo (tu membrete completo) */
+    /* Fondo (membrete) */
     .bg-page {
       position: fixed;
       inset: 0;
@@ -34,18 +33,14 @@
 
     .bg-page img {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       object-fit: cover;
       display: block;
     }
 
-    /* Aire superior para no pisar el logo/folio del membrete */
-    .header-space {
-      height: 36mm;
-    }
+    /* Espacio para no pisar encabezado del membrete */
+    .header-space { height: 36mm; }
 
     /* Dinámico */
     .fecha {
@@ -71,9 +66,7 @@
       color: #222;
     }
 
-    .label {
-      font-weight: 700;
-    }
+    .label { font-weight: 700; }
 
     /* Tabla */
     .table-wrap {
@@ -87,32 +80,11 @@
       border-collapse: collapse;
       page-break-inside: auto;
     }
-
-    thead {
-      display: table-header-group;
-    }
-
-    /* repite encabezado */
-    tr {
-      page-break-inside: avoid;
-      break-inside: avoid;
-    }
-
-    td,
-    th {
-      page-break-inside: avoid;
-      break-inside: avoid;
-    }
-
-    .keep {
-      page-break-inside: avoid;
-      break-inside: avoid;
-    }
-
-    .pb-before {
-      page-break-before: always;
-      break-before: page;
-    }
+    thead { display: table-header-group; } /* repite encabezado */
+    tr { page-break-inside: avoid; break-inside: avoid; }
+    td, th { page-break-inside: avoid; break-inside: avoid; }
+    .keep { page-break-inside: avoid; break-inside: avoid; }
+    .pb-before { page-break-before: always; break-before: page; }
 
     thead th {
       background: var(--thead);
@@ -131,13 +103,8 @@
       background: #fff;
     }
 
-    .center {
-      text-align: center;
-    }
-
-    .right {
-      text-align: right;
-    }
+    .center { text-align: center; }
+    .right { text-align: right; }
 
     /* Totales */
     .totals {
@@ -145,37 +112,21 @@
       justify-content: flex-end;
       margin: 10px 15px 0;
     }
-
     .totals table {
       width: 70mm;
       border-collapse: collapse;
     }
-
     .totals td {
       padding: 6px 8px;
       border-left: 1px solid var(--line);
       border-right: 1px solid var(--line);
     }
-
-    .totals tr:first-child td {
-      border-top: 1px solid var(--line);
-    }
-
-    .totals tr:last-child td {
-      border-bottom: 1px solid var(--line);
-    }
-
-    .totals .label {
-      font-weight: 700;
-      background: #f6f6f6;
-    }
-
-    .totals .value {
-      text-align: right;
-    }
+    .totals tr:first-child td { border-top: 1px solid var(--line); }
+    .totals tr:last-child  td { border-bottom: 1px solid var(--line); }
+    .totals .label { font-weight: 700; background: #f6f6f6; }
+    .totals .value { text-align: right; }
   </style>
 </head>
-
 <body>
 
   <div class="bg-page"><img src="assets/emp1.png" alt="membrete"></div>
@@ -208,42 +159,41 @@
           <th>Descripción</th>
           <th class="center" style="width:22mm;">Unidad</th>
           <th class="center" style="width:22mm;">Cantidad</th>
-          <th class="right" style="width:30mm;">Unitario</th>
-          <th class="right" style="width:30mm;">Parcial</th>
+          <th class="right"  style="width:30mm;">Unitario</th>
+          <th class="right"  style="width:30mm;">Parcial</th>
         </tr>
       </thead>
       <tbody>
         {{#each items}}
-        {{!-- Si estamos en el índice 10 (el ítem #11), cerramos tabla y abrimos otra con header nuevo en la siguiente
-        página --}}
-        {{#if (eq @index 10)}}
-      </tbody>
-    </table>
-  </div>
-  <div class="pb-before"></div>
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th class="center" style="width:16mm;">Concepto</th>
-          <th>Descripción</th>
-          <th class="center" style="width:22mm;">Unidad</th>
-          <th class="center" style="width:22mm;">Cantidad</th>
-          <th class="right" style="width:30mm;">Unitario</th>
-          <th class="right" style="width:30mm;">Parcial</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{/if}}
+          {{!-- Si @index === 10 (ítem #11), cerramos tabla y abrimos otra con header en nueva página --}}
+          {{#if (eq @index 10)}}
+            </tbody>
+          </table>
+        </div>
+        <div class="pb-before"></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="center" style="width:16mm;">Concepto</th>
+                <th>Descripción</th>
+                <th class="center" style="width:22mm;">Unidad</th>
+                <th class="center" style="width:22mm;">Cantidad</th>
+                <th class="right"  style="width:30mm;">Unitario</th>
+                <th class="right"  style="width:30mm;">Parcial</th>
+              </tr>
+            </thead>
+            <tbody>
+          {{/if}}
 
-        <tr>
-          <td class="center">{{inc @index}}</td>
-          <td>{{this.nombre}}</td>
-          <td class="center">{{this.unidad}}</td>
-          <td class="center">{{this.cantidad}}</td>
-          <td class="right">{{money this.unitario}}</td>
-          <td class="right">{{money this.parcial}}</td>
-        </tr>
+          <tr>
+            <td class="center">{{inc @index}}</td>
+            <td>{{this.nombre}}</td>
+            <td class="center">{{this.unidad}}</td>
+            <td class="center">{{this.cantidad}}</td>
+            <td class="right">{{money this.unitario}}</td>
+            <td class="right">{{money this.parcial}}</td>
+          </tr>
         {{/each}}
       </tbody>
     </table>
@@ -267,30 +217,36 @@
     </table>
   </div>
 
-  <!-- Cantidad en letra (línea adicional, sin tocar la tabla) -->
+  <!-- Cantidad en letra -->
   <div style="margin:6px 15px 0; font-size:12px;">
     <span class="label">Cantidad con letra:</span> {{totalEnLetra}}
   </div>
 
   {{#if (or condiciones incluirFirma)}}
-  <div class="pb-before"></div> <!-- nueva página -->
+    <div class="pb-before"></div> <!-- nueva página -->
 
-  {{#if condiciones}}
-  <div style="margin:10px 15px 0;">
-    <div class="label" style="margin-bottom:6px;">Condiciones generales</div>
-    <div style="line-height:1.55; color:#222;">
-      {{{condiciones}}}
-    </div>
-  </div>
-  {{/if}}
+    {{#if condiciones}}
+      <div style="margin:10px 15px 0;">
+        <div class="label" style="margin-bottom:6px;">Condiciones generales</div>
+        <div style="line-height:1.55; color:#222;">
+          {{{condiciones}}}
+        </div>
+      </div>
+    {{/if}}
 
-  {{#if incluirFirma}}
-  <div style="margin:30mm 15px 0; text-align:left;">
-    <img src="{{firmaUrl}}" alt="firma" style="height:45px; display:block; margin-bottom:6px;">
-  </div>
-  {{/if}}
+    {{#if incluirFirma}}
+      <div style="margin:30mm 15px 0; text-align:left;">
+        <img src="{{firmaUrl}}" alt="firma" style="height:45px; display:block; margin-bottom:6px;">
+        <div style="font-weight:600; margin-top:6px;">
+          {{#if firmanteNombre}}
+            {{firmanteNombre}}
+          {{else}}
+            Responsable de Ventas
+          {{/if}}
+        </div>
+      </div>
+    {{/if}}
   {{/if}}
 
 </body>
-
 </html>

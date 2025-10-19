@@ -9,7 +9,6 @@ import { UpdateItemDto } from './dto/update-item.dto';
 import { PdfService } from 'src/pdf/pdf.service';
 import { Service } from 'src/services/entities/service.entity';
 import { Role } from 'src/common/enums/roles.enum';
-import { SendQuoteDto } from './dto/send-quote.dto';
 
 @Injectable()
 export class QuotesService {
@@ -30,7 +29,7 @@ export class QuotesService {
     return quote;
   }
 
-  private sumSubtotals(quote: Quote, field: `subtotal${1 | 2 | 3 | 4 | 5 | 6 | 7}`) {
+  private sumSubtotals(quote: Quote, field: `subtotal${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10}`) {
     return quote.items.reduce((a, it) => a + Number((it as any)[field] ?? 0), 0);
   }
 
@@ -82,13 +81,13 @@ export class QuotesService {
       });
 
       // precálculo de sub/precios cuando haya margen definido
-      const apply = (m: number | null | undefined, idx: 1 | 2 | 3 | 4 | 5 | 6 | 7) => {
+      const apply = (m: number | null | undefined, idx: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10) => {
         if (m === null || m === undefined) return;
         const price = +(costo * (1 + m / 100)).toFixed(2);
         (item as any)[`precioFinal${idx}`] = price;
         (item as any)[`subtotal${idx}`] = +(price * cantidad).toFixed(2);
       };
-      [1, 2, 3, 4, 5, 6, 7].forEach((k) => apply((item as any)[`margenPct${k}`], k as any));
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].forEach((k) => apply((item as any)[`margenPct${k}`], k as any));
 
       await this.itemsRepo.save(item);
     }
@@ -113,14 +112,14 @@ export class QuotesService {
     const cost = Number(item.costo_unitario);
     const qty = Number(item.cantidad);
 
-    const recalc = (m: number | null | undefined, idx: 1 | 2 | 3 | 4 | 5 | 6 | 7) => {
+    const recalc = (m: number | null | undefined, idx: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10) => {
       if (m === null || m === undefined) return;
       const price = +(cost * (1 + m / 100)).toFixed(2);
       (item as any)[`precioFinal${idx}`] = price;
       (item as any)[`subtotal${idx}`] = +(price * qty).toFixed(2);
     };
 
-    [1, 2, 3, 4, 5, 6, 7].forEach((k) => recalc((item as any)[`margenPct${k}`], k as any));
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].forEach((k) => recalc((item as any)[`margenPct${k}`], k as any));
 
     const saved = await this.itemsRepo.save(item);
     return { message: 'Ítem actualizado', item: saved };
@@ -136,14 +135,14 @@ export class QuotesService {
     if (quote.status !== 'draft') throw new ForbiddenException('La cotización ya fue enviada');
 
     const subtotales: Record<number, number> = {};
-    ( [1,2,3,4,5,6,7] as const ).forEach(k => {
+    ( [1,2,3,4,5,6,7,8,9,10] as const ).forEach(k => {
       const sub = +this.sumSubtotals(quote, `subtotal${k}`).toFixed(2);
       subtotales[k] = sub;
       (quote as any)[`totalMargen${k}`] = sub; // mantenemos "totalMargen*" como subtotal pre-IVA
     });
 
     const ivaPct = Number(quote.ivaPct ?? 16);
-    ( [1,2,3,4,5,6,7] as const ).forEach(k => {
+    ( [1,2,3,4,5,6,7,8,9,10] as const ).forEach(k => {
       const iva = +(subtotales[k] * (ivaPct / 100)).toFixed(2);
       const total = +(subtotales[k] + iva).toFixed(2);
       (quote as any)[`totalIva${k}`] = iva;
@@ -165,6 +164,9 @@ export class QuotesService {
         5: { subtotal: subtotales[5], iva: (saved as any).totalIva5, total: (saved as any).totalFinal5 },
         6: { subtotal: subtotales[6], iva: (saved as any).totalIva6, total: (saved as any).totalFinal6 },
         7: { subtotal: subtotales[7], iva: (saved as any).totalIva7, total: (saved as any).totalFinal7 },
+        8: { subtotal: subtotales[8], iva: (saved as any).totalIva8, total: (saved as any).totalFinal8 },
+        9: { subtotal: subtotales[9], iva: (saved as any).totalIva9, total: (saved as any).totalFinal9 },
+        10: { subtotal: subtotales[10], iva: (saved as any).totalIva10, total: (saved as any).totalFinal10 },
       },
     };
   }

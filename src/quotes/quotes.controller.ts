@@ -103,6 +103,7 @@ export class QuotesController {
       presente: dto.presente,
       condiciones: dto.condiciones,
       incluirFirma: dto.incluirFirma,
+      firmanteNombre: dto.firmanteNombre,
     });
 
     res.setHeader('Content-Type', 'application/pdf');

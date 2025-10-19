@@ -89,6 +89,24 @@ export class Quote {
   })
   totalMargen7?: number | null;
 
+  @Column('decimal', {
+    name: 'total_margen8', precision: 12, scale: 2,
+    nullable: true, transformer: DecimalTransformer
+  })
+  totalMargen8?: number | null;
+
+  @Column('decimal', {
+    name: 'total_margen9', precision: 12, scale: 2,
+    nullable: true, transformer: DecimalTransformer
+  })
+  totalMargen9?: number | null;
+
+  @Column('decimal', {
+    name: 'total_margen10', precision: 12, scale: 2,
+    nullable: true, transformer: DecimalTransformer
+  })
+  totalMargen10?: number | null;
+
   /* IVA*/
   @Column('decimal', { name: 'total_iva1', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
   totalIva1?: number | null;
@@ -104,6 +122,12 @@ export class Quote {
   totalIva6?: number | null;
   @Column('decimal', { name: 'total_iva7', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
   totalIva7?: number | null;
+  @Column('decimal', { name: 'total_iva8', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
+  totalIva8?: number | null;
+  @Column('decimal', { name: 'total_iva9', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
+  totalIva9?: number | null;
+  @Column('decimal', { name: 'total_iva10', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
+  totalIva10?: number | null;
 
   /* Totales con IVA*/
   @Column('decimal', { name: 'total_final1', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
@@ -120,6 +144,12 @@ export class Quote {
   totalFinal6?: number | null;
   @Column('decimal', { name: 'total_final7', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
   totalFinal7?: number | null;
+  @Column('decimal', { name: 'total_final8', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
+  totalFinal8?: number | null;
+  @Column('decimal', { name: 'total_final9', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
+  totalFinal9?: number | null;
+  @Column('decimal', { name: 'total_final10', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
+  totalFinal10?: number | null;
 
   /* ---------- Ítems ---------- */
   @OneToMany(() => QuoteItem, (qi) => qi.quote, { cascade: true })
