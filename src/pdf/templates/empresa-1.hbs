@@ -1,6 +1,5 @@
 <!doctype html>
 <html>
-
 <head>
   <meta charset="utf-8">
   <title>{{titulo}}</title>
@@ -12,6 +11,7 @@
       --thead: #c51b1b;
     }
 
+    /* Dejo tus márgenes tal cual */
     @page {
       size: Letter;
       margin: 0 10mm 0;
@@ -30,6 +30,7 @@
       font-size: 12px;
     }
 
+    /* Fondo (tu membrete completo) */
     .bg-page {
       position: fixed;
       inset: 0;
@@ -38,14 +39,18 @@
     }
 
     .bg-page img {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
     }
 
+    /* Aire superior para no pisar el logo/folio del membrete */
     .header-space {
-      height: 23mm;
+      height: 36mm;
     }
 
     .fecha {
@@ -130,6 +135,8 @@
 
     .center { text-align: center; }
     .right { text-align: right; }
+    .center { text-align: center; }
+    .right { text-align: right; }
 
     /* Totales */
     .totals {
@@ -137,12 +144,10 @@
       justify-content: flex-end;
       margin: 10px 15px 0;
     }
-
     .totals table {
       width: 70mm;
       border-collapse: collapse;
     }
-
     .totals td {
       padding: 6px 8px;
       border-left: 1px solid var(--line);
@@ -156,7 +161,6 @@
     .totals .value { text-align: right; }
   </style>
 </head>
-
 <body>
 
   <div class="bg-page"><img src="assets/emp1.png" alt="membrete"></div>
@@ -190,20 +194,41 @@
           <th>Descripción</th>
           <th class="center" style="width:22mm;">Unidad</th>
           <th class="center" style="width:22mm;">Cantidad</th>
-          <th class="right" style="width:30mm;">Unitario</th>
-          <th class="right" style="width:30mm;">Parcial</th>
+          <th class="right"  style="width:30mm;">Unitario</th>
+          <th class="right"  style="width:30mm;">Parcial</th>
         </tr>
       </thead>
       <tbody>
         {{#each items}}
-        <tr>
-          <td class="center">{{inc @index}}</td>
-          <td>{{this.nombre}}</td>
-          <td class="center">{{this.unidad}}</td>
-          <td class="center">{{this.cantidad}}</td>
-          <td class="right">{{money this.unitario}}</td>
-          <td class="right">{{money this.parcial}}</td>
-        </tr>
+          {{!-- Si @index === 10 (ítem #11), cerramos tabla y abrimos otra con header en nueva página --}}
+          {{#if (eq @index 10)}}
+            </tbody>
+          </table>
+        </div>
+        <div class="pb-before"></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="center" style="width:16mm;">Concepto</th>
+                <th>Descripción</th>
+                <th class="center" style="width:22mm;">Unidad</th>
+                <th class="center" style="width:22mm;">Cantidad</th>
+                <th class="right"  style="width:30mm;">Unitario</th>
+                <th class="right"  style="width:30mm;">Parcial</th>
+              </tr>
+            </thead>
+            <tbody>
+          {{/if}}
+
+          <tr>
+            <td class="center">{{inc @index}}</td>
+            <td>{{this.nombre}}</td>
+            <td class="center">{{this.unidad}}</td>
+            <td class="center">{{this.cantidad}}</td>
+            <td class="right">{{money this.unitario}}</td>
+            <td class="right">{{money this.parcial}}</td>
+          </tr>
         {{/each}}
       </tbody>
     </table>
@@ -224,20 +249,27 @@
   </div>
 
   {{#if (or condiciones incluirFirma)}}
-  {{#if condiciones}}
-  <div style="margin:25px 15px 0;">
-    <div style="margin-bottom:6px; color:#143444; font-weight:800;">Condiciones</div>
-    <div style="line-height:1.55; color:#000;">
-      {{{condiciones}}}
-    </div>
-  </div>
-  {{/if}}
+      {{#if condiciones}}
+      <div style="margin:25px 15px 0;">
+        <div style="margin-bottom:6px; color:#143444; font-weight:800;">Condiciones</div>
+        <div style="line-height:1.55; color:#000;">
+          {{{condiciones}}}
+        </div>
+      </div>
+    {{/if}}
 
-  {{#if incluirFirma}}
-  <div style="margin:50mm 0 0; text-align:center;">
-    <img src="{{firmaUrl}}" alt="firma" style="height:90px; display:inline-block; margin-bottom:6px;">
-  </div>
-  {{/if}}
+    {{#if incluirFirma}}
+      <div style="margin:30mm 15px 0; text-align:left;">
+        <img src="{{firmaUrl}}" alt="firma" style="height:45px; display:block; margin-bottom:6px;">
+        <div style="font-weight:600; margin-top:6px;">
+          {{#if firmanteNombre}}
+            {{firmanteNombre}}
+          {{else}}
+            Responsable de Ventas
+          {{/if}}
+        </div>
+      </div>
+    {{/if}}
   {{/if}}
 
 
