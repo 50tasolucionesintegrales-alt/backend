@@ -75,11 +75,11 @@
     /* Firma sencilla por márgenes (como en el 5º) */
     .firma{
       text-align: center;     /* centrada dentro del recuadro */
-      margin-top: 97mm;       /* súbela/bájala: 10–16mm según tu impresión */
-      margin-right: 22mm;      /* dale aire al borde derecho del recuadro */
+      margin-top: 90mm;       /* súbela/bájala: 10–16mm según tu impresión */
+      margin-right: 32mm;      /* dale aire al borde derecho del recuadro */
     }
     .firma img{
-      height: 20mm;           /* ajusta 28–36mm si la ves muy chica/grande */
+      height: 24mm;           /* ajusta 28–36mm si la ves muy chica/grande */
       display: inline-block;
     }
 
@@ -145,7 +145,7 @@
     <div class="enletra">(Monto Total en letra: {{totalEnLetra}})</div>
   {{/if}}
 
-  <!-- Términos + espacio firma (sin textos “Atentamente”/nombre) -->
+  <!-- Términos + espacio firma (actualizado, respetando alineación centrada del formato) -->
   <div class="bottom-row">
     <div class="terms">
       {{#if condiciones}}
@@ -157,10 +157,18 @@
     <div class="firma">
       {{#if incluirFirma}}
         <img src="{{firmaUrl}}" alt="firma">
+
+        <div style="font-weight:bold; margin-top:0px; padding-left:25px;">
+          {{#if firmanteNombre}}
+            {{firmanteNombre}}
+          {{else}}
+            Responsable de Ventas
+          {{/if}}
+        </div>
       {{/if}}
     </div>
-
   </div>
+
 
   <div class="footer-space"></div>
 </body>

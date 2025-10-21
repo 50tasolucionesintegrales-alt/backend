@@ -172,12 +172,24 @@
       </div>
     {{/if}}
 
-    {{#if incluirFirma}}
-      <div style="margin:53mm 0 0; text-align:center;">
-        <img src="{{firmaUrl}}" alt="firma" style="height:115px; display:inline-block; margin-bottom:6px; margin-right:90px;">
+    <div style="margin:45mm auto 0; text-align:center;">
+      <span style="font-weight:600; display:block; margin-bottom:8px;">Atentamente</span>
+
+      {{#if incluirFirma}}
+      <img src="{{firmaUrl}}" alt="firma"
+        style="height:95px; display:block; margin:0 auto 8px auto;">
+      {{/if}}
+
+      <div style="font-weight:600; margin-top:10px;">
+        {{#if firmanteNombre}}
+          {{firmanteNombre}}
+        {{else}}
+          Responsable de Ventas
+        {{/if}}
       </div>
-    {{/if}}
+    </div>
   {{/if}}
+
 
 </body>
 </html>

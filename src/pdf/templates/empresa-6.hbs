@@ -111,15 +111,27 @@
   <div class="dest">{{destinatario}}</div>
   <div class="presente">{{presente}}</div>
 
-  <!-- Firma (solo imagen, el texto ya viene en el fondo) -->
+  <!-- Firma (alineación derecha, respetando la estructura original del formato) -->
   <div class="sig-row">
     <div></div>
     {{#if incluirFirma}}
-      <div class="sig-box">
-        <img src="{{firmaUrl}}" alt="firma">
+      <div class="sig-box" style="text-align:right;">
+        <span style="font-weight:700; display:block; margin-bottom:6px; padding-right:30px;">Atentamente</span>
+
+        <img src="{{firmaUrl}}" alt="firma"
+          style="height:100px; display:inline-block; margin-bottom:6px;">
+
+        <div style="font-weight:700; padding-right:25px;">
+          {{#if firmanteNombre}}
+            {{firmanteNombre}}
+          {{else}}
+            Responsable de Ventas
+          {{/if}}
+        </div>
       </div>
     {{/if}}
   </div>
+
 
   <!-- Resumen -->
   <div class="summary">

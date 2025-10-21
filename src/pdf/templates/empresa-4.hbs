@@ -200,12 +200,24 @@
   </div>
   {{/if}}
 
-  <!-- Firma centrada (si aplica) -->
+  <!-- Firma centrada (misma alineación original, mejor estructura y consistencia) -->
   {{#if incluirFirma}}
-  <div class="firma">
-    <img src="{{firmaUrl}}" alt="firma">
+  <div style="margin:90mm auto 0; text-align:center;">
+    <span style="font-weight:800; display:block; margin-bottom:8px;">Atentamente</span>
+
+    <img src="{{firmaUrl}}" alt="firma"
+      style="height:50px; display:block; margin:0 auto 8px auto;">
+
+    <div style="font-weight:800; margin-top:10px;">
+      {{#if firmanteNombre}}
+        {{firmanteNombre}}
+      {{else}}
+        Responsable de Ventas
+      {{/if}}
+    </div>
   </div>
   {{/if}}
+
 
 </body>
 </html>

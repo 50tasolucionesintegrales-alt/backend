@@ -47,8 +47,8 @@
     /* ===== Tabla principal ===== */
     .table-wrap{ position:relative; margin:12px 15px 0; }
     table{
-      width:96%;                 /* no ocupa todo el ancho */
-      margin:0 auto;             /* centrada */
+      width:96%;
+      margin:0 auto;
       border-collapse:collapse;
       page-break-inside:auto;
     }
@@ -56,10 +56,10 @@
     tr, td, th{ page-break-inside:avoid; break-inside:avoid; }
 
     thead th{
-      background:transparent;                /* sin fondo */
+      background:transparent;
       color:#333;
       font-weight:700;
-      border:1px solid var(--theadBorder);   /* borde color brand */
+      border:1px solid var(--theadBorder);
       padding:8px;
       font-size:12px;
       text-align:left;
@@ -67,36 +67,32 @@
     }
 
     tbody td{
-      border:1px solid var(--line);          /* borde color brand */
+      border:1px solid var(--line);
       padding:6px 8px;
       font-size:12px;
-      background:transparent;                /* sin fondo */
+      background:transparent;
       vertical-align:top;
     }
 
     .center{ text-align:center; }
     .right { text-align:right; }
 
-    /* ===== Fila de resumen (SOLO ajustado “letra + condiciones”) ===== */
     .summaryRow{
-      width:96%;                  /* mismo ancho que la tabla */
-      margin:16px 30px 0;         /* centrada y con aire arriba */
+      width:96%;
+      margin:16px 30px 0;
       display:grid;
-      grid-template-columns: 220px 1fr; /* izq: totales | der: letra+condiciones */
+      grid-template-columns: 220px 1fr;
       align-items:start;
     }
 
-    /* Columna derecha apilada y alineada a la derecha (sin amontonar) */
     .rightCol{
       display:flex;
       flex-direction:column;
-      gap:14px;                   /* espacio entre “en letra” y “condiciones” */
-      max-width:483px;            /* ancho cómodo */
-      margin-left:15px;           /* la empuja a la derecha */
-      /* sin márgenes laterales extra */
+      gap:14px;
+      max-width:483px;
+      margin-left:15px;
     }
 
-    /* Totales (sin cambios visuales relevantes para tu pedido) */
     .totals table{ width:100%; border-collapse:collapse; }
     .totals td{
       padding:8px 10px;
@@ -109,23 +105,19 @@
     .totals .label{ font-weight:700; }
     .totals .value{ text-align:right; }
 
-    /* Monto en letra */
     .enletra{
       border:1px solid var(--line);
       background:transparent;
       padding:12px 16px;
       line-height:1.6;
-      /* sin margin-left extra */
     }
     .enletra .title{ font-weight:800; color:#000; margin-bottom:8px; }
 
-    /* Condiciones (debajo, a la derecha) */
     .cond-box{
       border:1px solid var(--line);
       background:transparent;
       padding:12px 16px;
       line-height:1.6;
-      /* sin margin-left extra */
     }
     .cond-box .title{ font-weight:800; color:#000; margin-bottom:8px; }
     .cond-box .content{ color:#111; }
@@ -150,12 +142,10 @@
   <div class="dest">{{destinatario}}</div>
   <div class="presente">{{presente}}</div><br>
 
-  <!-- Texto/introducción -->
   <div class="intro">
     {{{descripcion}}}
   </div>
 
-  <!-- ===== TABLA ===== -->
   <div class="table-wrap">
     <table>
       <thead>
@@ -183,9 +173,7 @@
     </table>
   </div>
 
-  <!-- ===== RESUMEN: Totales | (derecha) Monto en letra + Condiciones ===== -->
   <div class="summaryRow">
-    <!-- Totales -->
     <div class="totals">
       <table>
         <tr><td class="label">SUBTOTAL:</td><td class="value">{{money totales.subtotal}}</td></tr>
@@ -194,7 +182,6 @@
       </table>
     </div>
 
-    <!-- Derecha: primero monto en letra y abajo condiciones -->
     <div class="rightCol">
       <div class="enletra">
         <div class="title">MONTO TOTAL EN LETRA:</div>
@@ -212,12 +199,23 @@
     </div>
   </div>
 
-  <!-- Firma (si este formato la usa; ajusta posición según tu membrete) -->
   {{#if incluirFirma}}
-  <div style="margin:55mm 0 0; text-align:left;">
-    <img src="{{firmaUrl}}" alt="firma" style="height:125px; display:inline-block; margin-left:18px;">
+  <div style="margin:45mm 0 0; text-align:left;">
+    <span style="font-weight:800; display:block; margin-left:18px; margin-bottom:8px;">ATENTAMENTE</span>
+
+    <img src="{{firmaUrl}}" alt="firma"
+      style="height:100px; display:block; margin-left:18px; margin-bottom:8px;">
+
+    <div style="font-weight:800; margin-left:18px; margin-top:10px;">
+      {{#if firmanteNombre}}
+        {{firmanteNombre}}
+      {{else}}
+        Responsable de Ventas
+      {{/if}}
+    </div>
   </div>
   {{/if}}
+
 
 </body>
 </html>

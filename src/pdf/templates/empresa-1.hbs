@@ -1,5 +1,6 @@
 <!doctype html>
 <html>
+
 <head>
   <meta charset="utf-8">
   <title>{{titulo}}</title>
@@ -11,7 +12,6 @@
       --thead: #c51b1b;
     }
 
-    /* Dejo tus márgenes tal cual */
     @page {
       size: Letter;
       margin: 0 10mm 0;
@@ -20,7 +20,7 @@
     @font-face {
       font-family: "InterVar";
       src: url("assets/fonts/Inter-VariableFont.ttf") format("truetype-variations");
-      font-weight: 100 900;  /* acepta todo el rango */
+      font-weight: 100 900;
       font-style: normal;
       font-display: swap;
     }
@@ -30,7 +30,6 @@
       font-size: 12px;
     }
 
-    /* Fondo (tu membrete completo) */
     .bg-page {
       position: fixed;
       inset: 0;
@@ -39,18 +38,14 @@
     }
 
     .bg-page img {
-      position: absolute;
-      top: 0;
-      left: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
     }
 
-    /* Aire superior para no pisar el logo/folio del membrete */
     .header-space {
-      height: 36mm;
+      height: 23mm;
     }
 
     .fecha {
@@ -85,10 +80,9 @@
       font-weight: 800;
       margin: 12px 15px 0;
       font-size: 14px;
-      color:#143444;
+      color: #143444;
     }
 
-    /* Tabla */
     .table-wrap {
       position: relative;
       margin: 12px 15px 0;
@@ -133,34 +127,50 @@
       background: #fff;
     }
 
-    .center { text-align: center; }
-    .right { text-align: right; }
-    .center { text-align: center; }
-    .right { text-align: right; }
+    .center {
+      text-align: center;
+    }
 
-    /* Totales */
+    .right {
+      text-align: right;
+    }
+
     .totals {
       display: flex;
       justify-content: flex-end;
       margin: 10px 15px 0;
     }
+
     .totals table {
       width: 70mm;
       border-collapse: collapse;
     }
+
     .totals td {
       padding: 6px 8px;
       border-left: 1px solid var(--line);
       border-right: 1px solid var(--line);
     }
 
-    .totals tr:first-child td { border-top: 1px solid var(--line); }
-    .totals tr:last-child td { border-bottom: 1px solid var(--line); }
+    .totals tr:first-child td {
+      border-top: 1px solid var(--line);
+    }
 
-    .totals .label { font-weight: 700; background: #f6f6f6; }
-    .totals .value { text-align: right; }
+    .totals tr:last-child td {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .totals .label {
+      font-weight: 700;
+      background: #f6f6f6;
+    }
+
+    .totals .value {
+      text-align: right;
+    }
   </style>
 </head>
+
 <body>
 
   <div class="bg-page"><img src="assets/emp1.png" alt="membrete"></div>
@@ -169,12 +179,11 @@
 
   <div class="folio">{{folio}}</div>
 
-  <!-- Lugar + fecha -->
   <div class="fecha">{{lugar}}; a {{fecha}}</div>
 
   <div class="dest">{{destinatario}}</div>
   <div class="presente">{{presente}}</div>
-  
+
   <div class="intro">
     <div><span class="label">Solicitud de cotización:</span> {{titulo}}</div>
     <div><span class="label">No. de conceptos:</span> {{items.length}}</div>
@@ -185,7 +194,6 @@
     {{{descripcion}}}
   </div>
 
-  <!-- TABLA -->
   <div class="table-wrap">
     <table>
       <thead>
@@ -194,84 +202,75 @@
           <th>Descripción</th>
           <th class="center" style="width:22mm;">Unidad</th>
           <th class="center" style="width:22mm;">Cantidad</th>
-          <th class="right"  style="width:30mm;">Unitario</th>
-          <th class="right"  style="width:30mm;">Parcial</th>
+          <th class="right" style="width:30mm;">Unitario</th>
+          <th class="right" style="width:30mm;">Parcial</th>
         </tr>
       </thead>
       <tbody>
         {{#each items}}
-          {{!-- Si @index === 10 (ítem #11), cerramos tabla y abrimos otra con header en nueva página --}}
-          {{#if (eq @index 10)}}
-            </tbody>
-          </table>
-        </div>
-        <div class="pb-before"></div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th class="center" style="width:16mm;">Concepto</th>
-                <th>Descripción</th>
-                <th class="center" style="width:22mm;">Unidad</th>
-                <th class="center" style="width:22mm;">Cantidad</th>
-                <th class="right"  style="width:30mm;">Unitario</th>
-                <th class="right"  style="width:30mm;">Parcial</th>
-              </tr>
-            </thead>
-            <tbody>
-          {{/if}}
-
-          <tr>
-            <td class="center">{{inc @index}}</td>
-            <td>{{this.nombre}}</td>
-            <td class="center">{{this.unidad}}</td>
-            <td class="center">{{this.cantidad}}</td>
-            <td class="right">{{money this.unitario}}</td>
-            <td class="right">{{money this.parcial}}</td>
-          </tr>
+        <tr>
+          <td class="center">{{inc @index}}</td>
+          <td>{{this.nombre}}</td>
+          <td class="center">{{this.unidad}}</td>
+          <td class="center">{{this.cantidad}}</td>
+          <td class="right">{{money this.unitario}}</td>
+          <td class="right">{{money this.parcial}}</td>
+        </tr>
         {{/each}}
       </tbody>
     </table>
   </div>
 
-  <!-- Totales -->
   <div class="totals keep">
     <table>
-      <tr><td class="label">Subtotal</td><td class="value">{{money totales.subtotal}}</td></tr>
-      <tr><td class="label">IVA ({{ivaPct}}%)</td><td class="value">{{money totales.iva}}</td></tr>
-      <tr><td class="label">Monto Total</td><td class="value">{{money totales.total}}</td></tr>
+      <tr>
+        <td class="label">Subtotal</td>
+        <td class="value">{{money totales.subtotal}}</td>
+      </tr>
+      <tr>
+        <td class="label">IVA ({{ivaPct}}%)</td>
+        <td class="value">{{money totales.iva}}</td>
+      </tr>
+      <tr>
+        <td class="label">Monto Total</td>
+        <td class="value">{{money totales.total}}</td>
+      </tr>
     </table>
   </div>
 
-  <!-- Cantidad en letra -->
   <div style="margin:12px 15px 0; font-size:12px; font-weight:600; color:#000;">
     <span class="label">Importe en letra:</span> {{totalEnLetra}}
   </div>
 
   {{#if (or condiciones incluirFirma)}}
-      {{#if condiciones}}
-      <div style="margin:25px 15px 0;">
-        <div style="margin-bottom:6px; color:#143444; font-weight:800;">Condiciones</div>
-        <div style="line-height:1.55; color:#000;">
-          {{{condiciones}}}
-        </div>
-      </div>
-    {{/if}}
+  {{#if condiciones}}
+  <div style="margin:25px 15px 0;">
+    <div style="margin-bottom:6px; color:#143444; font-weight:800;">Condiciones</div>
+    <div style="line-height:1.55; color:#000;">
+      {{{condiciones}}}
+    </div>
+  </div>
+  {{/if}}
+
+  <div style="margin:45mm auto 0; text-align:center;">
+    <span style="font-weight:600; display:block; margin-bottom:8px;">Atentamente</span>
 
     {{#if incluirFirma}}
-      <div style="margin:30mm 15px 0; text-align:left;">
-        <img src="{{firmaUrl}}" alt="firma" style="height:45px; display:block; margin-bottom:6px;">
-        <div style="font-weight:600; margin-top:6px;">
-          {{#if firmanteNombre}}
-            {{firmanteNombre}}
-          {{else}}
-            Responsable de Ventas
-          {{/if}}
-        </div>
-      </div>
+    <img src="{{firmaUrl}}" alt="firma"
+      style="height:85px; display:block; margin:0 auto 8px auto;">
     {{/if}}
+
+    <div style="font-weight:600; margin-top:10px;">
+      {{#if firmanteNombre}}
+        {{firmanteNombre}}
+      {{else}}
+        Responsable de Ventas
+      {{/if}}
+    </div>
+  </div>
   {{/if}}
 
 
 </body>
+
 </html>
