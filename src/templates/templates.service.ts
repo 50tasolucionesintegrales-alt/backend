@@ -14,6 +14,9 @@ export class TemplatesService {
     emp5: 'Mariana Loeza Hernández',
     emp6: 'Michelle',
     emp7: 'Chalor',
+    emp8: 'Leyses',
+    emp9: 'ES',
+    emp10: 'Jessica Rabadan Castro',
   };
 
   getAllTemplates(): { name: string; data: string }[] {
