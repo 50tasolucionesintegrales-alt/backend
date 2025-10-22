@@ -101,29 +101,96 @@ export class QuotesService {
 
   /* ───────── Actualizar ítem ───────── */
   async updateItem(itemId: string, dto: UpdateItemDto) {
-    const item = await this.itemsRepo.findOne({ where: { id: itemId }, relations: ['quote'] });
+    const item = await this.itemsRepo.findOne({
+      where: { id: itemId },
+      relations: ['quote'], // puedes añadir product/category/service si lo usas en la respuesta
+    });
     if (!item) throw new NotFoundException('Item no encontrado');
     if (item.quote.status !== 'draft') throw new ForbiddenException('La cotización ya fue enviada');
 
+    // 1) Aplicar cambios del DTO al ítem
     Object.entries(dto).forEach(([k, v]) => {
       if (v !== undefined) (item as any)[k] = v;
     });
 
-    const cost = Number(item.costo_unitario);
-    const qty = Number(item.cantidad);
+    // 2) Recalcular PU y subtotal del ítem para 1..10
+    const cost = Number(item.costo_unitario) || 0;
+    const qty = Number(item.cantidad) || 0;
 
-    const recalc = (m: number | null | undefined, idx: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10) => {
+    const recalc = (m: number | null | undefined, idx: number) => {
       if (m === null || m === undefined) return;
-      const price = +(cost * (1 + m / 100)).toFixed(2);
+      const price = +(cost * (1 + (Number(m) || 0) / 100)).toFixed(2);
       (item as any)[`precioFinal${idx}`] = price;
       (item as any)[`subtotal${idx}`] = +(price * qty).toFixed(2);
     };
 
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].forEach((k) => recalc((item as any)[`margenPct${k}`], k as any));
+    for (let i = 1; i <= 10; i++) {
+      recalc((item as any)[`margenPct${i}`], i);
+    }
 
     const saved = await this.itemsRepo.save(item);
-    return { message: 'Ítem actualizado', item: saved };
+
+    // 3) Recalcular totales del QUOTE (1..10)
+    //    - carga todos los ítems de la cotización
+    // Cargar quote + todos los items de la cotización
+    const quoteId = saved.quote.id;
+    const [quote, items] = await Promise.all([
+      this.quotesRepo.findOne({ where: { id: quoteId } }),
+      this.itemsRepo.find({ where: { quote: { id: quoteId } } }),
+    ]);
+
+    if (!quote) throw new NotFoundException('Quote no encontrada');
+
+    const round2 = (n: number) => Math.round(n * 100) / 100;
+    const ivaPct = Number(quote.ivaPct ?? 0);
+
+    for (let i = 1; i <= 10; i++) {
+      // Subtotales válidos para el formato i (sólo números finitos)
+      const subtotals = items
+        .map(it => Number((it as any)[`subtotal${i}`]))
+        .filter(n => Number.isFinite(n));
+
+      // Si NADIE usa el formato i → todo a 0 y continúa
+      if (subtotals.length === 0) {
+        (quote as any)[`totalMargen${i}`] = 0;
+        (quote as any)[`totalIva${i}`] = 0;
+        (quote as any)[`totalFinal${i}`] = 0;
+        continue;
+      }
+
+      // Suma de subtotales y totales con IVA
+      const subtotal = round2(subtotals.reduce((a, b) => a + b, 0));
+      const totalIva = round2(subtotal * ivaPct / 100);
+      const totalFinal = round2(subtotal + totalIva);
+
+      // Margen total: SOLO cuando el item tiene precioFinal{i} válido
+      const totalMargen = round2(
+        items.reduce((acc, it) => {
+          const price = Number((it as any)[`precioFinal${i}`]);
+          const cost = Number((it as any).costo_unitario);
+          const qty = Number((it as any).cantidad);
+          if (!Number.isFinite(price) || !Number.isFinite(cost) || !Number.isFinite(qty)) return acc;
+          return acc + (price - cost) * qty;
+        }, 0)
+      );
+
+      (quote as any)[`totalMargen${i}`] = totalMargen;
+      (quote as any)[`totalIva${i}`] = totalIva;
+      (quote as any)[`totalFinal${i}`] = totalFinal;
+    }
+
+    // Guardar el quote con los totales recalculados
+    await this.quotesRepo.save(quote);
+
+    // (Opcional pero recomendado) Recargar el ítem con relaciones frescas para responder
+    const fresh = await this.itemsRepo.findOne({
+      where: { id: saved.id },
+      relations: ['quote'], // añade product/service si los necesitas en la respuesta
+    });
+
+    return { message: 'Ítem actualizado', item: fresh };
   }
+
 
   /* ───────── Enviar cotización (genera PDFs) ───────── */
   async sendQuote(id: string) {
