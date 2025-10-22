@@ -8,15 +8,15 @@ export class TemplatesService {
 
   private empresaMap: Record<string, string> = {
     emp1: 'Goltech',
-    emp2: 'Juan Angel Bazan Gonzales',
-    emp3: 'Alejandra Giselle Hernández Islas',
-    emp4: 'Adrián Orihuela Rodríguez',
-    emp5: 'Mariana Loeza Hernández',
+    emp2: 'Juan Ángel Bazán',
+    emp3: 'Alejandra G. Hernández',
+    emp4: 'Adrián Orihuela',
+    emp5: 'Mariana Loeza',
     emp6: 'Michelle',
     emp7: 'Chalor',
-    emp8: 'Leyses',
-    emp9: 'ES',
-    emp10: 'Jessica Rabadan Castro',
+    emp8: 'Leyses Soluciones',
+    emp9: 'Eduardo Suárez (ES)',
+    emp10: 'Jessica Rabadán',
   };
 
   getAllTemplates(): { name: string; data: string }[] {
@@ -26,7 +26,7 @@ export class TemplatesService {
 
     return fs
       .readdirSync(this.assetsDir)
-      .filter(file => /^emp[1-7]\.png$/i.test(file))
+      .filter(file => /^emp[1-10]\.png$/i.test(file))
       .map(file => {
         const filePath = path.join(this.assetsDir, file);
         const buffer = fs.readFileSync(filePath);
