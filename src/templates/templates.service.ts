@@ -26,7 +26,7 @@ export class TemplatesService {
 
     return fs
       .readdirSync(this.assetsDir)
-      .filter(file => /^emp[1-10]\.png$/i.test(file))
+      .filter(file => /^emp(10|[1-9])\.png$/i.test(file))
       .map(file => {
         const filePath = path.join(this.assetsDir, file);
         const buffer = fs.readFileSync(filePath);
