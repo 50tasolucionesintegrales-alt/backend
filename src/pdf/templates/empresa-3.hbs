@@ -198,13 +198,17 @@
       {{/if}}
     </div>
   </div>
-
-  {{#if incluirFirma}}
+  
   <div style="margin:45mm 0 0; text-align:left;">
     <span style="font-weight:800; display:block; margin-left:18px; margin-bottom:8px;">ATENTAMENTE</span>
 
-    <img src="{{firmaUrl}}" alt="firma"
-      style="height:100px; display:block; margin-left:18px; margin-bottom:8px;">
+    {{#if incluirFirma}}
+      <img src="{{firmaUrl}}" alt="firma"
+          style="height:100px; display:block; margin-left:18px; margin-bottom:8px;">
+    {{else}}
+      <!-- Espacio reservado para la firma cuando no hay imagen -->
+      <div style="height:100px; margin-left:18px; margin-bottom:8px;"></div>
+    {{/if}}
 
     <div style="font-weight:800; margin-left:18px; margin-top:10px;">
       {{#if firmanteNombre}}
@@ -214,8 +218,6 @@
       {{/if}}
     </div>
   </div>
-  {{/if}}
-
 
 </body>
 </html>

@@ -214,6 +214,10 @@
           {{#if firmaUrl}}
             <img class="sign-img" src="{{firmaUrl}}" alt="firma">
           {{/if}}
+          {{else}}
+            <!-- Espacio reservado para la firma cuando no hay imagen -->
+            <div style="height:100px; margin-left:18px; margin-bottom:8px;"></div>
+          {{/if}}
           <div class="sign-name">
             {{#if firmanteNombre}}
               {{{firmanteNombre}}}  {{!-- permite “Nombre<br>Cargo” --}}
@@ -221,9 +225,6 @@
               <!-- Nombre y cargo (si no mandas nada, el recuadro queda como espacio de firma) -->
             {{/if}}
           </div>
-        {{else}}
-          <!-- Espacio reservado para firma en físico -->
-        {{/if}}
       </div>
     </div>
   </div>

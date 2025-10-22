@@ -189,10 +189,14 @@
     {{/if}}
   </div>
 
-  {{#if incluirFirma}}
     <div class="signature-fixed">
       <div class="attn">ATENTAMENTE</div>
+      {{#if incluirFirma}}
       {{#if firmaUrl}}<img src="{{firmaUrl}}" alt="firma">{{/if}}
+      {{else}}
+        <!-- Espacio reservado para la firma cuando no hay imagen -->
+        <div style="height:100px; margin-left:18px; margin-bottom:8px;"></div>
+      {{/if}}
       <div class="who">
         {{#if firmanteNombre}}
           {{{firmanteNombre}}} <!-- ej: "Ing. Laura Gómez<br>Directora de ventas" -->
@@ -201,7 +205,6 @@
         {{/if}}
       </div>
     </div>
-  {{/if}}
 
   <div class="footer-space"></div>
 </body>
