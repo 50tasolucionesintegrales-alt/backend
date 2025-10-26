@@ -4,24 +4,27 @@ import { Repository, ILike } from 'typeorm';
 import { Category } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { normalizeCategoryName } from 'src/common/utils/normalize';
 
 @Injectable()
 export class CategoriesService {
   constructor(
-    @InjectRepository(Category) private readonly categoryRepo: Repository<Category>,
-  ) { }
+    @InjectRepository(Category)
+    private readonly categoryRepo: Repository<Category>,
+  ) {}
 
   async create(dto: CreateCategoryDto) {
-    const nombre_norm = normalizeCategoryName(dto.nombre);
-    const exists = await this.categoryRepo.findOne({ where: { nombre_norm } });
+    const nombre = dto.nombre.trim();
+    const exists = await this.categoryRepo.findOne({
+      where: { nombre: ILike(nombre) },
+    });
+
     if (exists) throw new BadRequestException('Ya existe una categoría con ese nombre');
 
     const category = this.categoryRepo.create({
-      nombre: dto.nombre.trim(),
-      nombre_norm,
+      nombre,
       descripcion: dto.descripcion ?? '',
     });
+
     return this.categoryRepo.save(category);
   }
 
@@ -29,13 +32,16 @@ export class CategoriesService {
     const categoria = await this.findOne(id);
 
     if (dto.nombre && dto.nombre.trim() !== categoria.nombre) {
-      const nombre_norm = normalizeCategoryName(dto.nombre);
-      const exists = await this.categoryRepo.findOne({ where: { nombre_norm } });
+      const nombre = dto.nombre.trim();
+      const exists = await this.categoryRepo.findOne({
+        where: { nombre: ILike(nombre) },
+      });
+
       if (exists && exists.id !== id) {
         throw new BadRequestException('Ya existe otra categoría con ese nombre');
       }
-      categoria.nombre = dto.nombre.trim();
-      categoria.nombre_norm = nombre_norm;
+
+      categoria.nombre = nombre;
     }
 
     if (dto.descripcion !== undefined) {
@@ -61,15 +67,10 @@ export class CategoriesService {
     return categoria;
   }
 
-  // Búsqueda para typeahead (ver #3)
+  // Búsqueda por nombre (typeahead)
   async searchByName(q: string) {
-    const term = normalizeCategoryName(q);
-    // Búsqueda por prefijo/similar (fallback genérico)
     return this.categoryRepo.find({
-      where: [
-        { nombre_norm: ILike(`${term}%`) },
-        { nombre: ILike(`%${q.trim()}%`) }, // adicional por si el usuario escribe con acentos
-      ],
+      where: { nombre: ILike(`%${q.trim()}%`) },
       take: 10,
       order: { nombre: 'ASC' },
     });

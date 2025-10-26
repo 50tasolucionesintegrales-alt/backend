@@ -10,10 +10,6 @@ export class Category {
   @Column({ type: 'varchar', length: 255 })
   nombre!: string;
 
-  @Column({ type: 'varchar', length: 255 })
-  @Index({ unique: true })
-  nombre_norm!: string; 
-
   @Column({ type: 'text', nullable: true })
   descripcion?: string;
 
