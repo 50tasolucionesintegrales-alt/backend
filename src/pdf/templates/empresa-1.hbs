@@ -194,83 +194,87 @@
     {{{descripcion}}}
   </div>
 
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th class="center" style="width:16mm;">Concepto</th>
-          <th>Descripción</th>
-          <th class="center" style="width:22mm;">Unidad</th>
-          <th class="center" style="width:22mm;">Cantidad</th>
-          <th class="right" style="width:30mm;">Unitario</th>
-          <th class="right" style="width:30mm;">Parcial</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{#each items}}
-        <tr>
-          <td class="center">{{inc @index}}</td>
-          <td>{{this.nombre}}</td>
-          <td class="center">{{this.unidad}}</td>
-          <td class="center">{{this.cantidad}}</td>
-          <td class="right">{{money this.unitario}}</td>
-          <td class="right">{{money this.parcial}}</td>
-        </tr>
-        {{/each}}
-      </tbody>
-    </table>
-  </div>
+  {{!-- Se muestran los items en grupos de 5 por hoja --}}
+  {{#each (chunk items 5)}}
+    <div class="table-wrap {{#unless @first}}pb-before{{/unless}}">
+      <table>
+        <thead>
+          <tr>
+            <th class="center" style="width:16mm;">Concepto</th>
+            <th>Descripción</th>
+            <th class="center" style="width:22mm;">Unidad</th>
+            <th class="center" style="width:22mm;">Cantidad</th>
+            <th class="right" style="width:30mm;">Unitario</th>
+            <th class="right" style="width:30mm;">Parcial</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each this}}
+          <tr>
+            <td class="center">{{addOne (add (multiply @../index 5) @index)}}</td>
+            <td>{{this.nombre}}</td>
+            <td class="center">{{this.unidad}}</td>
+            <td class="center">{{this.cantidad}}</td>
+            <td class="right">{{money this.unitario}}</td>
+            <td class="right">{{money this.parcial}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
 
-  <div class="totals keep">
-    <table>
-      <tr>
-        <td class="label">Subtotal</td>
-        <td class="value">{{money totales.subtotal}}</td>
-      </tr>
-      <tr>
-        <td class="label">IVA ({{ivaPct}}%)</td>
-        <td class="value">{{money totales.iva}}</td>
-      </tr>
-      <tr>
-        <td class="label">Monto Total</td>
-        <td class="value">{{money totales.total}}</td>
-      </tr>
-    </table>
-  </div>
+      {{!-- Solo en la última página mostramos totales y firma --}}
+      {{#if @last}}
+        <div class="totals keep">
+          <table>
+            <tr>
+              <td class="label">Subtotal</td>
+              <td class="value">{{money totales.subtotal}}</td>
+            </tr>
+            <tr>
+              <td class="label">IVA ({{ivaPct}}%)</td>
+              <td class="value">{{money totales.iva}}</td>
+            </tr>
+            <tr>
+              <td class="label">Monto Total</td>
+              <td class="value">{{money totales.total}}</td>
+            </tr>
+          </table>
+        </div>
 
-  <div style="margin:12px 15px 0; font-size:12px; font-weight:600; color:#000;">
-    <span class="label">Importe en letra:</span> {{totalEnLetra}}
-  </div>
+        <div style="margin:12px 15px 0; font-size:12px; font-weight:600; color:#000;">
+          <span class="label">Importe en letra:</span> {{totalEnLetra}}
+        </div>
 
-  {{#if (or condiciones incluirFirma)}}
-  {{#if condiciones}}
-  <div style="margin:25px 15px 0;">
-    <div style="margin-bottom:6px; color:#143444; font-weight:800;">Condiciones</div>
-    <div style="line-height:1.55; color:#000;">
-      {{{condiciones}}}
-    </div>
-  </div>
-  {{/if}}
+        {{#if (or condiciones incluirFirma)}}
+        {{#if condiciones}}
+        <div style="margin:25px 15px 0;">
+          <div style="margin-bottom:6px; color:#143444; font-weight:800;">Condiciones</div>
+          <div style="line-height:1.55; color:#000;">
+            {{{condiciones}}}
+          </div>
+        </div>
+        {{/if}}
 
-  <div style="margin:45mm auto 0; text-align:center;">
-    <span style="font-weight:600; display:block; margin-bottom:8px;">Atentamente</span>
+        <div style="margin:45mm auto 0; text-align:center;">
+          <span style="font-weight:600; display:block; margin-bottom:8px;">Atentamente</span>
 
-    {{#if incluirFirma}}
-    <img src="{{firmaUrl}}" alt="firma"
-      style="height:85px; display:block; margin:0 auto 8px auto;">
-    {{/if}}
+          {{#if incluirFirma}}
+          <img src="{{firmaUrl}}" alt="firma"
+            style="height:85px; display:block; margin:0 auto 8px auto;">
+          {{/if}}
 
-    <div style="font-weight:600; margin-top:10px;">
-      {{#if firmanteNombre}}
-        {{firmanteNombre}}
-      {{else}}
-        Responsable de Ventas
+          <div style="font-weight:600; margin-top:10px;">
+            {{#if firmanteNombre}}
+              {{firmanteNombre}}
+            {{else}}
+              Responsable de Ventas
+            {{/if}}
+          </div>
+        </div>
+        {{/if}}
       {{/if}}
     </div>
-  </div>
-  {{/if}}
-
+  {{/each}}
 
 </body>
-
 </html>

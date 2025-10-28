@@ -4,91 +4,109 @@ import * as path from 'node:path';
 import * as hbs from 'handlebars';
 import { chromium, Browser } from 'playwright';
 
-hbs.registerHelper('inc', (v: any) => Number(v) + 1);
-hbs.registerHelper('money', (n: any) => {
-    const num = Number(n ?? 0);
-    return `$${num.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-});
-hbs.registerHelper('eq', (a: any, b: any) => a === b);
-hbs.registerHelper('or', (a: any, b: any) => !!(a || b));
+type MoneyInput = string | number | null | undefined;
 
+hbs.registerHelper('inc', (v: number) => v + 1);
+
+hbs.registerHelper('money', (n: MoneyInput) => {
+  const num = typeof n === 'number' ? n : Number(n ?? 0);
+  return `$${num.toLocaleString('es-MX', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+});
+
+hbs.registerHelper('eq', (a: unknown, b: unknown) => a === b);
+hbs.registerHelper('or', (a: unknown, b: unknown) => Boolean(a || b));
+
+// Helper para dividir los productos en grupos de 5
+hbs.registerHelper('splitPages', function (items: unknown[], options) {
+  if (!Array.isArray(items)) return '';
+  const chunkSize = 5;
+  const chunks: unknown[][] = [];
+  for (let i = 0; i < items.length; i += chunkSize) {
+    chunks.push(items.slice(i, i + chunkSize));
+  }
+
+  // Renderiza cada grupo como una "página"
+  let result = '';
+  chunks.forEach((group, index) => {
+    const isLast = index === chunks.length - 1;
+    result += options.fn({ items: group, isLast });
+    if (!isLast) result += '<div class="page-break"></div>';
+  });
+  return result;
+});
 
 function resolveBaseDir() {
-    // __dirname en prod: .../dist/pdf
-    const distDir = path.join(__dirname);
-    const distTpl = path.join(distDir, 'templates');
-    if (fs.existsSync(distTpl)) return distDir;
+  const distDir = path.join(__dirname);
+  const distTpl = path.join(distDir, 'templates');
+  if (fs.existsSync(distTpl)) return distDir;
 
-    // fallback dev: .../src/pdf
-    const srcDir = path.join(process.cwd(), 'src', 'pdf');
-    const srcTpl = path.join(srcDir, 'templates');
-    if (fs.existsSync(srcTpl)) return srcDir;
+  const srcDir = path.join(process.cwd(), 'src', 'pdf');
+  const srcTpl = path.join(srcDir, 'templates');
+  if (fs.existsSync(srcTpl)) return srcDir;
 
-    // último intento: donde estés corriendo
-    return distDir;
+  return distDir;
 }
 
 @Injectable()
 export class HtmlPdfService implements OnModuleInit, OnModuleDestroy {
-    private templates = new Map<string, hbs.TemplateDelegate>();
-    private browser!: Browser;
-    private baseDir = resolveBaseDir(); // 👈
+  private templates = new Map<string, hbs.TemplateDelegate>();
+  private browser!: Browser;
+  private baseDir = resolveBaseDir();
 
-    async onModuleInit() {
-        const partialsDir = path.join(this.baseDir, 'templates', 'partials');
-        if (fs.existsSync(partialsDir)) {
-            for (const f of fs.readdirSync(partialsDir)) {
-                if (f.endsWith('.hbs')) {
-                    const name = path.basename(f, '.hbs');
-                    const str = fs.readFileSync(path.join(partialsDir, f), 'utf8');
-                    hbs.registerPartial(name, str);
-                }
-            }
+  async onModuleInit() {
+    const partialsDir = path.join(this.baseDir, 'templates', 'partials');
+    if (fs.existsSync(partialsDir)) {
+      for (const f of fs.readdirSync(partialsDir)) {
+        if (f.endsWith('.hbs')) {
+          const name = path.basename(f, '.hbs');
+          const str = fs.readFileSync(path.join(partialsDir, f), 'utf8');
+          hbs.registerPartial(name, str);
         }
-        this.browser = await chromium.launch({ args: ['--no-sandbox'] });
+      }
     }
+    this.browser = await chromium.launch({ args: ['--no-sandbox'] });
+  }
 
-    async onModuleDestroy() { if (this.browser) await this.browser.close(); }
+  async onModuleDestroy() {
+    if (this.browser) await this.browser.close();
+  }
 
-    private getTemplate(name: string) {
-        if (!this.templates.has(name)) {
-            const file = path.join(this.baseDir, 'templates', `${name}.hbs`);
-            const str = fs.readFileSync(file, 'utf8');
-            const tpl = hbs.compile(str, { noEscape: true });
-            this.templates.set(name, tpl);
-        }
-        return this.templates.get(name)!;
+  private getTemplate(name: string) {
+    if (!this.templates.has(name)) {
+      const file = path.join(this.baseDir, 'templates', `${name}.hbs`);
+      const str = fs.readFileSync(file, 'utf8');
+      const tpl = hbs.compile(str, { noEscape: true });
+      this.templates.set(name, tpl);
     }
+    return this.templates.get(name)!;
+  }
 
+  async renderToPdf(templateName: string, data: Record<string, unknown>): Promise<Buffer> {
+    const tpl = this.getTemplate(templateName);
+    const html = tpl(data);
 
-    async renderToPdf(templateName: string, data: any): Promise<Buffer> {
-        const tpl = this.getTemplate(templateName);
-        const html = tpl(data);
+    const tmpDir = this.baseDir;
+    const tmpFile = path.join(tmpDir, `__tmp_${templateName}_${Date.now()}.html`);
+    fs.writeFileSync(tmpFile, html, 'utf8');
 
-        // 1) Escribe HTML temporal en el mismo directorio base (o en tmp)
-        const tmpDir = this.baseDir; // o usa: os.tmpdir()
-        const tmpFile = path.join(tmpDir, `__tmp_${templateName}_${Date.now()}.html`);
+    const ctx = await this.browser.newContext();
+    const page = await ctx.newPage();
+    const fileUrl = 'file://' + tmpFile.replace(/\\/g, '/');
+    await page.goto(fileUrl, { waitUntil: 'load' });
 
-        // Si tu HTML usa rutas relativas "assets/...", NO inyectes <base> aquí.
-        fs.writeFileSync(tmpFile, html, 'utf8');
+    const pdf = await page.pdf({
+      format: 'Letter',
+      printBackground: true,
+    });
 
-        const ctx = await this.browser.newContext();
-        const page = await ctx.newPage();
+    await ctx.close();
+    try {
+      fs.unlinkSync(tmpFile);
+    } catch {}
 
-        // 2) Navega al archivo local (ahora sí puede cargar file:// assets)
-        const fileUrl = 'file://' + tmpFile.replace(/\\/g, '/');
-        await page.goto(fileUrl, { waitUntil: 'load' });
-
-        const pdf = await page.pdf({
-            format: 'Letter',
-            printBackground: true,
-        });
-
-        await ctx.close();
-
-        // 3) Limpia el archivo temporal
-        try { fs.unlinkSync(tmpFile); } catch { }
-
-        return pdf;
-    }
+    return pdf;
+  }
 }

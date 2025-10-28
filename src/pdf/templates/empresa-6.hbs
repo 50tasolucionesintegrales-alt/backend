@@ -6,13 +6,12 @@
   <style>
     :root{
       --ink:#111;
-      --line:#aca4cb;      /* bordes lilas suaves */
-      --thead:#f0ecfb;     /* encabezado clarito */
+      --line:#aca4cb;
+      --thead:#f0ecfb;
     }
 
     @page { size: Letter; margin: 0; }
 
-    /* Lato: usa SOLO estos dos archivos */
     @font-face{
       font-family: "LatoLocal";
       src: url("assets/fonts/Lato-Regular.ttf") format("truetype");
@@ -27,190 +26,131 @@
       font-style: normal;
       font-display: swap;
     }
+
     body{ font-family: "LatoLocal", Arial, Helvetica, sans-serif; font-size:14px; color:var(--ink); }
 
-    /* Fondo con líneas y logotipo grandes */
     .bg-page{ position:fixed; inset:0; z-index:-1; pointer-events:none; }
     .bg-page img{ width:100%; height:100%; object-fit:cover; display:block; }
 
     .header-space{ height: 10mm; }
-
-    /* Fecha der., título centrado, destinatario izq. */
     .fecha{ text-align:right; color:#333; margin: 4mm 83px 2mm 20px; }
     .title{ text-align:center; font-weight:700; margin: 7mm 20px 10mm; font-size: 14px; }
     .dest{ font-weight:700; line-height:1.45; margin: 0 83px 0 20px; }
     .presente{ font-weight:700; margin: 2px 83px 10px 20px; }
 
-    /* Firma SOLO imagen, a la derecha (bloque indivisible) */
-    .sig-row{
-      display:grid;
-      grid-template-columns: 1fr 220px;
-      align-items:start;
-      gap: 10px;
-      margin: 0 83px 10px 20px;
-      page-break-inside: avoid; break-inside: avoid;
-    }
+    .sig-row{ display:grid; grid-template-columns:1fr 220px; align-items:start; gap:10px; margin:0 83px 10px 20px; page-break-inside:avoid; }
     .sig-box{ text-align:right; }
-    .sig-box img{ height:100px; display:block; margin: 0 0 0 0px; }
+    .sig-box img{ height:100px; display:block; }
 
-    /* Resumen (requisición/totales/en letra) a la izquierda */
     .summary{ margin: 6px 83px 6px 20px; line-height:1.55; color:#222; font-size:13px; }
     .label{ font-weight:700; }
 
-    /* Tabla */
     .table-wrap{ position:relative; margin: 8px 83px 0 20px; }
     table{ width:100%; border-collapse:collapse; page-break-inside:auto; }
     thead{ display: table-header-group; }
     tr, td, th{ page-break-inside:avoid; break-inside:avoid; }
-    thead th{
-      background: var(--thead);
-      color:#2a2740;
-      font-weight:700;
-      border:1px solid var(--line);
-      padding:8px; font-size:12px; text-align:left;
-    }
-    tbody td{
-      border:1px solid var(--line);
-      padding:6px 8px; font-size:12px; background:#fff; vertical-align:top;
-    }
+    thead th{ background: var(--thead); color:#2a2740; font-weight:700; border:1px solid var(--line); padding:8px; font-size:12px; text-align:left; }
+    tbody td{ border:1px solid var(--line); padding:6px 8px; font-size:12px; background:#fff; vertical-align:top; }
     .center{ text-align:center; } .right{ text-align:right; }
     .pb-before{ page-break-before: always; break-before: page; }
 
-    /* Totales (derecha) */
     .totals{ display:flex; justify-content:flex-end; margin: 10px 83px 0 20px; }
     .totals table{ width:70mm; border-collapse:collapse; }
-    .totals td{
-      padding:6px 8px;
-      border-left:1px solid var(--line); border-right:1px solid var(--line);
-      background:#fff;
-    }
+    .totals td{ padding:6px 8px; border-left:1px solid var(--line); border-right:1px solid var(--line); background:#fff; }
     .totals tr:first-child td{ border-top:1px solid var(--line); }
-    .totals tr:last-child  td{ border-bottom:1px solid var(--line); }
+    .totals tr:last-child td{ border-bottom:1px solid var(--line); }
     .totals .label{ font-weight:700; }
     .totals .value{ text-align:right; }
 
-    /* Términos (abajo izquierda) */
     .terms{ margin: 14mm 83px 0 20px; max-width: 125mm; font-size:13px; }
     .terms .t-title{ font-weight:700; margin-bottom:6px; }
     .terms ul{ margin: 6px 0 0 18px; line-height:1.6; }
+
     .footer{ position:fixed; bottom:6mm; left:20px; right:0; text-align:left; color:#333; font-size:12px; }
-    .folio{ margin: 10px 20px; }
   </style>
 </head>
 <body>
 
-  <!-- Membrete -->
   <div class="bg-page"><img src="assets/emp6.png" alt="membrete"></div>
   <div class="header-space"></div>
 
-  <!-- Cabecera -->
   <div class="fecha">{{lugar}}, a {{fecha}}</div>
   <div class="title">Solicitud de Cotización</div>
-
-  <!-- Destinatario -->
   <div class="dest">{{destinatario}}</div>
   <div class="presente">{{presente}}</div>
 
-  <!-- Firma (alineación derecha, respetando la estructura original del formato) -->
-  <div class="sig-row">
-    <div></div>
-      <div class="sig-box" style="text-align:right;">
-        <span style="font-weight:700; display:block; margin-bottom:6px; padding-right:30px;">Atentamente</span>
-
-        {{#if incluirFirma}}
-        <img src="{{firmaUrl}}" alt="firma"
-          style="height:100px; display:inline-block; margin-bottom:6px;">
-        {{else}}
-          <!-- Espacio reservado para la firma cuando no hay imagen -->
-          <div style="height:100px; margin-left:18px; margin-bottom:8px;"></div>
-        {{/if}}
-
-        <div style="font-weight:700; padding-right:25px;">
-          {{#if firmanteNombre}}
-            {{firmanteNombre}}
-          {{else}}
-            Responsable de Ventas
-          {{/if}}
-        </div>
+  <!-- Tabla con chunk/paginación 5 productos por página -->
+  {{#if items.length}}
+    {{#each (chunk items 5) as |grupo index|}}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="center" style="width:16mm;">No.</th>
+              <th>Especificaciones</th>
+              <th class="center" style="width:22mm;">Cantidad</th>
+              <th class="right" style="width:30mm;">Precio unitario</th>
+              <th class="right" style="width:30mm;">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each grupo}}
+              <tr>
+                <td class="center">{{inc @index}}</td>
+                <td>{{this.nombre}}</td>
+                <td class="center">{{this.cantidad}}</td>
+                <td class="right">{{money this.unitario}}</td>
+                <td class="right">{{money this.parcial}}</td>
+              </tr>
+            {{/each}}
+          </tbody>
+        </table>
       </div>
-  </div>
 
+      {{#if (notLast index ../lastIndex)}}
+        <div class="pb-before"></div>
+      {{else}}
+        <!-- Totales y resumen al final -->
+        <div class="summary">
+          {{#if titulo}}<div><span class="label">Requisición:</span> {{titulo}}</div>{{/if}}
+          <div><span class="label">Subtotal:</span> {{money totales.subtotal}}</div>
+          <div><span class="label">IVA ({{ivaPct}}%)</span>: {{money totales.iva}}</div>
+          <div><span class="label">Total:</span> {{money totales.total}}</div>
+          <div><span class="label">Total en letra:</span> {{totalEnLetra}}</div>
+        </div>
 
-  <!-- Resumen -->
-  <div class="summary">
-    {{#if titulo}}<div><span class="label">Requisición:</span> {{titulo}}</div>{{/if}}
-    <div><span class="label">Subtotal:</span> {{money totales.subtotal}}</div>
-    <div><span class="label">Total:</span> {{money totales.total}}</div>
-    <div><span class="label">Total en letra:</span> {{totalEnLetra}}</div>
-  </div>
+        <!-- Firma -->
+        <div class="sig-row">
+          <div></div>
+          <div class="sig-box">
+            <span style="font-weight:700; display:block; margin-bottom:6px; padding-right:30px;">Atentamente</span>
+            {{#if incluirFirma}}
+              <img src="{{firmaUrl}}" alt="firma">
+            {{else}}
+              <div style="height:100px; margin-bottom:8px;"></div>
+            {{/if}}
+            <div style="font-weight:700; padding-right:25px;">
+              {{#if firmanteNombre}}
+                {{firmanteNombre}}
+              {{else}}
+                Responsable de Ventas
+              {{/if}}
+            </div>
+          </div>
+        </div>
 
-  <!-- Texto de cortesía -->
-  <div class="summary" style="margin-top:8px;">
-    Un cordial saludo, le envío la cotización que se me requirió con anterioridad.
-  </div>
-
-  <!-- Tabla -->
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th class="center" style="width:16mm;">No.</th>
-          <th>Especificaciones</th>
-          <th class="center" style="width:22mm;">Cantidad</th>
-          <th class="right"  style="width:30mm;">Precio unitario</th>
-          <th class="right"  style="width:30mm;">Subtotal</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{#each items}}
-          {{#if (eq @index 10)}}
-            </tbody></table></div>
-            <div class="pb-before"></div>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th class="center" style="width:16mm;">No.</th>
-                    <th>Especificaciones</th>
-                    <th class="center" style="width:22mm;">Cantidad</th>
-                    <th class="right"  style="width:30mm;">Precio unitario</th>
-                    <th class="right"  style="width:30mm;">Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody>
-          {{/if}}
-          <tr>
-            <td class="center">{{inc @index}}</td>
-            <td>{{this.nombre}}</td>
-            <td class="center">{{this.cantidad}}</td>
-            <td class="right">{{money this.unitario}}</td>
-            <td class="right">{{money this.parcial}}</td>
-          </tr>
-        {{/each}}
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Totales -->
-  <div class="totals keep">
-    <table>
-      <tr><td class="label">Subtotal</td><td class="value">{{money totales.subtotal}}</td></tr>
-      <tr><td class="label">IVA ({{ivaPct}}%)</td><td class="value">{{money totales.iva}}</td></tr>
-      <tr><td class="label">Total</td><td class="value">{{money totales.total}}</td></tr>
-    </table>
-  </div>
-
-  <!-- Términos -->
-  {{#if condiciones}}
-  <div class="terms">
-    <div class="t-title">Términos:</div>
-    <div class="content">
-      {{{condiciones}}}
-    </div>
-  </div>
+        <!-- Términos -->
+        {{#if condiciones}}
+          <div class="terms">
+            <div class="t-title">Términos:</div>
+            <div>{{{condiciones}}}</div>
+          </div>
+        {{/if}}
+      {{/if}}
+    {{/each}}
   {{/if}}
 
-  <!-- Folio en el footer -->
+  <!-- Folio -->
   <div class="footer">
     <div class="folio">{{folio}}</div>
   </div>

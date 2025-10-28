@@ -5,224 +5,136 @@
   <title>{{titulo}}</title>
   <style>
     :root{
-      --brand:#245fa7;      /* azul del formato */
-      --ink:#111;
-      --line:#cfd7e3;
-      --thead:#245fa7;      /* encabezado tabla (si la usas) */
-      --theadText:#ffffff;
+      --brand:#245fa7; --ink:#111; --line:#cfd7e3;
+      --thead:#245fa7; --theadText:#ffffff;
     }
-
     @page { size: Letter; margin: 0; }
 
-    /* Tahoma local */
     @font-face{
       font-family: "TahomaLocal";
       src: url("assets/fonts/tahoma.ttf") format("truetype");
-      font-weight: 400;
-      font-style: normal;
-      font-display: swap;
+      font-weight: 400; font-style: normal; font-display: swap;
     }
-    body{
-      font-family: "TahomaLocal", Arial, Helvetica, sans-serif;
-      font-size: 12px;
-      color: var(--ink);
-    }
+    body{ font-family: "TahomaLocal", Arial, Helvetica, sans-serif; font-size:12px; color:var(--ink); }
 
-    /* ===== Fondo / membrete ===== */
     .bg-page{ position:fixed; inset:0; z-index:-1; pointer-events:none; }
     .bg-page img{ width:100%; height:100%; object-fit:cover; display:block; }
 
-    /* Deja respirar el encabezado del membrete */
     .header-space{ height:10mm; }
-
-    /* Folio arriba a la derecha (como en el mock) */
-    .folio{
-      margin: 2mm 10mm 0 10mm;
-      text-align: right;
-      font-weight: 700;
-      letter-spacing: .2px;
-    }
-
-    /* Cabecera de texto */
+    .folio{ margin:2mm 10mm 0 10mm; text-align:right; font-weight:700; letter-spacing:.2px; }
     .fecha{ text-align:right; color:#333; margin:6px 10mm 10px; }
     .dest{ font-weight:700; line-height:1.45; margin:0 12mm; }
     .presente{ font-weight:800; margin:6px 12mm 0; }
     .intro{ margin:10px 12mm 0; line-height:1.6; color:#222; }
     .label{ font-weight:700; }
 
-    /* ===== Tabla (opcional) ===== */
     .table-wrap{ position:relative; margin:12px 12mm 0; }
     table{ width:96%; margin:0 auto; border-collapse:collapse; page-break-inside:auto; }
     thead{ display:table-header-group; }
     tr, td, th{ page-break-inside:avoid; break-inside:avoid; }
 
-    thead th{
-      background:var(--thead);
-      color:var(--theadText);
-      font-weight:700;
-      border:1px solid var(--thead);
-      padding:8px; font-size:12px; text-align:left;
-    }
-    tbody td{
-      border:1px solid var(--line);
-      padding:6px 8px; font-size:12px; background:#fff; vertical-align:top;
-    }
+    thead th{ background:var(--thead); color:var(--theadText); font-weight:700; border:1px solid var(--thead); padding:8px; font-size:12px; text-align:left; }
+    tbody td{ border:1px solid var(--line); padding:6px 8px; font-size:12px; background:#fff; vertical-align:top; }
     .center{ text-align:center; }
-    .right { text-align:right; }
+    .right{ text-align:right; }
 
-    /* Totales */
-.totals {
-  width: 96%;            /* mismo ancho que la tabla */
-  margin: 10px auto 0;   /* centrado del contenedor como la tabla */
-  /* sin flex: más estable en PDF */
-}
-
-.totals table {
-  width: 70mm;
-  border-collapse: collapse;
-  margin-left: auto;     /* empuja la tablita a la derecha */
-}
-
-
+    .totals{ width:96%; margin:10px auto 0; }
+    .totals table{ width:70mm; border-collapse:collapse; margin-left:auto; }
     .totals td{ padding:6px 8px; border-left:1px solid var(--line); border-right:1px solid var(--line); }
     .totals tr:first-child td{ border-top:1px solid var(--line); }
-    .totals tr:last-child  td{ border-bottom:1px solid var(--line); }
+    .totals tr:last-child td{ border-bottom:1px solid var(--line); }
     .totals .label{ font-weight:700; background:#f2f5fa; }
     .totals .value{ text-align:right; }
 
-    /* ===== Condiciones (bloque con bullets, como en el mock) ===== */
-    .cond-box{
-      margin: 14mm 12mm 0;
-      max-width: 125mm;           /* zona izquierda, arriba del pie */
-    }
-    .cond-title{
-      font-weight:800;
-      text-transform: uppercase;
-      margin-bottom:6px;
-      letter-spacing:.2px;
-    }
-    .cond-box ul{
-      margin: 6px 0 0 18px;
-      line-height:1.6;
-    }
+    .cond-box{ margin:14mm 12mm 0; max-width:125mm; }
+    .cond-title{ font-weight:800; text-transform:uppercase; margin-bottom:6px; letter-spacing:.2px; }
+    .cond-box ul{ margin:6px 0 0 18px; line-height:1.6; }
 
-    /* ===== Firma opcional centrada ===== */
-    .firma{
-      margin: 110mm 0 0;
-      text-align: center;
-    }
-    .firma img{
-      height: 50px;
-      display: inline-block;
-    }
+    .firma{ margin:90mm auto 0; text-align:center; }
+    .firma img{ height:50px; display:inline-block; }
+
+    .page-break{ page-break-after: always; }
   </style>
 </head>
 <body>
 
-  <!-- Fondo -->
-  <div class="bg-page"><img src="assets/emp4.png" alt="membrete"></div>
+<div class="bg-page"><img src="assets/emp4.png" alt="membrete"></div>
 
-  <div class="header-space"></div>
+<div class="header-space"></div>
+<div class="folio">{{folio}}</div>
 
-  <!-- Folio (arriba a la derecha) -->
-  <div class="folio">{{folio}}</div>
+<div class="dest">{{destinatario}}</div>
+<div class="presente">{{presente}}</div>
+<div class="fecha"><span class="label">Fecha:</span> {{fecha}}</div>
 
+<div class="intro" style="margin-top:6px;">
+  <span class="label">Importe Total:</span> {{money totales.total}} ({{totalEnLetra}})
+</div>
 
-  <!-- A quién va dirigido -->
-  <div class="dest">{{destinatario}}</div>
-  <div class="presente">{{presente}}</div>
+<div class="intro">{{{descripcion}}}</div>
 
-  <!-- (Opcional) lugar y fecha; si no lo quieres, bórralo -->
-  <div class="fecha"><span class="label">Fecha:</span> {{fecha}}</div>
-
-  <!-- En letra -->
-  <div class="intro" style="margin-top:6px;">
-    <span class="label">Importe Total:</span>{{money totales.total}} ({{totalEnLetra}})
-  </div>
-
-  <!-- Cuerpo / descripción -->
-  <div class="intro">
-    {{{descripcion}}}
-  </div>
-
-  <!-- ===== TABLA (solo si mandas items) ===== -->
-  {{#if items.length}}
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th class="center" style="width:16mm;">ITEM</th>
-          <th class="center" style="width:22mm;">UNIDAD</th>
-          <th class="center" style="width:22mm;">CANTIDAD</th>
-          <th>DESCRIPCIÓN</th>
-          <th class="right"  style="width:30mm;">UNITARIO</th>
-          <th class="right"  style="width:30mm;">SUBTOTAL</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{#each items}}
-        <tr>
-          <td class="center">{{inc @index}}</td>
-          <td class="center">{{this.unidad}}</td>
-          <td class="center">{{this.cantidad}}</td>
-          <td>{{this.nombre}}</td>
-          <td class="right">{{money this.unitario}}</td>
-          <td class="right">{{money this.parcial}}</td>
-        </tr>
-        {{/each}}
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Totales (si hubo tabla) -->
-  <div class="totals keep">
-    <table>
-      <tr><td class="label">SUBTOTAL</td><td class="value">{{money totales.subtotal}}</td></tr>
-      <tr><td class="label">IVA ({{ivaPct}}%)</td><td class="value">{{money totales.iva}}</td></tr>
-      <tr><td class="label">TOTAL</td><td class="value">{{money totales.total}}</td></tr>
-    </table>
-  </div>
-
-  {{/if}}
-
-  <!-- ===== Condiciones (si mandas texto) ===== -->
-  {{#if condiciones}}
-  <div class="cond-box">
-    <div class="cond-title">Condiciones de la proposición:</div>
-    <div class="content">
-      {{{condiciones}}}
-      {{!-- Si prefieres bullets automáticos:
-      <ul>
-        {{#each condiciones as |li|}}<li>{{{li}}}</li>{{/each}}
-      </ul>
-      --}}
+{{#if items.length}}
+  {{#each (chunk items 5) as |grupo idx|}}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="center" style="width:16mm;">ITEM</th>
+            <th class="center" style="width:22mm;">UNIDAD</th>
+            <th class="center" style="width:22mm;">CANTIDAD</th>
+            <th>DESCRIPCIÓN</th>
+            <th class="right" style="width:30mm;">UNITARIO</th>
+            <th class="right" style="width:30mm;">SUBTOTAL</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each grupo}}
+            <tr>
+              <td class="center">{{inc @index}}</td>
+              <td class="center">{{this.unidad}}</td>
+              <td class="center">{{this.cantidad}}</td>
+              <td>{{this.nombre}}</td>
+              <td class="right">{{money this.unitario}}</td>
+              <td class="right">{{money this.parcial}}</td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
     </div>
-  </div>
-  {{/if}}
 
-  <!-- Firma centrada (misma alineación original, mejor estructura y consistencia) -->
+    {{#if (eq idx ../lastIndex)}}
+      <!-- Totales y firma solo en la última página -->
+      <div class="totals">
+        <table>
+          <tr><td class="label">SUBTOTAL</td><td class="value">{{money ../totales.subtotal}}</td></tr>
+          <tr><td class="label">IVA ({{../ivaPct}}%)</td><td class="value">{{money ../totales.iva}}</td></tr>
+          <tr><td class="label">TOTAL</td><td class="value">{{money ../totales.total}}</td></tr>
+        </table>
+      </div>
 
-  <div style="margin:90mm auto 0; text-align:center;">
-    <span style="font-weight:800; display:block; margin-bottom:8px;">Atentamente</span>
-
-    {{#if incluirFirma}}
-    <img src="{{firmaUrl}}" alt="firma"
-      style="height:50px; display:block; margin:0 auto 8px auto;">
-    {{else}}
-      <!-- Espacio reservado para la firma cuando no hay imagen -->
-      <div style="height:100px; margin-left:18px; margin-bottom:8px;"></div>
-    {{/if}}
-    
-    <div style="font-weight:800; margin-top:10px;">
-      {{#if firmanteNombre}}
-        {{firmanteNombre}}
-      {{else}}
-        Responsable de Ventas
+      {{#if ../condiciones}}
+      <div class="cond-box">
+        <div class="cond-title">Condiciones de la proposición:</div>
+        <div class="content">{{{../condiciones}}}</div>
+      </div>
       {{/if}}
-    </div>
-  </div>
 
-
+      <div class="firma">
+        <span style="font-weight:800; display:block; margin-bottom:8px;">Atentamente</span>
+        {{#if ../incluirFirma}}
+          <img src="{{../firmaUrl}}" alt="firma">
+        {{else}}
+          <div style="height:100px; margin-bottom:8px;"></div>
+        {{/if}}
+        <div style="font-weight:800; margin-top:10px;">
+          {{#if ../firmanteNombre}}{{../firmanteNombre}}{{else}}Responsable de Ventas{{/if}}
+        </div>
+      </div>
+    {{else}}
+      <div class="page-break"></div>
+    {{/if}}
+  {{/each}}
+{{/if}}
 
 </body>
 </html>
