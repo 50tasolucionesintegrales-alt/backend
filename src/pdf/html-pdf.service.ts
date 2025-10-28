@@ -6,8 +6,8 @@ import { chromium, Browser } from 'playwright';
 
 type MoneyInput = string | number | null | undefined;
 
-// === Helpers de Handlebars ===
-hbs.registerHelper('inc', (v: any) => Number(v) + 1);
+// Helpers Handlebars
+hbs.registerHelper('inc', (v: number) => Number(v) + 1);
 
 hbs.registerHelper('money', (n: MoneyInput) => {
   const num = typeof n === 'number' ? n : Number(n ?? 0);
@@ -20,32 +20,25 @@ hbs.registerHelper('money', (n: MoneyInput) => {
 hbs.registerHelper('eq', (a: unknown, b: unknown) => a === b);
 hbs.registerHelper('or', (a: unknown, b: unknown) => Boolean(a || b));
 
-// Helper para dividir los productos en grupos de 5 y marcar la última página
-hbs.registerHelper('splitPages', function (items: unknown[] = [], options) {
-  if (!Array.isArray(items) || items.length === 0) {
-    return '<p>No hay productos para mostrar.</p>';
-  }
-
-  const chunkSize = 5;
+// Helper "chunk" para dividir en grupos de N productos
+hbs.registerHelper('chunk', function (items: unknown[], size: number, options) {
+  if (!Array.isArray(items) || items.length === 0) return '';
   const chunks: unknown[][] = [];
-  for (let i = 0; i < items.length; i += chunkSize) {
-    chunks.push(items.slice(i, i + chunkSize));
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size));
   }
 
   let result = '';
   chunks.forEach((group, index) => {
     const isLast = index === chunks.length - 1;
-    result += `<div class="page">`;
     result += options.fn({ items: group, isLast });
-    result += `</div>`;
-
     if (!isLast) result += '<div class="page-break"></div>';
   });
 
   return result;
 });
 
-// === Función para resolver el directorio base ===
+// Resolver directorio base (dist en prod, src en dev)
 function resolveBaseDir() {
   const distDir = path.join(__dirname);
   const distTpl = path.join(distDir, 'templates');
@@ -58,7 +51,6 @@ function resolveBaseDir() {
   return distDir;
 }
 
-// === Servicio principal ===
 @Injectable()
 export class HtmlPdfService implements OnModuleInit, OnModuleDestroy {
   private templates = new Map<string, hbs.TemplateDelegate>();
@@ -66,7 +58,7 @@ export class HtmlPdfService implements OnModuleInit, OnModuleDestroy {
   private baseDir = resolveBaseDir();
 
   async onModuleInit() {
-    // Carga de partials
+    // Registrar partials
     const partialsDir = path.join(this.baseDir, 'templates', 'partials');
     if (fs.existsSync(partialsDir)) {
       for (const f of fs.readdirSync(partialsDir)) {
@@ -77,6 +69,7 @@ export class HtmlPdfService implements OnModuleInit, OnModuleDestroy {
         }
       }
     }
+
     this.browser = await chromium.launch({ args: ['--no-sandbox'] });
   }
 
@@ -104,6 +97,7 @@ export class HtmlPdfService implements OnModuleInit, OnModuleDestroy {
 
     const ctx = await this.browser.newContext();
     const page = await ctx.newPage();
+
     const fileUrl = 'file://' + tmpFile.replace(/\\/g, '/');
     await page.goto(fileUrl, { waitUntil: 'load' });
 
@@ -113,6 +107,7 @@ export class HtmlPdfService implements OnModuleInit, OnModuleDestroy {
     });
 
     await ctx.close();
+
     try { fs.unlinkSync(tmpFile); } catch {}
 
     return pdf;
