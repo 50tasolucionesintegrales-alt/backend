@@ -14,7 +14,10 @@
       --grayBox:#f2f2f2;
       --accent:#000; 
     }
-    @page { size: Letter; margin: 0; }
+    @page { 
+      size: Letter; 
+      margin: 0;
+    }
 
     @font-face{
       font-family: "TahomaLocal";
@@ -23,11 +26,40 @@
       font-style: normal;
       font-display: swap;
     }
-    body{ font-family:"TahomaLocal",Arial,sans-serif; font-size:12px; line-height:1.45; color:var(--ink); }
+    body{ 
+      font-family:"TahomaLocal",Arial,sans-serif; 
+      font-size:12px; 
+      line-height:1.45; 
+      color:var(--ink); 
+      margin: 0;
+      padding: 0;
+    }
 
-    .bg-page{ position:fixed; inset:0; z-index:-1; pointer-events:none; }
-    .bg-page img{ width:100%; height:100%; object-fit:cover; display:block; }
-    .header-space{ height:42mm; }
+    .page-container {
+      position: relative;
+      min-height: 279.4mm; /* Altura Letter */
+      width: 215.9mm; /* Ancho Letter */
+    }
+
+    .bg-page{ 
+      position:absolute; 
+      inset:0; 
+      z-index:-1; 
+      pointer-events:none; 
+    }
+    .bg-page img{ 
+      width:100%; 
+      height:100%; 
+      object-fit:cover; 
+      display:block; 
+    }
+
+    .content-area {
+      position: relative;
+      padding-top: 42mm; /* Espacio para el membrete */
+    }
+
+    .header-space{ height:0; }
     .block{ margin:0 18mm; }
     .title{ font-size:18px; font-weight:700; letter-spacing:.3px; margin-bottom:6px; }
     .row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:2px; }
@@ -37,7 +69,7 @@
     .table-wrap{ margin:10px 12mm 0; }
     table{ width:100%; border-collapse:collapse; table-layout:fixed; }
     thead{ display:table-header-group; }
-    tr, td, th{ page-break-inside:avoid; break-inside:avoid; }
+    tr, td, th{ page-break-inside:avoid; }
     thead th{ background:var(--thead); color:var(--theadText); border:1px solid #000; padding:7px 8px; font-weight:700; text-align:left; font-size:12px; }
     tbody td{ border:1px solid #000; padding:6px 8px; background:#fff; vertical-align:top; font-size:12px; }
     .center{text-align:center;}
@@ -72,50 +104,107 @@
     .sign-name{ font-weight:700; }
     .sign-img{ height:85px; display:block; }
 
-    .pb-before{ page-break-before: always; break-before: page; }
+    .page-break { 
+      page-break-before: always; 
+      break-before: page;
+    }
+
+    .footer-section {
+      margin-top: 20mm;
+    }
   </style>
 </head>
 <body>
 
-<div class="bg-page"><img src="assets/emp10.png" alt="membrete"></div>
-<div class="header-space"></div>
+<!-- Primera página -->
+<div class="page-container">
+  <div class="bg-page"><img src="assets/emp10.png" alt="membrete"></div>
+  <div class="content-area">
+    <div class="header-space"></div>
 
-<div class="block">
-  <div class="title">COTIZACIÓN {{titulo}}</div>
-  <div class="row"><span class="label">CLIENTE:</span>&nbsp;<span class="muted">{{destinatario}}</span></div>
-  <div class="row"><span class="label">FECHA:</span>&nbsp;<span class="muted">{{lugar}} a {{fecha}}</span></div>
-</div>
-
-<!-- Tabla por chunks de 5 productos -->
-{{#if items.length}}
-  {{#each (chunk items 5) as |grupo idx|}}
-    <div class="table-wrap {{#unless (eq idx 0)}}pb-before{{/unless}}">
-      <table>
-        <thead>
-          <tr>
-            <th class="col-par center">Partida</th>
-            <th class="col-cant center">Cantidad</th>
-            <th class="col-carac">Características</th>
-            <th class="col-unit center">Costo unitario</th>
-            <th class="col-total center">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{#each grupo}}
-          <tr>
-            <td class="center">{{inc @index}}</td>
-            <td class="center">{{this.cantidad}}</td>
-            <td>{{this.nombre}}</td>
-            <td class="right">{{money this.unitario}}</td>
-            <td class="right">{{money this.parcial}}</td>
-          </tr>
-          {{/each}}
-        </tbody>
-      </table>
+    <div class="block">
+      <div class="title">COTIZACIÓN {{titulo}}</div>
+      <div class="row"><span class="label">CLIENTE:</span>&nbsp;<span class="muted">{{destinatario}}</span></div>
+      <div class="row"><span class="label">FECHA:</span>&nbsp;<span class="muted">{{lugar}} a {{fecha}}</span></div>
     </div>
 
-    {{#if (eq idx ../lastIndex)}}
-      <!-- Totales y firma solo en la última página -->
+    <!-- Tabla de productos - primera parte -->
+    {{#if items.length}}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="col-par center">Partida</th>
+              <th class="col-cant center">Cantidad</th>
+              <th class="col-carac">Características</th>
+              <th class="col-unit center">Costo unitario</th>
+              <th class="col-total center">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each (slice items 0 8)}}
+            <tr>
+              <td class="center">{{inc @index}}</td>
+              <td class="center">{{this.cantidad}}</td>
+              <td>{{this.nombre}}</td>
+              <td class="right">{{money this.unitario}}</td>
+              <td class="right">{{money this.parcial}}</td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+    {{/if}}
+  </div>
+</div>
+
+<!-- Páginas adicionales para productos si es necesario -->
+{{#if (gt items.length 8)}}
+  {{#each (slice items 8)}}
+    {{#if (eq @index 0)}}
+      <div class="page-container page-break">
+        <div class="bg-page"><img src="assets/emp10.png" alt="membrete"></div>
+        <div class="content-area">
+          <div class="header-space"></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="col-par center">Partida</th>
+                  <th class="col-cant center">Cantidad</th>
+                  <th class="col-carac">Características</th>
+                  <th class="col-unit center">Costo unitario</th>
+                  <th class="col-total center">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+    {{/if}}
+    
+    <tr>
+      <td class="center">{{inc (add @index 8)}}</td>
+      <td class="center">{{this.cantidad}}</td>
+      <td>{{this.nombre}}</td>
+      <td class="right">{{money this.unitario}}</td>
+      <td class="right">{{money this.parcial}}</td>
+    </tr>
+
+    {{#if (eq @index (sub (length ../items) 9))}}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    {{/if}}
+  {{/each}}
+{{/if}}
+
+<!-- ÚLTIMA PÁGINA - Totales, condiciones y firma -->
+<div class="page-container page-break">
+  <div class="bg-page"><img src="assets/emp10.png" alt="membrete"></div>
+  <div class="content-area">
+    <div class="header-space"></div>
+    
+    <div class="footer-section">
       <div class="totals-wrap">
         <table class="totals">
           <tr><td class="label">Subtotal</td><td class="value">{{money totales.subtotal}}</td></tr>
@@ -151,13 +240,14 @@
             <div class="sign-name">
               {{#if firmanteNombre}}{{{firmanteNombre}}}{{/if}}
             </div>
+            {{#if firmantePuesto}}
+              <div class="sign-caption">{{firmantePuesto}}</div>
+            {{/if}}
           </div>
         </div>
       </div>
-    {{/if}}
-  {{/each}}
-{{/if}}
-
-<div class="footer-space"></div>
+    </div>
+  </div>
+</div>
 </body>
 </html>

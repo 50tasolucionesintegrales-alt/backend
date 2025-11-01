@@ -10,42 +10,85 @@
       --thead:#111;
       --theadText:#fff;
     }
+
+    /* ProtoMono Regular (400) */
     @font-face{
       font-family: "ProtoMono";
-      src: url("assets/fonts/ProtoMono-Regular.woff2") format("woff2"),
-           url("assets/fonts/ProtoMono-Regular.woff") format("woff");
+      src:
+        url("assets/fonts/ProtoMono-Regular.woff2") format("woff2"),
+        url("assets/fonts/ProtoMono-Regular.woff") format("woff");
       font-weight: 400;
       font-style: normal;
       font-display: swap;
     }
+
+    /* ProtoMono SemiBold mapeado a 700 (negritas) */
     @font-face{
       font-family: "ProtoMono";
-      src: url("assets/fonts/ProtoMono-SemiBold.woff2") format("woff2"),
-           url("assets/fonts/ProtoMono-SemiBold.woff") format("woff");
+      src:
+        url("assets/fonts/ProtoMono-SemiBold.woff2") format("woff2"),
+        url("assets/fonts/ProtoMono-SemiBold.woff") format("woff");
       font-weight: 700;
       font-style: normal;
       font-display: swap;
     }
+
+    /* (Opcional) Medium 500 */
     @font-face{
       font-family: "ProtoMono";
-      src: url("assets/fonts/ProtoMono-Medium.woff2") format("woff2"),
-           url("assets/fonts/ProtoMono-Medium.woff") format("woff");
+      src:
+        url("assets/fonts/ProtoMono-Medium.woff2") format("woff2"),
+        url("assets/fonts/ProtoMono-Medium.woff") format("woff");
       font-weight: 500;
       font-style: normal;
       font-display: swap;
     }
 
-    body{ font-family: "ProtoMono", Arial, Helvetica, sans-serif; font-size:12px; color:var(--ink); }
+    body{ font-family: "ProtoMono", Arial, Helvetica, sans-serif; }
     strong, b{ font-weight:700; }
 
-    @page { size: Letter; margin:0; }
-    .bg-page{ position:fixed; inset:0; z-index:-1; pointer-events:none; }
-    .bg-page img{ width:100%; height:100%; object-fit:cover; display:block; }
-    .header-space{ height:36mm; }
+    @page { size: Letter; margin: 0; }
+    body{ 
+      font-family: "ProtoMono", Arial, Helvetica, sans-serif; 
+      font-size:12px; 
+      color:var(--ink);
+      margin: 0;
+      padding: 0;
+    }
+
+    .page-container {
+      position: relative;
+      min-height: 279.4mm;
+      width: 215.9mm;
+    }
+
+    /* ===== Membrete ===== */
+    .bg-page{ 
+      position:absolute; 
+      inset:0; 
+      z-index:-1; 
+      pointer-events:none; 
+    }
+    .bg-page img{ 
+      width:100%; 
+      height:100%; 
+      object-fit:cover; 
+      display:block; 
+    }
+
+    .content-area {
+      position: relative;
+      padding-top: 36mm; /* Espacio para el membrete */
+    }
+
     .footer-space{ height:60mm; }
 
-    .meta-grid{ margin: 8px 16mm 0 16mm; display:grid; grid-template-columns: 1fr 1fr; gap:10mm; }
-    .meta-block .row{ display:grid; grid-template-columns:28mm 1fr; gap:6px; margin:3px 0; }
+    /* ===== Encabezados ===== */
+    .meta-grid{
+      margin: 8px 16mm 0 16mm;
+      display:grid; grid-template-columns: 1fr 1fr; gap: 10mm;
+    }
+    .meta-block .row{ display:grid; grid-template-columns: 28mm 1fr; gap:6px; margin:3px 0; }
     .meta-block .label{ color:#666; }
     .meta-block .value{ font-weight:700; }
 
@@ -53,6 +96,8 @@
     .bar.light{ background:#f4f4f4; color:#222; border:1px solid #e5e5e5; font-weight:700; }
 
     .intro{ margin:10px 16mm 0 16mm; line-height:1.55; color:#222; }
+
+    /* ===== Tabla ===== */
     .table-wrap{ margin:10px 6mm 0 6mm; }
     table{ width:100%; border-collapse:collapse; table-layout:fixed; }
     thead th{ background:var(--thead); color:var(--theadText); border:1px solid #000; padding:7px 8px; font-size:11px; text-align:left; }
@@ -63,91 +108,147 @@
     .w-unit{width:26mm;} .w-sub{width:26mm;}
 
     thead{ display:table-header-group; }
-    tr,td,th{ page-break-inside:avoid; break-inside:avoid; }
-    .pb-before{ page-break-before:always; break-before:page; }
+    tr,td,th{ page-break-inside:avoid; }
 
+    /* ===== Totales ===== */
     .totals-wrap{ margin:8px 6mm 0; display:flex; justify-content:flex-end; }
     .totals{ width:72mm; border-collapse:collapse; }
     .totals td{ padding:6px 8px; background:#fff; border-left:1px solid var(--line); border-right:1px solid var(--line); }
     .totals tr:first-child td{ border-top:1px solid var(--line); }
-    .totals tr:last-child td{ border-bottom:1px solid var(--line); }
+    .totals tr:last-child  td{ border-bottom:1px solid var(--line); }
     .totals .label{ font-weight:700; } .totals .value{ text-align:right; }
 
     .enletra{ margin:10px 16mm 0; font-weight:700; }
 
+    /* ===== Términos ===== */
     .terms{ margin:14px 16mm 0 16mm; }
     .terms .title{ font-weight:700; margin-bottom:6px; }
     .terms .content{ line-height:1.55; }
 
-    .signature-fixed{
-      position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 20mm;
-      width: 78mm;
+    /* ===== Firma ===== */
+    .signature-section{
+      margin: 20mm 16mm 0 16mm;
       text-align: center;
     }
-    .signature-fixed .attn{ font-weight:700; margin-bottom:6px; }
-    .signature-fixed img{ height:85px; display:inline-block; margin-bottom:6px; }
-    .signature-fixed .who{ font-weight:700; }
+    .signature-section .attn{ font-weight:700; margin-bottom:6px; }
+    .signature-section img{ height:85px; display:inline-block; margin-bottom:6px; }
+    .signature-section .who{ font-weight:700; }
 
+    .page-break { 
+      page-break-before: always; 
+      break-before: page;
+    }
+
+    .footer-section {
+      margin-top: 10mm;
+    }
   </style>
 </head>
 <body>
 
-<div class="bg-page"><img src="assets/emp8.png" alt="membrete"></div>
-<div class="header-space"></div>
+<!-- Primera página -->
+<div class="page-container">
+  <div class="bg-page"><img src="assets/emp8.png" alt="membrete"></div>
+  <div class="content-area">
 
-<div class="meta-grid">
-  <div class="meta-block">
-    <div class="row"><div class="label">RFC:</div> <div class="value">{{rfc}}</div></div>
-    <div class="row"><div class="label">RAZÓN SOCIAL:</div> <div class="value">{{razonSocial}}</div></div>
-    <div class="row"><div class="label">LUGAR Y FECHA:</div> <div class="value">{{lugar}}; {{fecha}}</div></div>
-  </div>
-  <div class="meta-block">
-    <div class="row"><div class="label">CLIENTE:</div> <div class="value">{{cliente}}</div></div>
-    <div class="row"><div class="label">DIRIGIDA:</div> <div class="value">{{destinatario}}</div></div>
+    <!-- Encabezado -->
+    <div class="meta-grid">
+      <div class="meta-block">
+        <div class="row"><div class="label">RFC:</div>           <div class="value">{{rfc}}</div></div>
+        <div class="row"><div class="label">RAZÓN SOCIAL:</div>  <div class="value">{{razonSocial}}</div></div>
+        <div class="row"><div class="label">LUGAR Y FECHA:</div> <div class="value">{{lugar}}; {{fecha}}</div></div>
+      </div>
+      <div class="meta-block">
+        <div class="row"><div class="label">CLIENTE:</div>   <div class="value">{{cliente}}</div></div>
+        <div class="row"><div class="label">DIRIGIDA:</div>  <div class="value">{{destinatario}}</div></div>
+      </div>
+    </div>
+
+    <div class="bar">{{barraSuperiorTitulo}}</div>
+    <div class="bar light">PROPUESTA ECONÓMICA</div>
+
+    <div class="intro">{{{descripcion}}}</div>
+
+    <!-- Tabla - primera parte (10 productos) -->
+    {{#if items.length}}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="center w-num">#</th>
+              <th>Concepto</th>
+              <th class="center w-cant">Cantidad</th>
+              <th class="center w-unid">Unidad de medida</th>
+              <th class="right  w-unit">Precio unitario</th>
+              <th class="right  w-sub">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each (slice items 0 10)}}
+            <tr>
+              <td class="center w-num">{{inc @index}}</td>
+              <td>{{this.nombre}}</td>
+              <td class="center w-cant">{{this.cantidad}}</td>
+              <td class="center w-unid">{{this.unidad}}</td>
+              <td class="right  w-unit">{{money this.unitario}}</td>
+              <td class="right  w-sub">{{money this.parcial}}</td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+    {{/if}}
   </div>
 </div>
 
-<div class="bar">{{barraSuperiorTitulo}}</div>
-<div class="bar light">PROPUESTA ECONÓMICA</div>
-<div class="intro">{{{descripcion}}}</div>
+<!-- Páginas adicionales para productos si es necesario -->
+{{#if (gt items.length 10)}}
+  {{#each (slice items 10)}}
+    {{#if (eq @index 0)}}
+      <div class="page-container page-break">
+        <div class="bg-page"><img src="assets/emp8.png" alt="membrete"></div>
+        <div class="content-area">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="center w-num">#</th>
+                  <th>Concepto</th>
+                  <th class="center w-cant">Cantidad</th>
+                  <th class="center w-unid">Unidad de medida</th>
+                  <th class="right  w-unit">Precio unitario</th>
+                  <th class="right  w-sub">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+    {{/if}}
+    
+    <tr>
+      <td class="center w-num">{{inc (add @index 10)}}</td>
+      <td>{{this.nombre}}</td>
+      <td class="center w-cant">{{this.cantidad}}</td>
+      <td class="center w-unid">{{this.unidad}}</td>
+      <td class="right  w-unit">{{money this.unitario}}</td>
+      <td class="right  w-sub">{{money this.parcial}}</td>
+    </tr>
 
-<!-- Tabla con chunk de 5 items por página -->
-{{#if items.length}}
-  {{#each (chunk items 5) as |grupo index|}}
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th class="center w-num">#</th>
-            <th>Concepto</th>
-            <th class="center w-cant">Cantidad</th>
-            <th class="center w-unid">Unidad de medida</th>
-            <th class="right w-unit">Precio unitario</th>
-            <th class="right w-sub">Subtotal</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{#each grupo}}
-          <tr>
-            <td class="center w-num">{{inc @index}}</td>
-            <td>{{this.nombre}}</td>
-            <td class="center w-cant">{{this.cantidad}}</td>
-            <td class="center w-unid">{{this.unidad}}</td>
-            <td class="right w-unit">{{money this.unitario}}</td>
-            <td class="right w-sub">{{money this.parcial}}</td>
-          </tr>
-          {{/each}}
-        </tbody>
-      </table>
-    </div>
+    {{#if (eq @index (sub (length ../items) 11))}}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    {{/if}}
+  {{/each}}
+{{/if}}
 
-    {{#if (notLast index ../lastIndex)}}
-      <div class="pb-before"></div>
-    {{else}}
-      <!-- Totales y firma solo en última página -->
+<!-- ÚLTIMA PÁGINA - Totales, condiciones y firma -->
+<div class="page-container page-break">
+  <div class="bg-page"><img src="assets/emp8.png" alt="membrete"></div>
+  <div class="content-area">
+    
+    <div class="footer-section">
+      <!-- Totales -->
       <div class="totals-wrap">
         <table class="totals">
           <tr><td class="label">Subtotal</td> <td class="value">{{money totales.subtotal}}</td></tr>
@@ -156,10 +257,12 @@
         </table>
       </div>
 
+      <!-- En letra -->
       {{#if totalEnLetra}}
-        <div class="enletra">MONTO TOTAL CON LETRA: {{totalEnLetra}}</div>
+      <div class="enletra">MONTO TOTAL CON LETRA: {{totalEnLetra}}</div>
       {{/if}}
 
+      <!-- Términos -->
       <div class="terms">
         {{#if condiciones}}
           <div class="title">CONDICIONES GENERALES DE LA COTIZACIÓN.</div>
@@ -167,12 +270,14 @@
         {{/if}}
       </div>
 
-      <div class="signature-fixed">
+      <!-- Firma -->
+      <div class="signature-section">
         <div class="attn">ATENTAMENTE</div>
         {{#if incluirFirma}}
           {{#if firmaUrl}}<img src="{{firmaUrl}}" alt="firma">{{/if}}
         {{else}}
-          <div style="height:100px; margin-left:18px; margin-bottom:8px;"></div>
+          <!-- Espacio reservado para la firma cuando no hay imagen -->
+          <div style="height:100px; margin-bottom:8px;"></div>
         {{/if}}
         <div class="who">
           {{#if firmanteNombre}}
@@ -181,10 +286,13 @@
             ING. NOMBRE APELLIDO<br>DIRECTOR GENERAL
           {{/if}}
         </div>
+        {{#if firmantePuesto}}
+          <div style="margin-top: 4px; font-weight: 500;">{{firmantePuesto}}</div>
+        {{/if}}
       </div>
-    {{/if}}
-  {{/each}}
-{{/if}}
+    </div>
+  </div>
+</div>
 
 <div class="footer-space"></div>
 </body>

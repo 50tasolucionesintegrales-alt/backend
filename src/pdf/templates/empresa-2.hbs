@@ -4,17 +4,59 @@
   <meta charset="utf-8">
   <title>{{titulo}}</title>
   <style>
-    :root{ --brand:#213a57; --ink:#111; --line:#d9d9d9; --thead:#0c2c44; }
+    :root{ --brand:#213a57; --ink:#111; --line:#d9d9d9; --thead: #0c2c44 ; }
+
     @page { size: Letter; margin: 0 7mm 0; }
+    
+    /* Century Gothic */
+    @font-face{
+      font-family: "Century Gothic";
+      src: url("assets/fonts/centurygothic.ttf") format("truetype");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
 
-    @font-face{ font-family:"Century Gothic"; src: url("assets/fonts/centurygothic.ttf") format("truetype"); font-weight:400; }
-    @font-face{ font-family:"Century Gothic"; src: url("assets/fonts/centurygothic_bold.ttf") format("truetype"); font-weight:700; }
+    @font-face{
+      font-family: "Century Gothic";
+      src: url("assets/fonts/centurygothic_bold.ttf") format("truetype");
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
 
-    body{ font-family:"Century Gothic", Arial, Helvetica, sans-serif; font-size:12px; }
-    .bg-page { position:fixed; inset:0; z-index:-1; pointer-events:none; }
-    .bg-page img{ position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; display:block; }
+    body{ 
+      font-family: "Century Gothic", Arial, Helvetica, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
 
-    .header-space{ height:10mm; }
+    .page-container {
+      position: relative;
+      min-height: 279.4mm;
+      width: 215.9mm;
+    }
+
+    /* ===== Fondo / membrete ===== */
+    .bg-page { 
+      position:absolute; 
+      inset:0; 
+      z-index:-1; 
+      pointer-events:none; 
+    }
+    .bg-page img{
+      width:100%; 
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .content-area {
+      position: relative;
+      padding-top: 10mm; /* Espacio para el membrete */
+    }
+
+    /* Dinámico */
     .fecha{ text-align:right; color:#333; margin:70px 5px 20px; font-weight:bold; }
     .dest{ font-weight:800; line-height:1.45; margin:12px 5px 0; }
     .presente{ font-weight:800; margin:10px 5px 0; }
@@ -22,54 +64,97 @@
     .label{ font-weight:400; }
     .folio{ font-weight:800; margin:12px 5px 0; text-align:right; }
 
+    /* Contenedor de tabla */
     .table-wrap{ position:relative; margin:12px 5px 0; }
-    table{ width:100%; border-collapse:collapse; page-break-inside:auto; }
-    thead{ display:table-header-group; }
-    tr, td, th{ page-break-inside:avoid; break-inside:avoid; }
-    .center{ text-align:center; }
-    .right{ text-align:right; }
 
-    thead th{ background:var(--thead); color:#fff; font-weight:700; border:1px solid var(--thead); padding:8px; font-size:12px; text-align:left; }
+    /* ===== Tabla ===== */
+    table { width:100%; border-collapse:collapse; }
+    thead { display: table-header-group; }
+    tr, td, th { page-break-inside: avoid; }
+
+    thead th{
+      background:var(--thead); color:#fff; font-weight:700;
+      border:1px solid var(--thead); padding:8px; font-size:12px; text-align:left;
+    }
     tbody td{ border:1px solid var(--line); padding:6px 8px; font-size:12px; background:#fff; }
-    .pb-before{ page-break-before:always; break-before:page; }
+    .center{ text-align:center; } .right{ text-align:right; }
 
+    /* Totales a la derecha */
     .totals{ display:flex; justify-content:flex-end; margin:10px 15px 0; }
     .totals table{ width:70mm; border-collapse:collapse; }
     .totals td{ padding:6px 8px; border-left:1px solid var(--line); border-right:1px solid var(--line); }
     .totals tr:first-child td{ border-top:1px solid var(--line); }
-    .totals tr:last-child td{ border-bottom:1px solid var(--line); }
+    .totals tr:last-child  td{ border-bottom:1px solid var(--line); }
     .totals .label{ font-weight:700; background:#f6f6f6; }
     .totals .value{ text-align:right; }
 
+    /* ===== Firma ===== */
+    .firma{
+      margin: 20mm 0 0;
+      text-align: center;
+    }
+    .firma img{
+      height: 95px;
+      display: block;
+      margin: 0 auto 8px auto;
+    }
+
+    .page-break { 
+      page-break-before: always; 
+      break-before: page;
+    }
+
+    .footer-section {
+      margin-top: 10mm;
+    }
+
+    /* Información de contacto */
+    .contact-info {
+      margin: 10mm 5px 0;
+      font-size: 11px;
+      color: #333;
+      line-height: 1.4;
+    }
   </style>
 </head>
 <body>
 
+<!-- Primera página -->
+<div class="page-container">
   <div class="bg-page"><img src="assets/emp2.png" alt="membrete"></div>
+  <div class="content-area">
 
-  <div class="header-space"></div>
-  <div class="folio">{{folio}}</div>
-  <div class="fecha">{{lugar}}, a {{fecha}}</div>
-  <div class="dest">{{destinatario}}</div>
-  <div class="presente">{{presente}}</div>
-  <div class="intro" style="margin-top:10px;">{{{descripcion}}}</div>
+    <!-- Folio -->
+    <div class="folio">{{folio}}</div>
 
-  <!-- Tabla con chunk de 5 productos -->
-  {{#each (chunk items 5) as |grupo idx|}}
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th class="center" style="width:16mm;">Número</th>
-            <th>Descripción</th>
-            <th class="center" style="width:22mm;">Cantidad</th>
-            <th class="center" style="width:22mm;">Unidad</th>
-            <th class="right" style="width:30mm;">Precio Unitario</th>
-            <th class="right" style="width:30mm;">Subtotal</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{#each grupo}}
+    <!-- Lugar + fecha -->
+    <div class="fecha">{{lugar}}, a {{fecha}}</div>
+
+    <!-- A quién va dirigido -->
+    <div class="dest">{{destinatario}}</div>
+    <div class="presente">{{presente}}</div>
+
+    <!-- Descripción -->
+    <div class="intro" style="margin-top:10px;">
+      {{{descripcion}}}
+    </div>
+
+    <!-- Tabla - primera parte (10 productos) -->
+    {{#if items.length}}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="center" style="width:16mm;">Número</th>
+              <th>Descripción</th>
+              <th class="center" style="width:22mm;">Cantidad</th>
+              <th class="center" style="width:22mm;">Unidad</th>
+              <th class="right"  style="width:30mm;">Precio Unitario</th>
+              <th class="right"  style="width:30mm;">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each (slice items 0 10)}}
             <tr>
               <td class="center">{{inc @index}}</td>
               <td>{{this.nombre}}</td>
@@ -78,37 +163,118 @@
               <td class="right">{{money this.unitario}}</td>
               <td class="right">{{money this.parcial}}</td>
             </tr>
-          {{/each}}
-        </tbody>
-      </table>
-    </div>
-
-    {{#if (notLast idx ../lastIndex)}}<div class="pb-before"></div>{{/if}}
-  {{/each}}
-
-  <!-- Totales solo en la última página -->
-  <div class="totals">
-    <table>
-      <tr><td class="label">Subtotal</td><td class="value">{{money totales.subtotal}}</td></tr>
-      <tr><td class="label">IVA ({{ivaPct}}%)</td><td class="value">{{money totales.iva}}</td></tr>
-      <tr><td class="label">Total</td><td class="value">{{money totales.total}}</td></tr>
-    </table>
-  </div>
-
-  <div style="margin:6px 5px 0; font-size:12px;">
-    <span class="label" style="font-weight:bold;">Importe total cotizado con letra: ({{totalEnLetra}})</span>
-  </div>
-
-  <!-- Firma solo en la última página -->
-  <div style="margin:45mm auto 0; text-align:center;">
-    <span style="font-weight:600; display:block; margin-bottom:8px;">Atentamente</span>
-    {{#if incluirFirma}}
-      <img src="{{firmaUrl}}" alt="firma" style="height:95px; display:block; margin:0 auto 8px auto;">
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
     {{/if}}
-    <div style="font-weight:600; margin-top:10px;">
-      {{#if firmanteNombre}}{{firmanteNombre}}{{else}}Responsable de Ventas{{/if}}
+  </div>
+</div>
+
+<!-- Páginas adicionales para productos si es necesario -->
+{{#if (gt items.length 10)}}
+  {{#each (slice items 10)}}
+    {{#if (eq @index 0)}}
+      <div class="page-container page-break">
+        <div class="bg-page"><img src="assets/emp2.png" alt="membrete"></div>
+        <div class="content-area">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="center" style="width:16mm;">Número</th>
+                  <th>Descripción</th>
+                  <th class="center" style="width:22mm;">Cantidad</th>
+                  <th class="center" style="width:22mm;">Unidad</th>
+                  <th class="right"  style="width:30mm;">Precio Unitario</th>
+                  <th class="right"  style="width:30mm;">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+    {{/if}}
+    
+    <tr>
+      <td class="center">{{inc (add @index 10)}}</td>
+      <td>{{this.nombre}}</td>
+      <td class="center">{{this.cantidad}}</td>
+      <td class="center">{{this.unidad}}</td>
+      <td class="right">{{money this.unitario}}</td>
+      <td class="right">{{money this.parcial}}</td>
+    </tr>
+
+    {{#if (eq @index (sub (length ../items) 11))}}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    {{/if}}
+  {{/each}}
+{{/if}}
+
+<!-- ÚLTIMA PÁGINA - Totales, condiciones y firma -->
+<div class="page-container page-break">
+  <div class="bg-page"><img src="assets/emp2.png" alt="membrete"></div>
+  <div class="content-area">
+    
+    <div class="footer-section">
+      <!-- Totales -->
+      <div class="totals">
+        <table>
+          <tr><td class="label">Subtotal</td><td class="value">{{money totales.subtotal}}</td></tr>
+          <tr><td class="label">IVA ({{ivaPct}}%)</td><td class="value">{{money totales.iva}}</td></tr>
+          <tr><td class="label">Total</td><td class="value">{{money totales.total}}</td></tr>
+        </table>
+      </div>
+
+      <!-- Cantidad en letra -->
+      <div style="margin:6px 5px 0; font-size:12px;">
+        <span class="label" style="font-weight:bold;">Importe total cotizado con letra: ({{totalEnLetra}})</span> 
+      </div>
+
+      <!-- Condiciones -->
+      {{#if condiciones}}
+        <div style="margin:10px 5px 0;">
+          <div class="label" style="margin-bottom:6px; font-weight: bold;">Condiciones generales</div>
+          <div style="line-height:1.55; color:#222;">
+            {{{condiciones}}}
+          </div>
+        </div>
+      {{/if}}
+
+      <!-- Firma -->
+      <div class="firma">
+        <span style="font-weight:600; display:block; margin-bottom:8px;">Atentamente</span>
+
+        {{#if incluirFirma}}
+          {{#if firmaUrl}}<img src="{{firmaUrl}}" alt="firma">{{/if}}
+        {{else}}
+          <!-- Espacio reservado para la firma cuando no hay imagen -->
+          <div style="height:95px; margin-bottom:8px;"></div>
+        {{/if}}
+
+        <div style="font-weight:600; margin-top:10px;">
+          {{#if firmanteNombre}}
+            {{{firmanteNombre}}}
+          {{else}}
+            Responsable de Ventas
+          {{/if}}
+        </div>
+        {{#if firmantePuesto}}
+          <div style="margin-top: 4px;">{{firmantePuesto}}</div>
+        {{/if}}
+      </div>
+
+      <!-- Información de contacto -->
+      <div class="contact-info">
+        {{#if contactoTelefono}}{{contactoTelefono}}<br>{{/if}}
+        {{#if contactoEmail}}{{contactoEmail}}<br>{{/if}}
+        {{#if contactoDireccion}}{{contactoDireccion}}<br>{{/if}}
+        {{#if contactoCiudad}}{{contactoCiudad}}{{/if}}
+      </div>
     </div>
   </div>
+</div>
 
 </body>
 </html>

@@ -7,13 +7,14 @@
     :root{
       --brand:#e0553c;
       --ink:#111;
-      --line:#dc5c3c;
-      --thead:#0000;
-      --theadBorder:#dc5c3c;
+      --line:#dc5c3c;        /* color de borde */
+      --thead:#0000;         /* sin fondo */
+      --theadBorder:#dc5c3c; /* borde encabezado */
     }
 
     @page { size: Letter; margin: 0 3mm 0; }
 
+    /* Poppins variable */
     @font-face{
       font-family: "PoppinsVar";
       src: url("assets/fonts/Poppins-VariableFont_wght.otf") format("opentype");
@@ -26,12 +27,34 @@
       font-family: "PoppinsVar", Arial, Helvetica, sans-serif;
       font-size: 12px;
       color: var(--ink);
+      margin: 0;
+      padding: 0;
     }
 
-    .bg-page{ position:fixed; inset:0; z-index:-1; pointer-events:none; }
-    .bg-page img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .page-container {
+      position: relative;
+      min-height: 279.4mm;
+      width: 215.9mm;
+    }
 
-    .header-space{ height:26mm; }
+    /* ===== Fondo / membrete ===== */
+    .bg-page{ 
+      position:absolute; 
+      inset:0; 
+      z-index:-1; 
+      pointer-events:none; 
+    }
+    .bg-page img{ 
+      width:100%; 
+      height:100%; 
+      object-fit:cover; 
+      display:block; 
+    }
+
+    .content-area {
+      position: relative;
+      padding-top: 26mm; /* Espacio para el membrete */
+    }
 
     .fecha    { text-align:left; color:#333; margin:10px 15px 12px; font-weight:700; }
     .folioRow { margin:10px 15px 0; display:flex; gap:30px; flex-wrap:wrap; }
@@ -42,15 +65,15 @@
     .presente { font-weight:800; margin:6px 15px 0; }
     .intro    { margin:10px 15px 0; line-height:1.55; color:#222; }
 
+    /* ===== Tabla principal ===== */
     .table-wrap{ position:relative; margin:12px 15px 0; }
     table{
       width:96%;
       margin:0 auto;
       border-collapse:collapse;
-      page-break-inside:auto;
     }
     thead{ display:table-header-group; }
-    tr, td, th{ page-break-inside:avoid; break-inside:avoid; }
+    tr, td, th{ page-break-inside:avoid; }
 
     thead th{
       background:transparent;
@@ -119,60 +142,136 @@
     .cond-box .title{ font-weight:800; color:#000; margin-bottom:8px; }
     .cond-box .content{ color:#111; }
 
-    .page-break {
-      page-break-after: always;
+    /* ===== Firma ===== */
+    .firma{
+      margin: 20mm 0 0;
+      text-align: left;
+    }
+    .firma img{
+      height: 100px;
+      display: block;
+    }
+
+    .page-break { 
+      page-break-before: always; 
+      break-before: page;
+    }
+
+    .footer-section {
+      margin-top: 10mm;
+    }
+
+    /* Información de contacto */
+    .contact-info {
+      margin: 10mm 15px 0;
+      font-size: 11px;
+      color: #333;
+      line-height: 1.4;
     }
   </style>
 </head>
 <body>
 
-  {{!-- Fondo --}}
+<!-- Primera página -->
+<div class="page-container">
   <div class="bg-page"><img src="assets/emp3.png" alt="membrete"></div>
+  <div class="content-area">
 
-  <div class="header-space"></div>
-
-  <div class="folioRow">
-    <div class="cell"><span class="label">{{folio}}</span></div>
-  </div>
-
-  <div class="fecha">{{fecha}}</div><br>
-
-  <div class="dest">{{destinatario}}</div>
-  <div class="presente">{{presente}}</div><br>
-
-  <div class="intro">{{{descripcion}}}</div>
-
-  {{!-- 🔹 Se divide el contenido en páginas de 5 productos --}}
-  {{#splitPages items}}
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th class="center" style="width:16mm;">NO.</th>
-            <th class="center" style="width:26mm;">UNIDAD<br>DE MEDIDA</th>
-            <th>DESCRIPCIÓN</th>
-            <th class="center" style="width:22mm;">CANTIDAD</th>
-            <th class="right"  style="width:30mm;">PRECIO UNITARIO</th>
-            <th class="right"  style="width:30mm;">SUBTOTAL</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{#each items}}
-          <tr>
-            <td class="center">{{inc @index}}</td>
-            <td class="center">{{this.unidad}}</td>
-            <td>{{this.nombre}}</td>
-            <td class="center">{{this.cantidad}}</td>
-            <td class="right">{{money this.unitario}}</td>
-            <td class="right">{{money this.parcial}}</td>
-          </tr>
-          {{/each}}
-        </tbody>
-      </table>
+    <div class="folioRow">
+      <div class="cell"><span class="label"><span class="font-weight:bold">{{folio}}</span></div>
     </div>
 
-    {{!-- Solo se muestra en la última hoja --}}
-    {{#if isLast}}
+    <!-- Fecha -->
+    <div class="fecha">{{fecha}}</div><br>
+
+    <!-- A quién va dirigido -->
+    <div class="dest">{{destinatario}}</div>
+    <div class="presente">{{presente}}</div><br>
+
+    <div class="intro">
+      {{{descripcion}}}
+    </div>
+
+    <!-- Tabla - primera parte (9 productos) -->
+    {{#if items.length}}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="center" style="width:16mm;">NO.</th>
+              <th class="center" style="width:26mm;">UNIDAD<br>DE MEDIDA</th>
+              <th>DESCRIPCIÓN</th>
+              <th class="center" style="width:22mm;">CANTIDAD</th>
+              <th class="right"  style="width:30mm;">PRECIO UNITARIO</th>
+              <th class="right"  style="width:30mm;">SUBTOTAL</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each (slice items 0 9)}}
+            <tr>
+              <td class="center">{{inc @index}}</td>
+              <td class="center">{{this.unidad}}</td>
+              <td>{{this.nombre}}</td>
+              <td class="center">{{this.cantidad}}</td>
+              <td class="right">{{money this.unitario}}</td>
+              <td class="right">{{money this.parcial}}</td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+    {{/if}}
+  </div>
+</div>
+
+<!-- Páginas adicionales para productos si es necesario -->
+{{#if (gt items.length 9)}}
+  {{#each (slice items 9)}}
+    {{#if (eq @index 0)}}
+      <div class="page-container page-break">
+        <div class="bg-page"><img src="assets/emp3.png" alt="membrete"></div>
+        <div class="content-area">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="center" style="width:16mm;">NO.</th>
+                  <th class="center" style="width:26mm;">UNIDAD<br>DE MEDIDA</th>
+                  <th>DESCRIPCIÓN</th>
+                  <th class="center" style="width:22mm;">CANTIDAD</th>
+                  <th class="right"  style="width:30mm;">PRECIO UNITARIO</th>
+                  <th class="right"  style="width:30mm;">SUBTOTAL</th>
+                </tr>
+              </thead>
+              <tbody>
+    {{/if}}
+    
+    <tr>
+      <td class="center">{{inc (add @index 9)}}</td>
+      <td class="center">{{this.unidad}}</td>
+      <td>{{this.nombre}}</td>
+      <td class="center">{{this.cantidad}}</td>
+      <td class="right">{{money this.unitario}}</td>
+      <td class="right">{{money this.parcial}}</td>
+    </tr>
+
+    {{#if (eq @index (sub (length ../items) 10))}}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    {{/if}}
+  {{/each}}
+{{/if}}
+
+<!-- ÚLTIMA PÁGINA - Totales, condiciones y firma -->
+<div class="page-container page-break">
+  <div class="bg-page"><img src="assets/emp3.png" alt="membrete"></div>
+  <div class="content-area">
+    
+    <div class="footer-section">
+      <!-- Resumen con totales y condiciones -->
       <div class="summaryRow">
         <div class="totals">
           <table>
@@ -191,35 +290,47 @@
           {{#if condiciones}}
           <div class="cond-box">
             <div class="title">CONDICIONES GENERALES:</div>
-            <div class="content">{{{condiciones}}}</div>
+            <div class="content">
+              {{{condiciones}}}
+            </div>
           </div>
           {{/if}}
         </div>
       </div>
-      
-      <div style="margin:45mm 0 0; text-align:left;">
+
+      <!-- Firma -->
+      <div class="firma">
         <span style="font-weight:800; display:block; margin-left:18px; margin-bottom:8px;">ATENTAMENTE</span>
 
         {{#if incluirFirma}}
-          <img src="{{firmaUrl}}" alt="firma"
-              style="height:100px; display:block; margin-left:18px; margin-bottom:8px;">
+          {{#if firmaUrl}}<img src="{{firmaUrl}}" alt="firma" style="height:100px; display:block; margin-left:18px; margin-bottom:8px;">{{/if}}
         {{else}}
+          <!-- Espacio reservado para la firma cuando no hay imagen -->
           <div style="height:100px; margin-left:18px; margin-bottom:8px;"></div>
         {{/if}}
 
         <div style="font-weight:800; margin-left:18px; margin-top:10px;">
           {{#if firmanteNombre}}
-            {{firmanteNombre}}
+            {{{firmanteNombre}}}
           {{else}}
             Responsable de Ventas
           {{/if}}
         </div>
+        {{#if firmantePuesto}}
+          <div style="margin-left:18px; margin-top: 4px;">{{firmantePuesto}}</div>
+        {{/if}}
       </div>
-    {{/if}}
 
-    {{!-- Salto de página entre grupos --}}
-    {{#unless isLast}}<div class="page-break"></div>{{/unless}}
-  {{/splitPages}}
+      <!-- Información de contacto -->
+      <div class="contact-info">
+        {{#if contactoRFC}}RFC: {{contactoRFC}}<br>{{/if}}
+        {{#if contactoEmail}}{{contactoEmail}}<br>{{/if}}
+        {{#if contactoDireccion}}{{contactoDireccion}}<br>{{/if}}
+        {{#if contactoCiudad}}{{contactoCiudad}}{{/if}}
+      </div>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
