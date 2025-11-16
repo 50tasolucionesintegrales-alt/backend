@@ -11,6 +11,7 @@ import { CreateQuoteDto } from './dto/create-quote.dto';
 import { Response } from 'express';
 import { PdfService } from 'src/pdf/pdf.service';
 import { GeneratePdfDto } from './dto/generate-pdf.dto';
+import { BatchUpdateItemDto } from './dto/batch-update-item.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('quotes')
@@ -60,6 +61,16 @@ export class QuotesController {
   ) {
     console.log({ dto });
     return this.quotes.addItems(id, dto);
+  }
+
+  /* 4️⃣ Actualizar ítems en lote (Batch) */
+  @Patch(':quoteId/items')
+  @Roles(Role.Admin, Role.Cotizador)
+  updateQuoteItems(
+    @Param('quoteId', IdValidationPipe) quoteId: string,
+    @Body() dtos: BatchUpdateItemDto[],
+  ) {
+    return this.quotes.updateQuoteItems(quoteId, dtos);
   }
 
   /* 3️⃣  Actualizar ítem */

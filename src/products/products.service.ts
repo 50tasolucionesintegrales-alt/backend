@@ -107,6 +107,24 @@ export class ProductsService {
 
   async findAll() {
     return this.productRepo.find({
+      select: {
+        id: true,
+        nombre: true,
+        descripcion: true,
+        precio: true,
+        especificaciones: true,
+        link_compra: true,
+        createdAt: true,
+        category: {
+          id: true,
+          nombre: true,
+        },
+        createdBy: {
+          id: true,
+          nombre: true, 
+        },
+      },
+      // --- FIN DEL CAMBIO ---
       relations: { createdBy: true, category: true },
       order: { createdAt: 'DESC' },
     });
@@ -115,6 +133,23 @@ export class ProductsService {
   async findOne(id: string) {
     const product = await this.productRepo.findOne({
       where: { id },
+      select: {
+        id: true,
+        nombre: true,
+        descripcion: true,
+        precio: true,
+        especificaciones: true,
+        link_compra: true,
+        createdAt: true,
+        category: {
+          id: true,
+          nombre: true,
+        },
+        createdBy: {
+          id: true,
+          nombre: true,
+        },
+      },
       relations: { createdBy: true, category: true },
     });
 

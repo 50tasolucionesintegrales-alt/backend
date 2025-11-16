@@ -9,11 +9,12 @@ import { FileValidationPipe } from 'src/common/pipes/file-validation/file-valida
 import { memoryStorage } from 'multer';
 import { Response } from 'express';
 
-@UseGuards(JwtAuthGuard)
+
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) { }
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   @UseInterceptors(FileInterceptor('file', {
     storage: memoryStorage(),
@@ -27,11 +28,13 @@ export class ProductsController {
     return this.productsService.create(dto, req.user.id, file);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get()
   findAll() {
     return this.productsService.findAll();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id', IdValidationPipe) id: string) {
     return this.productsService.findOne(id);
@@ -51,6 +54,7 @@ export class ProductsController {
     res.send(img.buffer);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
   @UseInterceptors(FileInterceptor('file', {
     storage: memoryStorage(),
@@ -64,6 +68,7 @@ export class ProductsController {
     return this.productsService.update(id, dto, file);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   remove(@Param('id', IdValidationPipe) id: string) {
     return this.productsService.remove(id);
