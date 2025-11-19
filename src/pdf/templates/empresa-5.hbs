@@ -41,6 +41,11 @@
       position: relative;
       min-height: 279.4mm;
       width: 215.9mm;
+      page-break-after: always;
+    }
+
+    .page-container:last-child {
+      page-break-after: auto;
     }
 
     /* ===== Fondo / membrete ===== */
@@ -60,6 +65,9 @@
     .content-area {
       position: relative;
       padding-top: 32mm; /* Espacio para el membrete */
+      min-height: calc(279.4mm - 32mm);
+      display: flex;
+      flex-direction: column;
     }
 
     .fecha{ text-align:right; color:#333; margin:10px 15mm 16px; }
@@ -133,13 +141,27 @@
     }
 
     .footer-section {
-      margin-top: 10mm;
+      margin-top: auto;
+      padding-bottom: 20mm;
+    }
+
+    .important-content {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    /* Información de contacto */
+    .contact-info {
+      margin: 10mm 15mm 0;
+      font-size: 11px;
+      color: #333;
+      line-height: 1.4;
     }
   </style>
 </head>
 <body>
 
-<!-- Primera página -->
+<!-- PRIMERA PÁGINA -->
 <div class="page-container">
   <div class="bg-page"><img src="assets/emp5.png" alt="membrete"></div>
   <div class="content-area">
@@ -159,7 +181,7 @@
     <!-- Texto -->
     <div class="intro">{{{descripcion}}}</div>
 
-    <!-- Tabla - primera parte (9 productos) -->
+    <!-- Tabla - PRIMEROS 8 ITEMS (sistema estándar) -->
     {{#if items.length}}
       <div class="table-wrap">
         <table>
@@ -174,70 +196,216 @@
             </tr>
           </thead>
           <tbody>
-            {{#each (slice items 0 9)}}
-            <tr>
-              <td class="center">{{inc @index}}</td>
-              <td>{{this.nombre}}</td>
-              <td class="center">{{this.cantidad}}</td>
-              <td class="center">{{this.unidad}}</td>
-              <td class="right">{{money this.unitario}}</td>
-              <td class="right">{{money this.parcial}}</td>
-            </tr>
+            {{#each (chunkArray items)}}
+              {{#if @first}}
+                {{#each this}}
+                <tr>
+                  <td class="center">{{inc @index}}</td>
+                  <td>{{this.nombre}}</td>
+                  <td class="center">{{this.cantidad}}</td>
+                  <td class="center">{{this.unidad}}</td>
+                  <td class="right">{{money this.unitario}}</td>
+                  <td class="right">{{money this.parcial}}</td>
+                </tr>
+                {{/each}}
+              {{/if}}
             {{/each}}
           </tbody>
         </table>
       </div>
     {{/if}}
+
+    <!-- SECCIÓN IMPORTANTE - Solo si hay 4 items o menos (Regla 1) -->
+    {{#if (showImportantOnFirstPage items)}}
+      <div class="footer-section important-content">
+        <!-- Totales en 3 columnas al borde derecho -->
+        <div class="totals3">
+          <table>
+            <tr>
+              <td class="letra" rowspan="3">
+                <div class="title">Monto total en letra:</div>
+                <div>{{totalEnLetra}}</div>
+              </td>
+              <td class="lbl">Subtotal</td>
+              <td class="val">{{money totales.subtotal}}</td>
+            </tr>
+            <tr>
+              <td class="lbl">IVA ({{ivaPct}}%)</td>
+              <td class="val">{{money totales.iva}}</td>
+            </tr>
+            <tr>
+              <td class="lbl">Total</td>
+              <td class="val">{{money totales.total}}</td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Firma -->
+        <div class="firma">
+          <span style="font-weight:700; display:block; margin-bottom:8px; padding-left:50px;">Atentamente</span>
+
+          {{#if incluirFirma}}
+            {{#if firmaUrl}}<img src="{{firmaUrl}}" alt="firma">{{/if}}
+          {{else}}
+            <!-- Espacio reservado para la firma cuando no hay imagen -->
+            <div style="height:100px; margin-bottom:8px;"></div>
+          {{/if}}
+
+          <div style="font-weight:700; padding-left:50px;">
+            {{#if firmanteNombre}}
+              {{{firmanteNombre}}}
+            {{else}}
+              Responsable de Ventas
+            {{/if}}
+          </div>
+          {{#if firmantePuesto}}
+            <div style="padding-left:50px; margin-top: 4px;">{{firmantePuesto}}</div>
+          {{/if}}
+        </div>
+
+        <!-- Información de contacto -->
+        <div class="contact-info">
+          {{#if contactoTelefono}}{{contactoTelefono}}<br>{{/if}}
+          {{#if contactoEmail}}{{contactoEmail}}<br>{{/if}}
+          {{#if contactoDireccion}}{{contactoDireccion}}<br>{{/if}}
+          {{#if contactoCiudad}}{{contactoCiudad}}{{/if}}
+        </div>
+      </div>
+    {{else}}
+      <!-- Si no cabe la sección importante, al menos poner info de contacto -->
+      <div class="contact-info" style="margin-top: auto;">
+        {{#if contactoTelefono}}{{contactoTelefono}}<br>{{/if}}
+        {{#if contactoEmail}}{{contactoEmail}}<br>{{/if}}
+        {{#if contactoDireccion}}{{contactoDireccion}}<br>{{/if}}
+        {{#if contactoCiudad}}{{contactoCiudad}}{{/if}}
+      </div>
+    {{/if}}
   </div>
 </div>
 
-<!-- Páginas adicionales para productos si es necesario -->
-{{#if (gt items.length 9)}}
-  {{#each (slice items 9)}}
-    {{#if (eq @index 0)}}
-      <div class="page-container page-break">
-        <div class="bg-page"><img src="assets/emp5.png" alt="membrete"></div>
-        <div class="content-area">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th class="center" style="width:16mm;">No.</th>
-                  <th>Descripción</th>
-                  <th class="center" style="width:22mm;">Cantidad</th>
-                  <th class="center" style="width:22mm;">Medida</th>
-                  <th class="right"  style="width:30mm;">Precio Unitario</th>
-                  <th class="right"  style="width:30mm;">Subtotal</th>
-                </tr>
-              </thead>
-              <tbody>
-    {{/if}}
-    
-    <tr>
-      <td class="center">{{inc (add @index 9)}}</td>
-      <td>{{this.nombre}}</td>
-      <td class="center">{{this.cantidad}}</td>
-      <td class="center">{{this.unidad}}</td>
-      <td class="right">{{money this.unitario}}</td>
-      <td class="right">{{money this.parcial}}</td>
-    </tr>
-
-    {{#if (eq @index (sub (length ../items) 10))}}
-              </tbody>
-            </table>
-          </div>
+<!-- PÁGINAS ADICIONALES PARA MÁS DE 8 ITEMS -->
+{{#if (gt items.length 8)}}
+  {{#each (chunkArray items) as |pageItems pageIndex|}}
+    {{#if (gt pageIndex 0)}}
+    <div class="page-container">
+      <div class="bg-page"><img src="assets/emp5.png" alt="membrete"></div>
+      <div class="content-area">
+        
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="center" style="width:16mm;">No.</th>
+                <th>Descripción</th>
+                <th class="center" style="width:22mm;">Cantidad</th>
+                <th class="center" style="width:22mm;">Medida</th>
+                <th class="right"  style="width:30mm;">Precio Unitario</th>
+                <th class="right"  style="width:30mm;">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each pageItems}}
+              <tr>
+                <td class="center">{{inc (add (multiply pageIndex 8) @index)}}</td>
+                <td>{{this.nombre}}</td>
+                <td class="center">{{this.cantidad}}</td>
+                <td class="center">{{this.unidad}}</td>
+                <td class="right">{{money this.unitario}}</td>
+                <td class="right">{{money this.parcial}}</td>
+              </tr>
+              {{/each}}
+            </tbody>
+          </table>
         </div>
+
+        <!-- SECCIÓN IMPORTANTE solo si es la última página Y tiene 4 items o menos -->
+        {{#if @last}}
+          {{#if (showImportantOnLastPage ../items)}}
+          <div class="footer-section important-content">
+            <!-- Totales en 3 columnas al borde derecho -->
+            <div class="totals3">
+              <table>
+                <tr>
+                  <td class="letra" rowspan="3">
+                    <div class="title">Monto total en letra:</div>
+                    <div>{{../totalEnLetra}}</div>
+                  </td>
+                  <td class="lbl">Subtotal</td>
+                  <td class="val">{{money ../totales.subtotal}}</td>
+                </tr>
+                <tr>
+                  <td class="lbl">IVA ({{../ivaPct}}%)</td>
+                  <td class="val">{{money ../totales.iva}}</td>
+                </tr>
+                <tr>
+                  <td class="lbl">Total</td>
+                  <td class="val">{{money ../totales.total}}</td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Firma -->
+            <div class="firma">
+              <span style="font-weight:700; display:block; margin-bottom:8px; padding-left:50px;">Atentamente</span>
+
+              {{#if ../incluirFirma}}
+                {{#if ../firmaUrl}}<img src="{{../firmaUrl}}" alt="firma">{{/if}}
+              {{else}}
+                <!-- Espacio reservado para la firma cuando no hay imagen -->
+                <div style="height:100px; margin-bottom:8px;"></div>
+              {{/if}}
+
+              <div style="font-weight:700; padding-left:50px;">
+                {{#if ../firmanteNombre}}
+                  {{{../firmanteNombre}}}
+                {{else}}
+                  Responsable de Ventas
+                {{/if}}
+              </div>
+              {{#if ../firmantePuesto}}
+                <div style="padding-left:50px; margin-top: 4px;">{{../firmantePuesto}}</div>
+              {{/if}}
+            </div>
+
+            <!-- Información de contacto -->
+            <div class="contact-info">
+              {{#if ../contactoTelefono}}{{../contactoTelefono}}<br>{{/if}}
+              {{#if ../contactoEmail}}{{../contactoEmail}}<br>{{/if}}
+              {{#if ../contactoDireccion}}{{../contactoDireccion}}<br>{{/if}}
+              {{#if ../contactoCiudad}}{{../contactoCiudad}}{{/if}}
+            </div>
+          </div>
+          {{else}}
+          <!-- Info de contacto si no cabe la sección importante -->
+          <div class="contact-info" style="margin-top: auto;">
+            {{#if ../contactoTelefono}}{{../contactoTelefono}}<br>{{/if}}
+            {{#if ../contactoEmail}}{{../contactoEmail}}<br>{{/if}}
+            {{#if ../contactoDireccion}}{{../contactoDireccion}}<br>{{/if}}
+            {{#if ../contactoCiudad}}{{../contactoCiudad}}{{/if}}
+          </div>
+          {{/if}}
+        {{else}}
+          <!-- Info de contacto en páginas intermedias -->
+          <div class="contact-info" style="margin-top: auto;">
+            {{#if ../contactoTelefono}}{{../contactoTelefono}}<br>{{/if}}
+            {{#if ../contactoEmail}}{{../contactoEmail}}<br>{{/if}}
+            {{#if ../contactoDireccion}}{{../contactoDireccion}}<br>{{/if}}
+            {{#if ../contactoCiudad}}{{../contactoCiudad}}{{/if}}
+          </div>
+        {{/if}}
       </div>
+    </div>
     {{/if}}
   {{/each}}
 {{/if}}
 
-<!-- ÚLTIMA PÁGINA - Totales y firma -->
-<div class="page-container page-break">
+<!-- PÁGINA SEPARADA PARA INFORMACIÓN IMPORTANTE (Reglas 2 y 4) -->
+{{#if (needsSeparateImportantPage items)}}
+<div class="page-container">
   <div class="bg-page"><img src="assets/emp5.png" alt="membrete"></div>
   <div class="content-area">
     
-    <div class="footer-section">
+    <div class="footer-section important-content" style="padding-top: 50mm;">
       <!-- Totales en 3 columnas al borde derecho -->
       <div class="totals3">
         <table>
@@ -282,9 +450,17 @@
           <div style="padding-left:50px; margin-top: 4px;">{{firmantePuesto}}</div>
         {{/if}}
       </div>
+
+      <!-- Información de contacto -->
+      <div class="contact-info">
+        {{#if contactoTelefono}}{{contactoTelefono}}<br>{{/if}}
+        {{#if contactoEmail}}{{contactoEmail}}<br>{{/if}}
+        {{#if contactoDireccion}}{{contactoDireccion}}<br>{{/if}}
+        {{#if contactoCiudad}}{{contactoCiudad}}{{/if}}
+      </div>
     </div>
   </div>
 </div>
-
+{{/if}}
 </body>
 </html>
