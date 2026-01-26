@@ -99,27 +99,40 @@ export class PdfService {
     return map[empresa];
   }
 
-  private computeTotals(quote: Quote, m: Emp) {
-    const items = quote.items.map((it) => {
-      const nombre = it.product?.nombre ?? it.service?.nombre ?? '—';
-      const unidad = (it as any).unidad ?? 'Pieza';
-      const unitario = Number(
-        (it as any)[`precioFinal${m}`] ??
-        (Number(it.costo_unitario) *
-          (1 + Number((it as any)[`margenPct${m}`] ?? 0) / 100)).toFixed(2)
-      );
-      const parcial = Number(
-        (it as any)[`subtotal${m}`] ?? (unitario * Number(it.cantidad)).toFixed(2)
-      );
-      return { nombre, unidad, cantidad: Number(it.cantidad), unitario, parcial };
-    });
+private computeTotals(quote: Quote, m: Emp) {
+  const items = quote.items.map((it) => {
+    const nombre = it.product?.nombre ?? it.service?.nombre ?? '—';
+    const unidad = (it as any).unidad ?? 'Pieza';
 
-    const subtotal = +items.reduce((a, i) => a + i.parcial, 0).toFixed(2);
-    const ivaPct = Number(quote.ivaPct ?? 16);
-    const iva = +(subtotal * (ivaPct / 100)).toFixed(2);
-    const total = +(subtotal + iva).toFixed(2);
-    return { items, ivaPct, subtotales: { subtotal, iva, total } };
-  }
+    const cantidad = Number(it.cantidad);
+
+    // PRECIO FINAL DE VENTA
+    const unitario = Number(
+      (it as any)[`precioFinal${m}`] ??
+      (
+        Number(it.costo_unitario) *
+        (1 + Number((it as any)[`margenPct${m}`] ?? 0) / 100)
+      ).toFixed(2)
+    );
+
+    const parcial = +(
+      unitario * cantidad
+    ).toFixed(2);
+
+    return { nombre, unidad, cantidad, unitario, parcial };
+  });
+
+  const subtotal = +items
+    .reduce((a, i) => a + i.parcial, 0)
+    .toFixed(2);
+
+  const ivaPct = Number(quote.ivaPct ?? 16);
+  const iva = +(subtotal * (ivaPct / 100)).toFixed(2);
+  const total = +(subtotal + iva).toFixed(2);
+
+  return { items, ivaPct, subtotales: { subtotal, iva, total } };
+}
+
 
   // ───────────────────────────────────────────────────────────────
   // Conversor a letras en español (MXN) sencillo y suficiente

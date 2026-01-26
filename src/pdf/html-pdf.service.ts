@@ -17,6 +17,8 @@ hbs.registerHelper('add', (a: any, b: any) => Number(a) + Number(b));
 hbs.registerHelper('sub', (a: any, b: any) => Number(a) - Number(b));
 hbs.registerHelper('lte', (a: any, b: any) => Number(a) <= Number(b));
 hbs.registerHelper('gte', (a: any, b: any) => Number(a) >= Number(b));
+hbs.registerHelper('multiply', (a: any, b: any) =>  Number(a) * Number(b));
+
 
 // =========================================================
 //   CONFIG GENERAL DEL SISTEMA DE PAGINADO
