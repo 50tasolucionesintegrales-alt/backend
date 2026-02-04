@@ -35,8 +35,8 @@ export class Product {
   @Column({ type: 'varchar', length: 255 })
   nombre!: string;
 
-  @Column({ type: 'text', nullable: true })
-  descripcion?: string;
+  @Column({ type: 'varchar', length: 128 })
+  descripcion!: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   precio!: string;
@@ -45,7 +45,7 @@ export class Product {
   especificaciones?: Record<string, any>;
 
   @Column({ type: 'varchar', length: 512, nullable: true })
-  link_compra?: string;
+  link_compra?: string | null;
 
   @Column({ type: 'bytea', name: 'image_data', nullable: true })
   imageData?: Buffer | null;

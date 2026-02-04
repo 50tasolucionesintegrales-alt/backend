@@ -35,7 +35,7 @@ export class ProductsService {
 
     const baseData: Partial<Product> = {
       nombre: dto.nombre,
-      descripcion: dto.descripcion ?? '',
+      descripcion: dto.descripcion,
       precio: dto.precio,
       especificaciones: dto.especificaciones,
       link_compra: dto.link_compra,
@@ -83,7 +83,7 @@ export class ProductsService {
 
     Object.assign(product, {
       nombre: dto.nombre ?? product.nombre,
-      descripcion: dto.descripcion ?? product.descripcion ?? '',
+      descripcion: dto.descripcion ?? product.descripcion,
       precio: dto.precio ?? product.precio,
       especificaciones: dto.especificaciones ?? product.especificaciones,
       link_compra: dto.link_compra ?? product.link_compra,

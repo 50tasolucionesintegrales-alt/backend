@@ -4,12 +4,11 @@ import { Repository } from 'typeorm';
 import { Quote } from './entities/quote.entity';
 import { QuoteItem } from './entities/quote-item.entity';
 import { Product } from 'src/products/entities/product.entity';
+import { Service } from 'src/services/entities/service.entity';
 import { AddItemsDto } from './dto/add-items.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
-import { PdfService } from 'src/pdf/pdf.service';
-import { Service } from 'src/services/entities/service.entity';
-import { Role } from 'src/common/enums/roles.enum';
 import { BatchUpdateItemDto } from './dto/batch-update-item.dto';
+import { Role } from 'src/common/enums/roles.enum';
 
 @Injectable()
 export class QuotesService {
@@ -18,7 +17,6 @@ export class QuotesService {
     @InjectRepository(QuoteItem) private itemsRepo: Repository<QuoteItem>,
     @InjectRepository(Product) private productRepo: Repository<Product>,
     @InjectRepository(Service) private serviceRepo: Repository<Service>,
-    private readonly pdf: PdfService,
   ) { }
 
   async loadForPdf(id: string) {

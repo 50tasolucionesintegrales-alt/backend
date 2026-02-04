@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { HtmlPdfService } from './html-pdf.service';
+import { HtmlPdfService1 } from './html-pdf.service';
 import { Quote } from 'src/quotes/entities/quote.entity';
 
-type Emp = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+type Emp = 1;
 
 type MetaIn = {
   destinatario: string;
@@ -18,22 +18,13 @@ type MetaIn = {
 
 const FIRMA_BY_EMPRESA: Record<Emp, string> = {
   1: 'assets/firma_emp1.png',
-  2: 'assets/firma_emp2.png',
-  3: 'assets/firma_emp3.png',
-  4: 'assets/firma_emp4.png',
-  5: 'assets/firma_emp5.png',
-  6: 'assets/firma_emp6.png',
-  7: 'assets/firma_emp7.png',
-  8: 'assets/firma_emp8.png',
-  9: 'assets/firma_emp9.png',
-  10: 'assets/firma_emp10.png',
 };
 
 const FIRMA_FALLBACK = 'assets/firma.png';
 
 @Injectable()
-export class PdfService {
-  constructor(private readonly html: HtmlPdfService) { }
+export class PdfService1 {
+  constructor(private readonly html: HtmlPdfService1) { }
 
   async generateOneBuffer(
     quote: Quote,
@@ -85,59 +76,51 @@ export class PdfService {
 
   private brandByEmpresa(empresa: Emp) {
     const map: Record<Emp, { color: string; logo: string }> = {
-      1: { color: '#C51B1B', logo: 'assets/emp1.png' },
-      2: { color: '#0A59BF', logo: 'assets/emp2.png' },
-      3: { color: '#0E927A', logo: 'assets/emp3.png' },
-      4: { color: '#7C3AED', logo: 'assets/emp4.png' },
-      5: { color: '#DB2777', logo: 'assets/emp5.png' },
-      6: { color: '#CA8A04', logo: 'assets/emp6.png' },
-      7: { color: '#1F2937', logo: 'assets/emp7.png' },
-      8: { color: '#1F2937', logo: 'assets/emp8.png' },
-      9: { color: '#1F2937', logo: 'assets/emp9.png' },
-      10: { color: '#1F2937', logo: 'assets/emp10.png' },
+      1: { color: '#C51B1B', logo: '../assets/emp1.png' },
     };
     return map[empresa];
   }
 
-private computeTotals(quote: Quote, m: Emp) {
-  const items = quote.items.map((it) => {
-    const nombre = it.product?.nombre ?? it.service?.nombre ?? '—';
-    const unidad = (it as any).unidad ?? 'Pieza';
+  private computeTotals(quote: Quote, m: Emp) {
+    const items = quote.items.map((it) => {
+      const descripcion = it.product?.descripcion ?? it.service?.descripcion ?? 
+                         it.product?.nombre ?? it.service?.nombre ?? '—';
+      
+      const unidad = (it as any).unidad ?? 'Pieza';
+      const cantidad = Number(it.cantidad);
 
-    const cantidad = Number(it.cantidad);
+      const unitario = Number(
+        (it as any)[`precioFinal${m}`] ??
+        (
+          Number(it.costo_unitario) *
+          (1 + Number((it as any)[`margenPct${m}`] ?? 0) / 100)
+        ).toFixed(2)
+      );
 
-    // PRECIO FINAL DE VENTA
-    const unitario = Number(
-      (it as any)[`precioFinal${m}`] ??
-      (
-        Number(it.costo_unitario) *
-        (1 + Number((it as any)[`margenPct${m}`] ?? 0) / 100)
-      ).toFixed(2)
-    );
+      const parcial = +(
+        unitario * cantidad
+      ).toFixed(2);
 
-    const parcial = +(
-      unitario * cantidad
-    ).toFixed(2);
+      return { 
+        nombre: descripcion,
+        unidad, 
+        cantidad, 
+        unitario, 
+        parcial 
+      };
+    });
 
-    return { nombre, unidad, cantidad, unitario, parcial };
-  });
+    const subtotal = +items
+      .reduce((a, i) => a + i.parcial, 0)
+      .toFixed(2);
 
-  const subtotal = +items
-    .reduce((a, i) => a + i.parcial, 0)
-    .toFixed(2);
+    const ivaPct = Number(quote.ivaPct ?? 16);
+    const iva = +(subtotal * (ivaPct / 100)).toFixed(2);
+    const total = +(subtotal + iva).toFixed(2);
 
-  const ivaPct = Number(quote.ivaPct ?? 16);
-  const iva = +(subtotal * (ivaPct / 100)).toFixed(2);
-  const total = +(subtotal + iva).toFixed(2);
+    return { items, ivaPct, subtotales: { subtotal, iva, total } };
+  }
 
-  return { items, ivaPct, subtotales: { subtotal, iva, total } };
-}
-
-
-  // ───────────────────────────────────────────────────────────────
-  // Conversor a letras en español (MXN) sencillo y suficiente
-  // Maneja hasta miles de millones; redondea a 2 decimales; "PESOS XX/100 M.N."
-  // ───────────────────────────────────────────────────────────────
   private numeroEnLetrasMXN(n: number) {
     const entero = Math.floor(n);
     const cent = Math.round((n - entero) * 100);

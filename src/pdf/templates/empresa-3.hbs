@@ -58,7 +58,7 @@
 
     .content-area {
       position: relative;
-      padding-top: 26mm; /* Espacio para el membrete */
+      padding-top: 26mm;
       min-height: calc(279.4mm - 26mm);
       display: flex;
       flex-direction: column;
@@ -152,22 +152,12 @@
 
     /* ===== Firma ===== */
     .firma{
-      margin: 20mm 0 0;
+      margin: 12mm 0 0;
       text-align: left;
     }
     .firma img{
       height: 100px;
       display: block;
-    }
-
-    .page-break { 
-      page-break-before: always; 
-      break-before: page;
-    }
-
-    .footer-section {
-      margin-top: auto;
-      padding-bottom: 20mm;
     }
 
     .important-content {
@@ -177,7 +167,7 @@
 
     /* Información de contacto */
     .contact-info {
-      margin: 10mm 15px 0;
+      margin: 8mm 15px 0;
       font-size: 11px;
       color: #333;
       line-height: 1.4;
@@ -186,84 +176,88 @@
 </head>
 <body>
 
-<!-- PRIMERA PÁGINA -->
+<!-- PÁGINAS CON PAGINACIÓN INTELIGENTE -->
+{{#each (smartChunk items)}}
 <div class="page-container">
   <div class="bg-page"><img src="assets/emp3.png" alt="membrete"></div>
   <div class="content-area">
 
+    <!-- ENCABEZADO SOLO EN PRIMERA PÁGINA -->
+    {{#if (eq @index 0)}}
     <div class="folioRow">
-      <div class="cell"><span class="label"><span class="font-weight:bold">{{folio}}</span></div>
+      <div class="cell"><span class="label"><span class="font-weight:bold">{{../folio}}</span></div>
     </div>
 
     <!-- Fecha -->
-    <div class="fecha">{{fecha}}</div><br>
+    <div class="fecha">{{../fecha}}</div><br>
 
     <!-- A quién va dirigido -->
-    <div class="dest">{{destinatario}}</div>
-    <div class="presente">{{presente}}</div><br>
+    <div class="dest">{{../destinatario}}</div>
+    <div class="presente">{{../presente}}</div><br>
 
     <div class="intro">
-      {{{descripcion}}}
+      {{{../descripcion}}}
     </div>
-
-    <!-- Tabla - PRIMEROS 8 ITEMS (sistema estándar) -->
-    {{#if items.length}}
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th class="center" style="width:16mm;">NO.</th>
-              <th class="center" style="width:26mm;">UNIDAD<br>DE MEDIDA</th>
-              <th>DESCRIPCIÓN</th>
-              <th class="center" style="width:22mm;">CANTIDAD</th>
-              <th class="right"  style="width:30mm;">PRECIO UNITARIO</th>
-              <th class="right"  style="width:30mm;">SUBTOTAL</th>
-            </tr>
-          </thead>
-          <tbody>
-            {{#each (chunkArray items)}}
-              {{#if @first}}
-                {{#each this}}
-                <tr>
-                  <td class="center">{{inc @index}}</td>
-                  <td class="center">{{this.unidad}}</td>
-                  <td>{{this.nombre}}</td>
-                  <td class="center">{{this.cantidad}}</td>
-                  <td class="right">{{money this.unitario}}</td>
-                  <td class="right">{{money this.parcial}}</td>
-                </tr>
-                {{/each}}
-              {{/if}}
-            {{/each}}
-          </tbody>
-        </table>
-      </div>
     {{/if}}
 
-    <!-- SECCIÓN IMPORTANTE - Solo si hay 4 items o menos (Regla 1) -->
-    {{#if (showImportantOnFirstPage items)}}
-      <div class="footer-section important-content">
+    <!-- EN PÁGINAS SUBSECUENTES, LA TABLA COMIENZA MÁS ARRIBA -->
+    {{#if (gt @index 0)}}
+    <div style="margin-top: 20px;"></div>
+    {{/if}}
+
+    <!-- TABLA DE ITEMS -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="center" style="width:16mm;">NO.</th>
+            <th class="center" style="width:26mm;">UNIDAD<br>DE MEDIDA</th>
+            <th>DESCRIPCIÓN</th>
+            <th class="center" style="width:22mm;">CANTIDAD</th>
+            <th class="right" style="width:30mm;">PRECIO UNITARIO</th>
+            <th class="right" style="width:30mm;">SUBTOTAL</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each this}}
+          <tr>
+            <td class="center">{{this.globalIndex}}</td>
+            <td class="center">{{this.unidad}}</td>
+            <td>{{this.nombre}}</td>
+            <td class="center">{{this.cantidad}}</td>
+            <td class="right">{{money this.unitario}}</td>
+            <td class="right">{{money this.parcial}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECCIÓN IMPORTANTE SOLO EN ÚLTIMA PÁGINA SI HAY ESPACIO -->
+    {{#if @last}}
+      {{#if (not (needsSeparateImportantPage ../items))}}
+      <div class="important-content" style="margin-top: 12px;">
         <!-- Resumen con totales y condiciones -->
         <div class="summaryRow">
           <div class="totals">
             <table>
-              <tr><td class="label">SUBTOTAL:</td><td class="value">{{money totales.subtotal}}</td></tr>
-              <tr><td class="label">IVA ({{ivaPct}}%):</td><td class="value">{{money totales.iva}}</td></tr>
-              <tr><td class="label">MONTO TOTAL:</td><td class="value">{{money totales.total}}</td></tr>
+              <tr><td class="label">SUBTOTAL:</td><td class="value">{{money ../totales.subtotal}}</td></tr>
+              <tr><td class="label">IVA ({{../ivaPct}}%):</td><td class="value">{{money ../totales.iva}}</td></tr>
+              <tr><td class="label">MONTO TOTAL:</td><td class="value">{{money ../totales.total}}</td></tr>
             </table>
           </div>
 
           <div class="rightCol">
             <div class="enletra">
               <div class="title">MONTO TOTAL EN LETRA:</div>
-              <div>{{totalEnLetra}}</div>
+              <div>{{../totalEnLetra}}</div>
             </div>
 
-            {{#if condiciones}}
+            {{#if ../condiciones}}
             <div class="cond-box">
               <div class="title">CONDICIONES GENERALES:</div>
               <div class="content">
-                {{{condiciones}}}
+                {{{../condiciones}}}
               </div>
             </div>
             {{/if}}
@@ -273,174 +267,60 @@
         <!-- Firma -->
         <div class="firma">
           <span style="font-weight:800; display:block; margin-left:18px; margin-bottom:8px;">ATENTAMENTE</span>
-
-          {{#if incluirFirma}}
-            {{#if firmaUrl}}<img src="{{firmaUrl}}" alt="firma" style="height:100px; display:block; margin-left:18px; margin-bottom:8px;">{{/if}}
+          {{#if ../incluirFirma}}
+            {{#if ../firmaUrl}}<img src="{{../firmaUrl}}" alt="firma" style="height:100px; display:block; margin-left:18px; margin-bottom:8px;">{{/if}}
           {{else}}
             <!-- Espacio reservado para la firma cuando no hay imagen -->
             <div style="height:100px; margin-left:18px; margin-bottom:8px;"></div>
           {{/if}}
-
           <div style="font-weight:800; margin-left:18px; margin-top:10px;">
-            {{#if firmanteNombre}}
-              {{{firmanteNombre}}}
-            {{else}}
-              Responsable de Ventas
-            {{/if}}
+            {{#if ../firmanteNombre}}{{{../firmanteNombre}}}{{else}}Responsable de Ventas{{/if}}
           </div>
-          {{#if firmantePuesto}}
-            <div style="margin-left:18px; margin-top: 4px;">{{firmantePuesto}}</div>
+          {{#if ../firmantePuesto}}
+            <div style="margin-left:18px; margin-top: 4px;">{{../firmantePuesto}}</div>
           {{/if}}
         </div>
 
         <!-- Información de contacto -->
         <div class="contact-info">
-          {{#if contactoRFC}}RFC: {{contactoRFC}}<br>{{/if}}
-          {{#if contactoEmail}}{{contactoEmail}}<br>{{/if}}
-          {{#if contactoDireccion}}{{contactoDireccion}}<br>{{/if}}
-          {{#if contactoCiudad}}{{contactoCiudad}}{{/if}}
+          {{#if ../contactoRFC}}RFC: {{../contactoRFC}}<br>{{/if}}
+          {{#if ../contactoEmail}}{{../contactoEmail}}<br>{{/if}}
+          {{#if ../contactoDireccion}}{{../contactoDireccion}}<br>{{/if}}
+          {{#if ../contactoCiudad}}{{../contactoCiudad}}{{/if}}
         </div>
       </div>
+      {{else}}
+      <!-- Info de contacto si no cabe la sección importante -->
+      <div class="contact-info" style="margin-top: 20px;">
+        {{#if ../contactoRFC}}RFC: {{../contactoRFC}}<br>{{/if}}
+        {{#if ../contactoEmail}}{{../contactoEmail}}<br>{{/if}}
+        {{#if ../contactoDireccion}}{{../contactoDireccion}}<br>{{/if}}
+        {{#if ../contactoCiudad}}{{../contactoCiudad}}{{/if}}
+      </div>
+      {{/if}}
     {{else}}
-      <!-- Si no cabe la sección importante, al menos poner info de contacto -->
-      <div class="contact-info" style="margin-top: auto;">
-        {{#if contactoRFC}}RFC: {{contactoRFC}}<br>{{/if}}
-        {{#if contactoEmail}}{{contactoEmail}}<br>{{/if}}
-        {{#if contactoDireccion}}{{contactoDireccion}}<br>{{/if}}
-        {{#if contactoCiudad}}{{contactoCiudad}}{{/if}}
+      <!-- Info de contacto en páginas intermedias -->
+      <div class="contact-info" style="margin-top: 20px;">
+        {{#if ../contactoRFC}}RFC: {{../contactoRFC}}<br>{{/if}}
+        {{#if ../contactoEmail}}{{../contactoEmail}}<br>{{/if}}
+        {{#if ../contactoDireccion}}{{../contactoDireccion}}<br>{{/if}}
+        {{#if ../contactoCiudad}}{{../contactoCiudad}}{{/if}}
       </div>
     {{/if}}
   </div>
 </div>
+{{/each}}
 
-<!-- PÁGINAS ADICIONALES PARA MÁS DE 8 ITEMS -->
-{{#if (gt items.length 8)}}
-  {{#each (chunkArray items) as |pageItems pageIndex|}}
-    {{#if (gt pageIndex 0)}}
-    <div class="page-container">
-      <div class="bg-page"><img src="assets/emp3.png" alt="membrete"></div>
-      <div class="content-area">
-        
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th class="center" style="width:16mm;">NO.</th>
-                <th class="center" style="width:26mm;">UNIDAD<br>DE MEDIDA</th>
-                <th>DESCRIPCIÓN</th>
-                <th class="center" style="width:22mm;">CANTIDAD</th>
-                <th class="right"  style="width:30mm;">PRECIO UNITARIO</th>
-                <th class="right"  style="width:30mm;">SUBTOTAL</th>
-              </tr>
-            </thead>
-            <tbody>
-              {{#each pageItems}}
-              <tr>
-                <td class="center">{{inc (add (multiply pageIndex 8) @index)}}</td>
-                <td class="center">{{this.unidad}}</td>
-                <td>{{this.nombre}}</td>
-                <td class="center">{{this.cantidad}}</td>
-                <td class="right">{{money this.unitario}}</td>
-                <td class="right">{{money this.parcial}}</td>
-              </tr>
-              {{/each}}
-            </tbody>
-          </table>
-        </div>
-
-        <!-- SECCIÓN IMPORTANTE solo si es la última página Y tiene 4 items o menos -->
-        {{#if @last}}
-          {{#if (showImportantOnLastPage ../items)}}
-          <div class="footer-section important-content">
-            <!-- Resumen con totales y condiciones -->
-            <div class="summaryRow">
-              <div class="totals">
-                <table>
-                  <tr><td class="label">SUBTOTAL:</td><td class="value">{{money ../totales.subtotal}}</td></tr>
-                  <tr><td class="label">IVA ({{../ivaPct}}%):</td><td class="value">{{money ../totales.iva}}</td></tr>
-                  <tr><td class="label">MONTO TOTAL:</td><td class="value">{{money ../totales.total}}</td></tr>
-                </table>
-              </div>
-
-              <div class="rightCol">
-                <div class="enletra">
-                  <div class="title">MONTO TOTAL EN LETRA:</div>
-                  <div>{{../totalEnLetra}}</div>
-                </div>
-
-                {{#if ../condiciones}}
-                <div class="cond-box">
-                  <div class="title">CONDICIONES GENERALES:</div>
-                  <div class="content">
-                    {{{../condiciones}}}
-                  </div>
-                </div>
-                {{/if}}
-              </div>
-            </div>
-
-            <!-- Firma -->
-            <div class="firma">
-              <span style="font-weight:800; display:block; margin-left:18px; margin-bottom:8px;">ATENTAMENTE</span>
-
-              {{#if ../incluirFirma}}
-                {{#if ../firmaUrl}}<img src="{{../firmaUrl}}" alt="firma" style="height:100px; display:block; margin-left:18px; margin-bottom:8px;">{{/if}}
-              {{else}}
-                <!-- Espacio reservado para la firma cuando no hay imagen -->
-                <div style="height:100px; margin-left:18px; margin-bottom:8px;"></div>
-              {{/if}}
-
-              <div style="font-weight:800; margin-left:18px; margin-top:10px;">
-                {{#if ../firmanteNombre}}
-                  {{{../firmanteNombre}}}
-                {{else}}
-                  Responsable de Ventas
-                {{/if}}
-              </div>
-              {{#if ../firmantePuesto}}
-                <div style="margin-left:18px; margin-top: 4px;">{{../firmantePuesto}}</div>
-              {{/if}}
-            </div>
-
-            <!-- Información de contacto -->
-            <div class="contact-info">
-              {{#if ../contactoRFC}}RFC: {{../contactoRFC}}<br>{{/if}}
-              {{#if ../contactoEmail}}{{../contactoEmail}}<br>{{/if}}
-              {{#if ../contactoDireccion}}{{../contactoDireccion}}<br>{{/if}}
-              {{#if ../contactoCiudad}}{{../contactoCiudad}}{{/if}}
-            </div>
-          </div>
-          {{else}}
-          <!-- Info de contacto si no cabe la sección importante -->
-          <div class="contact-info" style="margin-top: auto;">
-            {{#if ../contactoRFC}}RFC: {{../contactoRFC}}<br>{{/if}}
-            {{#if ../contactoEmail}}{{../contactoEmail}}<br>{{/if}}
-            {{#if ../contactoDireccion}}{{../contactoDireccion}}<br>{{/if}}
-            {{#if ../contactoCiudad}}{{../contactoCiudad}}{{/if}}
-          </div>
-          {{/if}}
-        {{else}}
-          <!-- Info de contacto en páginas intermedias -->
-          <div class="contact-info" style="margin-top: auto;">
-            {{#if ../contactoRFC}}RFC: {{../contactoRFC}}<br>{{/if}}
-            {{#if ../contactoEmail}}{{../contactoEmail}}<br>{{/if}}
-            {{#if ../contactoDireccion}}{{../contactoDireccion}}<br>{{/if}}
-            {{#if ../contactoCiudad}}{{../contactoCiudad}}{{/if}}
-          </div>
-        {{/if}}
-      </div>
-    </div>
-    {{/if}}
-  {{/each}}
-{{/if}}
-
-<!-- PÁGINA SEPARADA PARA INFORMACIÓN IMPORTANTE (Reglas 2 y 4) -->
+<!-- PÁGINA SEPARADA PARA INFORMACIÓN IMPORTANTE SI NO CABE EN LA ÚLTIMA -->
 {{#if (needsSeparateImportantPage items)}}
 <div class="page-container">
   <div class="bg-page"><img src="assets/emp3.png" alt="membrete"></div>
   <div class="content-area">
     
-    <div class="footer-section important-content" style="padding-top: 50mm;">
+    <!-- Espacio desde arriba -->
+    <div style="margin-top: 20px;"></div>
+    
+    <div class="important-content">
       <!-- Resumen con totales y condiciones -->
       <div class="summaryRow">
         <div class="totals">
@@ -471,20 +351,14 @@
       <!-- Firma -->
       <div class="firma">
         <span style="font-weight:800; display:block; margin-left:18px; margin-bottom:8px;">ATENTAMENTE</span>
-
         {{#if incluirFirma}}
           {{#if firmaUrl}}<img src="{{firmaUrl}}" alt="firma" style="height:100px; display:block; margin-left:18px; margin-bottom:8px;">{{/if}}
         {{else}}
           <!-- Espacio reservado para la firma cuando no hay imagen -->
           <div style="height:100px; margin-left:18px; margin-bottom:8px;"></div>
         {{/if}}
-
         <div style="font-weight:800; margin-left:18px; margin-top:10px;">
-          {{#if firmanteNombre}}
-            {{{firmanteNombre}}}
-          {{else}}
-            Responsable de Ventas
-          {{/if}}
+          {{#if firmanteNombre}}{{{firmanteNombre}}}{{else}}Responsable de Ventas{{/if}}
         </div>
         {{#if firmantePuesto}}
           <div style="margin-left:18px; margin-top: 4px;">{{firmantePuesto}}</div>

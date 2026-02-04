@@ -1,13 +1,24 @@
-import { IsString, IsNumberString, IsOptional, IsUrl, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsNumberString,
+  IsOptional,
+  IsUrl,
+  MaxLength,
+  MinLength,
+  IsNotEmpty,
+} from 'class-validator';
 
 export class CreateProductDto {
   @IsString({ message: 'El nombre debe ser texto' })
   @MaxLength(255)
   nombre!: string;
 
-  @IsOptional()
-  @IsString()
-  descripcion?: string;
+  @IsString({ message: 'La descripción debe ser texto' })
+  @IsNotEmpty({ message: 'La descripción es obligatoria' })
+  @MaxLength(128, {
+    message: 'La descripción debe tener máximo 128 caracteres',
+  })
+  descripcion!: string;
 
   @IsNumberString({}, { message: 'El precio debe ser un número válido' })
   precio!: string;
