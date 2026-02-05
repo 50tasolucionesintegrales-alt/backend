@@ -4,7 +4,6 @@ import { IsOptional, IsNumber, Min, IsInt, IsString, MaxLength } from 'class-val
 const toNum = () =>
   Transform(({ value }) => {
     if (value === null || value === undefined || value === '') return undefined;
-    // Normaliza "1.234,56" o "1,234.56"
     let s = String(value).trim();
     if (s.match(/,\d{1,2}$/)) s = s.replace(/\./g, '').replace(',', '.');
     else s = s.replace(/,/g, '');
@@ -29,7 +28,6 @@ export class UpdateItemDto {
   @Min(0, { message: 'margenPct4 no puede ser negativo' })
   margenPct4?: number;
 
-  // OJO: en tu versión decía "margenPct5 dede ser negativo" (typo y mensaje)
   @IsOptional() @toNum() @IsNumber({}, { message: 'margenPct5 debe ser un número' })
   @Min(0, { message: 'margenPct5 no puede ser negativo' })
   margenPct5?: number;
@@ -42,7 +40,6 @@ export class UpdateItemDto {
   @Min(0, { message: 'margenPct7 no puede ser negativo' })
   margenPct7?: number;
 
-  // 👇 Agregar los que faltaban
   @IsOptional() @toNum() @IsNumber({}, { message: 'margenPct8 debe ser un número' })
   @Min(0, { message: 'margenPct8 no puede ser negativo' })
   margenPct8?: number;

@@ -15,7 +15,7 @@ export class BatchUpdateItemDto {
 
   @IsNumber()
   @IsOptional()
-  @Allow() // Permite que el valor sea 'null'
+  @Allow()
   margenPct1?: number | null;
 
   @IsNumber()
@@ -23,7 +23,41 @@ export class BatchUpdateItemDto {
   @Allow()
   margenPct2?: number | null;
 
-  // ... (Repite para margenPct3 hasta margenPct10) ...
+  @IsNumber()
+  @IsOptional()
+  @Allow()
+  margenPct3?: number | null;
+  
+  @IsNumber()
+  @IsOptional()
+  @Allow()
+  margenPct4?: number | null;
+
+  @IsNumber()
+  @IsOptional()
+  @Allow()
+  margenPct5?: number | null;
+
+  @IsNumber()
+  @IsOptional()
+  @Allow()
+  margenPct6?: number | null;
+
+  @IsNumber()
+  @IsOptional()
+  @Allow()
+  margenPct7?: number | null;
+
+  @IsNumber()
+  @IsOptional()
+  @Allow()
+  margenPct8?: number | null;
+
+  @IsNumber()
+  @IsOptional()
+  @Allow()
+  margenPct9?: number | null;
+
   @IsNumber()
   @IsOptional()
   @Allow()

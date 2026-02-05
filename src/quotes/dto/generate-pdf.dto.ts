@@ -11,7 +11,7 @@ export class GeneratePdfDto {
     @IsString() @IsNotEmpty({ message: "La descripcion es obligatoria" })
     descripcion!: string;
 
-    @IsString() @IsNotEmpty({ message: "La fecha es obligatoria" })  // formato libre: "05 de octubre de 2025" o "2025-10-05"
+    @IsString() @IsNotEmpty({ message: "La fecha es obligatoria" })
     fecha!: string;
 
     @IsString() @IsNotEmpty({ message: "El folio es obligatorio" })

@@ -98,29 +98,44 @@ export class QuotesService {
     return { message: 'Ítems agregados/actualizados', quote: updated };
   }
 
-  /* ───────── Actualizar ítems ───────── */
   private recalculateItem(item: QuoteItem) {
     const cost = Number(item.costo_unitario ?? 0);
     const qty = Number(item.cantidad ?? 0);
+    const subtotalBase = cost * qty; // Subtotal sin margen
 
     const round2 = (n: number) => Math.round(n * 100) / 100;
 
     for (let i = 1; i <= 10; i++) {
-      const mRaw = (item as any)[`margenPct${i}`];
+      const marginKey = `margenPct${i}` as keyof QuoteItem;
+      const precioKey = `precioFinal${i}` as keyof QuoteItem;
+      const subtotalKey = `subtotal${i}` as keyof QuoteItem;
+      const gananciaKey = `ganancia${i}` as keyof any;
 
-      if (mRaw === null || mRaw === undefined) {
-        (item as any)[`precioFinal${i}`] = null;
-        (item as any)[`subtotal${i}`] = round2(cost * qty);
+      const marginRaw = item[marginKey];
+      
+      if (marginRaw === null || marginRaw === undefined || marginRaw === 0) {
+        // Sin margen - todos los valores iguales
+        (item as any)[precioKey] = round2(cost); // Precio final = costo unitario
+        (item as any)[subtotalKey] = round2(subtotalBase); // Subtotal sin margen = subtotal con margen
+        // GANANCIA = subtotalConMargen - subtotalBase (que debería ser 0)
+        (item as any)[gananciaKey] = 0;
         continue;
       }
 
-      const margenPct = Number(mRaw) || 0;
-
-      const baseSubtotal = round2(cost * qty);
-
-      const unitPriceWithMargin = round2(cost * (1 + margenPct / 100));
-      (item as any)[`precioFinal${i}`] = unitPriceWithMargin;
-      (item as any)[`subtotal${i}`] = baseSubtotal;
+      const margin = Number(marginRaw);
+      
+      // Precio final con margen
+      const precioFinal = round2(cost * (1 + margin / 100));
+      
+      // Subtotal con margen
+      const subtotalConMargen = round2(precioFinal * qty);
+      
+      // GANANCIA CORRECTA: subtotal con margen - subtotal base
+      const ganancia = round2(subtotalConMargen - subtotalBase);
+      
+      (item as any)[precioKey] = precioFinal;
+      (item as any)[subtotalKey] = subtotalConMargen;
+      (item as any)[gananciaKey] = ganancia;
     }
   }
 
@@ -167,14 +182,16 @@ export class QuotesService {
     }
   }
 
-  /* ───────── Actualizar ítems en Lote (NUEVO) ───────── */
   async updateQuoteItems(quoteId: string, dtos: BatchUpdateItemDto[]) {
     const quote = await this.quotesRepo.findOne({ where: { id: quoteId } });
     if (!quote) throw new NotFoundException('Cotización no encontrada');
     if (quote.status !== 'draft') throw new ForbiddenException('La cotización ya fue enviada');
 
-    const items = await this.itemsRepo.find({ where: { quote: { id: quoteId } } });
-
+    // Obtener items con relaciones
+    const items = await this.itemsRepo.find({ 
+      where: { quote: { id: quoteId } },
+      relations: ['product', 'service']
+    });
     const itemsMap = new Map(items.map(item => [item.id, item]));
 
     for (const dto of dtos) {
@@ -184,18 +201,54 @@ export class QuotesService {
         continue;
       }
 
-      Object.assign(item, dto);
+      // Actualizar campos
+      if (dto.cantidad !== undefined) item.cantidad = dto.cantidad;
+      if (dto.costo_unitario !== undefined) item.costo_unitario = dto.costo_unitario;
+      
+      // Validar márgenes (no permitir negativos)
+      const validateMargin = (margin: number | null | undefined): number | null => {
+        if (margin === null || margin === undefined) return null;
+        if (margin < 0) throw new ForbiddenException('Los márgenes no pueden ser negativos');
+        return margin;
+      };
 
+      if (dto.margenPct1 !== undefined) item.margenPct1 = validateMargin(dto.margenPct1);
+      if (dto.margenPct2 !== undefined) item.margenPct2 = validateMargin(dto.margenPct2);
+      if (dto.margenPct3 !== undefined) item.margenPct3 = validateMargin(dto.margenPct3);
+      if (dto.margenPct4 !== undefined) item.margenPct4 = validateMargin(dto.margenPct4);
+      if (dto.margenPct5 !== undefined) item.margenPct5 = validateMargin(dto.margenPct5);
+      if (dto.margenPct6 !== undefined) item.margenPct6 = validateMargin(dto.margenPct6);
+      if (dto.margenPct7 !== undefined) item.margenPct7 = validateMargin(dto.margenPct7);
+      if (dto.margenPct8 !== undefined) item.margenPct8 = validateMargin(dto.margenPct8);
+      if (dto.margenPct9 !== undefined) item.margenPct9 = validateMargin(dto.margenPct9);
+      if (dto.margenPct10 !== undefined) item.margenPct10 = validateMargin(dto.margenPct10);
+
+      // Recalcular el ítem
       this.recalculateItem(item);
     }
 
+    // Guardar todos los ítems
     await this.itemsRepo.save(items);
 
+    // Recalcular totales de la cotización
     this.recalculateQuoteTotals(quote, items);
-
     await this.quotesRepo.save(quote);
 
-    return { message: 'Ítems actualizados correctamente' };
+    // Recalcular con nueva lógica para cada ítem
+    for (const item of items) {
+      this.recalculateItem(item);
+    }
+
+    // Obtener la cotización completa actualizada
+    const updatedQuote = await this.quotesRepo.findOne({
+      where: { id: quoteId },
+      relations: ['items', 'items.product', 'items.service'],
+    });
+
+    return { 
+      message: 'Ítems actualizados correctamente', 
+      items: updatedQuote?.items || [] 
+    };
   }
 
   /* ───────── Actualizar ítem (Refactorizado) ───────── */
