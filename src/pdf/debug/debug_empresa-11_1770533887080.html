@@ -1,0 +1,639 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Prueba de Margenes</title>
+  <style>
+    :root{ --brand:#2c3e50; --ink:#111; --line:#bdc3c7; --thead: #93CEBC ; }
+
+    @page { size: Letter; margin: 0 7mm 0; }
+    
+    /* Oswald */
+    @font-face{
+      font-family: "Oswald";
+      src: url("assets/fonts/Oswald.ttf") format("truetype");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face{
+      font-family: "Oswald";
+      src: url("assets/fonts/Oswald-Bold.ttf") format("truetype");
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    body{ 
+      font-family: "Oswald", Arial, Helvetica, sans-serif;
+      margin: 0;
+      padding: 0;
+      font-size: 12px;
+    }
+
+    .page-container {
+      position: relative;
+      min-height: 279.4mm;
+      width: 215.9mm;
+      page-break-after: always;
+    }
+
+    .page-container:last-child {
+      page-break-after: auto;
+    }
+
+    /* ===== Fondo / membrete ===== */
+    .bg-page { 
+      position:absolute; 
+      inset:0; 
+      z-index:-1; 
+      pointer-events:none; 
+    }
+    .bg-page img{
+      width:100%; 
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .content-area {
+      position: relative;
+      padding-top: 10mm;
+      min-height: calc(279.4mm - 10mm);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Encabezado empresa 11 */
+    .company-header {
+      text-align: center;
+      margin-bottom: 5mm;
+    }
+    
+    .company-name {
+      font-size: 28px;
+      font-weight: bold;
+      color: #2c3e50;
+      margin-bottom: 3px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    
+    .company-subtitle {
+      font-size: 14px;
+      color: #7f8c8d;
+      letter-spacing: 1px;
+    }
+
+    /* Dinámico */
+    .fecha{ text-align:right; color:#333; margin:20px 5px 20px; font-weight:bold; }
+    .dest{ font-weight:800; line-height:1.45; margin:12px 5px 0; }
+    .presente{ font-weight:800; margin:10px 5px 0; }
+    .intro{ margin:10px 5px 0; line-height:1.55; color:#222; }
+    .label{ font-weight:400; }
+    .folio{ font-weight:800; margin:50px 5px 0; text-align:center; } /* Cambiado a center */
+
+    /* Contenedor de tabla */
+    .table-wrap{ position:relative; margin:12px 5px 0; }
+
+    /* ===== Tabla ===== */
+    table { 
+      width:100%; 
+      border-collapse:collapse;
+      border-left: none;
+      border-right: none;
+    }
+    thead { display: table-header-group; }
+    tr, td, th { page-break-inside: avoid; }
+
+    thead th{
+      color: #93CEBC; /* Color cambiado a #93CEBC */
+      font-weight:700;
+      border: 1px solid var(--line);
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding:8px; 
+      font-size:12px; 
+      text-align:center; /* Centrado para los títulos */
+      background: none; /* Sin fondo */
+    }
+    
+    /* Eliminar primer borde izquierdo de la tabla */
+    thead th:first-child {
+      border-left: none;
+    }
+    
+    /* Eliminar último borde derecho de la tabla */
+    thead th:last-child {
+      border-right: none;
+    }
+    
+    tbody td{ 
+      border:1px solid var(--line); 
+      padding:6px 8px; 
+      font-size:12px; 
+      background:#fff; 
+    }
+    
+    /* Eliminar primer borde izquierdo de las celdas del cuerpo */
+    tbody td:first-child {
+      border-left: none;
+    }
+    
+    /* Eliminar último borde derecho de las celdas del cuerpo */
+    tbody td:last-child {
+      border-right: none;
+    }
+    
+    .center{ text-align:center; } 
+    .right{ text-align:right; }
+
+    /* Totales a la derecha */
+    .totals{ 
+      display:flex; 
+      justify-content:flex-end; 
+      margin:10px 5px 0; 
+    }
+    .totals table{ 
+      width:70mm; 
+      border-collapse:collapse;
+      border-left: none;
+      border-right: none;
+    }
+    .totals td{ 
+      padding:6px 8px; 
+      border-left:1px solid var(--line); 
+      border-right:1px solid var(--line); 
+    }
+    .totals tr:first-child td{ 
+      border-top:1px solid var(--line); 
+    }
+    .totals tr:last-child  td{ 
+      border-bottom:1px solid var(--line); 
+    }
+    .totals .label{ 
+      font-weight:700; 
+      background:none; /* Sin fondo azul */
+      color: #93CEBC; /* Color cambiado a #93CEBC */
+    }
+    .totals .value{ 
+      text-align:right; 
+    }
+
+    /* ===== Firma ===== */
+    .firma{
+      margin: 12mm 0 0;
+      text-align: right; /* Cambiado a right (derecha) */
+    }
+
+    .firma-content {
+      text-align: right;
+      margin-left: auto;
+      width: fit-content;
+      max-width: 80%;
+    }
+
+    .firma img{
+      height: 95px;
+      display: block;
+      margin: auto;
+      margin-bottom: 8px;
+    }
+
+    .footer-section {
+      margin-top: auto;
+      padding-bottom: 15mm;
+    }
+
+    .important-content {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    /* Información de contacto */
+    .contact-info {
+      margin: 8mm 5px 0;
+      font-size: 11px;
+      color: #333;
+      line-height: 1.4;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<!-- PÁGINAS CON PAGINACIÓN INTELIGENTE -->
+  <div class="page-container">
+    <div class="bg-page"><img src="assets/emp11.png" alt="membrete"></div>
+    <div class="content-area">
+
+      <!-- ENCABEZADO SOLO EN PRIMERA PÁGINA -->
+      
+      <div class="folio">Folio</div>
+      <div class="fecha">Lugar, a 2026-02-08</div>
+      <div class="dest">Destinatario</div>
+      <div class="presente">Encabezado</div>
+
+      <div class="intro" style="margin-top:10px;">
+        Descripcion
+      </div>
+
+      <!-- EN PÁGINAS SUBSECUENTES, LA TABLA COMIENZA MÁS ARRIBA -->
+
+      <!-- TABLA DE ITEMS -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="center" style="width:16mm;">Número</th>
+              <th class="center">Concepto</th>
+              <th class="center" style="width:22mm;">Cantidad</th>
+              <th class="center" style="width:22mm;">Unidad</th>
+              <th class="center" style="width:30mm;">Precio Unitario</th>
+              <th class="center" style="width:30mm;">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="center">1</td>
+              <td>SSD Kingston FURY Renegade G5 NVMe, 2 TB, M.2, 14000 MB/s Escritura, 14700 MB/s Lectura, PCI Express 5.0</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$23,478.00</td>
+              <td class="right">$23,478.00</td>
+            </tr>
+            <tr>
+              <td class="center">2</td>
+              <td>Tarjeta Madre ASUS ROG STRIX B860-A GAMING WIFI, ATX, LGA 1851, Intel B860, 256GB DDR5, HDMI/DP para Intel</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$10,498.00</td>
+              <td class="right">$10,498.00</td>
+            </tr>
+            <tr>
+              <td class="center">3</td>
+              <td>SSD para Servidor HPE P40504-B21, 1.9TB, SATA III, 2.5"</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$35,000.00</td>
+              <td class="right">$35,000.00</td>
+            </tr>
+            <tr>
+              <td class="center">4</td>
+              <td>Servidor HPE ProLiant DL380 Gen11, Intel Xeon Gold 5418Y, 64GB DDR5, 2.5", M.2, 2U - no Sistema Operativo Instalado</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$289,038.00</td>
+              <td class="right">$289,038.00</td>
+            </tr>
+            <tr>
+              <td class="center">5</td>
+              <td>Camioneta 2.7L, 4 cilindros, 164 HP, transmisión manual, pantalla 8", cámara de reversa, rines 17" y 7 bolsas de aire.</td>
+              <td class="center">5</td>
+              <td class="center">pieza</td>
+              <td class="right">$1,176,200.00</td>
+              <td class="right">$5,881,000.00</td>
+            </tr>
+            <tr>
+              <td class="center">6</td>
+              <td>Jaula de acero galvanizado de 79×30×32 cm, sin bebederos ni comederos, incluye puerta trasera para fácil acceso.</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$3,000.00</td>
+              <td class="right">$3,000.00</td>
+            </tr>
+            <tr>
+              <td class="center">7</td>
+              <td>No Break CDP UPO11-3RTAX Doble Conversión en Línea, 3.000W, 3.000VA, Entrada 55V - 150V, Salida 100V - 120V, 4 Salidas</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$45,558.00</td>
+              <td class="right">$45,558.00</td>
+            </tr>
+            <tr>
+              <td class="center">8</td>
+              <td>Lenovo Veeam Respaldo y Recopilación Enterprise Plus Universal, 1 Licencia</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$187,878.00</td>
+              <td class="right">$187,878.00</td>
+            </tr>
+            <tr>
+              <td class="center">9</td>
+              <td>Chocolate Carlos V Nestlé 27 piezas de 18 gramos cada uno</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$419.38</td>
+              <td class="right">$419.38</td>
+            </tr>
+            <tr>
+              <td class="center">10</td>
+              <td>Aromatizante en aerosol Febreze  paquete con 3 piezas de 250 gramos cada uno</td>
+              <td class="center">11</td>
+              <td class="center">pieza</td>
+              <td class="right">$407.14</td>
+              <td class="right">$4,478.54</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- SECCIÓN IMPORTANTE SOLO EN ÚLTIMA PÁGINA SI HAY ESPACIO -->
+        <!-- Información de contacto en páginas intermedias -->
+        <div class="contact-info" style="margin-top: 20px;">
+          
+          
+          
+          
+        </div>
+    </div>
+  </div>
+  <div class="page-container">
+    <div class="bg-page"><img src="assets/emp11.png" alt="membrete"></div>
+    <div class="content-area">
+
+      <!-- ENCABEZADO SOLO EN PRIMERA PÁGINA -->
+
+      <!-- EN PÁGINAS SUBSECUENTES, LA TABLA COMIENZA MÁS ARRIBA -->
+      <div style="margin-top: 100px;"></div> <!-- Espacio similar a donde va la fecha en primera página -->
+
+      <!-- TABLA DE ITEMS -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="center" style="width:16mm;">Número</th>
+              <th class="center">Concepto</th>
+              <th class="center" style="width:22mm;">Cantidad</th>
+              <th class="center" style="width:22mm;">Unidad</th>
+              <th class="center" style="width:30mm;">Precio Unitario</th>
+              <th class="center" style="width:30mm;">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="center">11</td>
+              <td>Cacahuate  tostado sin sal bolsa de 600 gramos</td>
+              <td class="center">10</td>
+              <td class="center">pieza</td>
+              <td class="right">$249.98</td>
+              <td class="right">$2,499.80</td>
+            </tr>
+            <tr>
+              <td class="center">12</td>
+              <td>Almendras naturales bolsa con 907 gramos </td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$368.26</td>
+              <td class="right">$368.26</td>
+            </tr>
+            <tr>
+              <td class="center">13</td>
+              <td>Bubulubu ricolino paquete con 36 piezas </td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$345.76</td>
+              <td class="right">$345.76</td>
+            </tr>
+            <tr>
+              <td class="center">14</td>
+              <td>Cucharas desechables tamaño pastelero paquete con 60 piezas</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$40.00</td>
+              <td class="right">$40.00</td>
+            </tr>
+            <tr>
+              <td class="center">15</td>
+              <td>Marca KNOVA</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$990.00</td>
+              <td class="right">$990.00</td>
+            </tr>
+            <tr>
+              <td class="center">16</td>
+              <td>Gafas de visión nocturna 4K con zoom digital 16x, alcance hasta 1000 m, batería recargable y control por app para exteriores.</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$11,198.00</td>
+              <td class="right">$11,198.00</td>
+            </tr>
+            <tr>
+              <td class="center">17</td>
+              <td>Kit herpetológico con ganchos y pinza de 100 cm, bote con tapa y caja transportadora para manejo seguro de serpientes.</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$14,500.00</td>
+              <td class="right">$14,500.00</td>
+            </tr>
+            <tr>
+              <td class="center">18</td>
+              <td>Marca: KLEIN TOOLS</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$3,310.00</td>
+              <td class="right">$3,310.00</td>
+            </tr>
+            <tr>
+              <td class="center">19</td>
+              <td>MARCA: DE WALT</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$167,196.00</td>
+              <td class="right">$167,196.00</td>
+            </tr>
+            <tr>
+              <td class="center">20</td>
+              <td>MARCA: MAKITA</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$49,268.00</td>
+              <td class="right">$49,268.00</td>
+            </tr>
+            <tr>
+              <td class="center">21</td>
+              <td>MARCA: MILWAUKEE</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$20,962.00</td>
+              <td class="right">$20,962.00</td>
+            </tr>
+            <tr>
+              <td class="center">22</td>
+              <td>MARCA: TRUPER</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$278.00</td>
+              <td class="right">$278.00</td>
+            </tr>
+            <tr>
+              <td class="center">23</td>
+              <td>MARCA : TRUPER</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$278.00</td>
+              <td class="right">$278.00</td>
+            </tr>
+            <tr>
+              <td class="center">24</td>
+              <td>MARCA : RIGID</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$36,196.00</td>
+              <td class="right">$36,196.00</td>
+            </tr>
+            <tr>
+              <td class="center">25</td>
+              <td>MARCA : TRUPER</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$330.00</td>
+              <td class="right">$330.00</td>
+            </tr>
+            <tr>
+              <td class="center">26</td>
+              <td>MARCA: LEVEL 5</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$50,000.00</td>
+              <td class="right">$50,000.00</td>
+            </tr>
+            <tr>
+              <td class="center">27</td>
+              <td>MARCA: GENERICA</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$11,462.00</td>
+              <td class="right">$11,462.00</td>
+            </tr>
+            <tr>
+              <td class="center">28</td>
+              <td>MARCA: TRUPER</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$2,590.00</td>
+              <td class="right">$2,590.00</td>
+            </tr>
+            <tr>
+              <td class="center">29</td>
+              <td>MARCA: RUBI</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$46,420.00</td>
+              <td class="right">$46,420.00</td>
+            </tr>
+            <tr>
+              <td class="center">30</td>
+              <td>MARCA DE WALT</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$4,972.00</td>
+              <td class="right">$4,972.00</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- SECCIÓN IMPORTANTE SOLO EN ÚLTIMA PÁGINA SI HAY ESPACIO -->
+        <!-- Información de contacto en páginas intermedias -->
+        <div class="contact-info" style="margin-top: 20px;">
+          
+          
+          
+          
+        </div>
+    </div>
+  </div>
+  <div class="page-container">
+    <div class="bg-page"><img src="assets/emp11.png" alt="membrete"></div>
+    <div class="content-area">
+
+      <!-- ENCABEZADO SOLO EN PRIMERA PÁGINA -->
+
+      <!-- EN PÁGINAS SUBSECUENTES, LA TABLA COMIENZA MÁS ARRIBA -->
+      <div style="margin-top: 100px;"></div> <!-- Espacio similar a donde va la fecha en primera página -->
+
+      <!-- TABLA DE ITEMS -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="center" style="width:16mm;">Número</th>
+              <th class="center">Concepto</th>
+              <th class="center" style="width:22mm;">Cantidad</th>
+              <th class="center" style="width:22mm;">Unidad</th>
+              <th class="center" style="width:30mm;">Precio Unitario</th>
+              <th class="center" style="width:30mm;">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="center">31</td>
+              <td>MARCA DE WALT</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$11,860.00</td>
+              <td class="right">$11,860.00</td>
+            </tr>
+            <tr>
+              <td class="center">32</td>
+              <td>MARCA: TRUPER</td>
+              <td class="center">1</td>
+              <td class="center">pieza</td>
+              <td class="right">$350.00</td>
+              <td class="right">$350.00</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- SECCIÓN IMPORTANTE SOLO EN ÚLTIMA PÁGINA SI HAY ESPACIO -->
+        <div class="important-content" style="margin-top: 12px;">
+          <!-- Totales -->
+          <div class="totals">
+            <table>
+              <tr><td class="label">IVA</td><td class="value">$1,106,521.88</td></tr>
+              <tr><td class="label">Total</td><td class="value">$8,022,283.62</td></tr>
+            </table>
+          </div>
+
+          <!-- Cantidad en letra -->
+          <div style="margin:6px 5px 0; font-size:12px;">
+            <span class="label" style="font-weight:bold;">MONTO TOTAL EN LETRA: OCHO MILLONES VEINTIDOS MIL DOSCIENTOS OCHENTA Y TRES PESOS 62/100 M.N.</span> 
+          </div>
+
+          <!-- Condiciones -->
+          <div style="margin:10px 5px 0;">
+            <div class="label" style="margin-bottom:6px; font-weight: bold;">Condiciones:</div>
+            <div style="line-height:1.55; color:#222;">
+              <ul><li>Precios en MXN</li><li>Entrega: 7 días</li><li>Garantía: 12 meses</li></ul>
+            </div>
+          </div>
+
+          <!-- Firma -->
+          <div class="firma">
+            <div class="firma-content">
+              <span style="font-weight:600; display:block; margin-bottom:8px;">A T E N T A M E N T E</span>
+                <img src="assets/firma_emp11.png" alt="firma">
+              <div style="font-weight:600; margin-top:10px;">
+                Firmante<br>Cargo
+              </div>
+            </div>
+          </div>
+
+          <!-- Información de contacto -->
+          <div class="contact-info">
+            
+            
+            
+            
+          </div>
+        </div>
+    </div>
+  </div>
+
+  <!-- PÁGINA SEPARADA PARA INFORMACIÓN IMPORTANTE SI NO CABE EN LA ÚLTIMA -->
+</body>
+</html>

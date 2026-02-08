@@ -129,6 +129,15 @@ export class QuoteItem {
   })
   margenPct10?: number | null;
 
+  @Column('numeric', {
+    precision: 5,
+    scale: 2,
+    name: 'margen_pct11',
+    nullable: true,
+    transformer: DecimalTransformer,
+  })
+  margenPct11?: number | null;  
+
   /* ---------- Precios finales ---------- */
   @Column('decimal', {
     precision: 10,
@@ -220,6 +229,15 @@ export class QuoteItem {
   })
   precioFinal10?: number | null;
 
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    name: 'precio_final11',
+    nullable: true,
+    transformer: DecimalTransformer,
+  })
+  precioFinal11?: number | null;
+
   /* ---------- Subtotales ---------- */
   @Column('decimal', {
     precision: 10,
@@ -300,4 +318,12 @@ export class QuoteItem {
     transformer: DecimalTransformer,
   })
   subtotal10?: number | null;
+
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    nullable: true,
+    transformer: DecimalTransformer,
+  })
+  subtotal11?: number | null;
 }

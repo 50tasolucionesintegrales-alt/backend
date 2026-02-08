@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsUUID, Allow } from 'class-validator';
+import { IsNumber, IsOptional, IsUUID, Allow, isNumber } from 'class-validator';
 
 // Este DTO solo define los campos que se pueden cambiar desde la tabla
 export class BatchUpdateItemDto {
@@ -62,4 +62,9 @@ export class BatchUpdateItemDto {
   @IsOptional()
   @Allow()
   margenPct10?: number | null;
+
+  @IsNumber()
+  @IsOptional()
+  @Allow()
+  margenPct11?: number | null;
 }

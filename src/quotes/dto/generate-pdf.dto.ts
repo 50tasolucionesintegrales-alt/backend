@@ -1,8 +1,8 @@
 import { IsBoolean, IsInt, IsNotEmpty, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class GeneratePdfDto {
-    @IsInt() @Min(1) @Max(10)
-    empresa!: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+    @IsInt() @Min(1) @Max(11)
+    empresa!: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
 
     // OBLIGATORIOS por formato:
     @IsString() @IsNotEmpty({ message: "El destinatario es obligatorio" })

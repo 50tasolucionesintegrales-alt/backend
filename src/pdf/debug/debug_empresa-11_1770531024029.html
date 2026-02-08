@@ -1,0 +1,553 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Prueba de Margenes</title>
+  <style>
+    :root{ --brand:#2c3e50; --ink:#111; --line:#bdc3c7; --thead: #2c3e50 ; }
+
+    @page { size: Letter; margin: 0 7mm 0; }
+    
+    /* Oswald */
+    @font-face{
+      font-family: "Oswald";
+      src: url("assets/fonts/Oswald.ttf") format("truetype");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face{
+      font-family: "Oswald";
+      src: url("assets/fonts/Oswald-Bold.ttf") format("truetype");
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    body{ 
+      font-family: "Oswald", Arial, Helvetica, sans-serif;
+      margin: 0;
+      padding: 0;
+      font-size: 12px;
+    }
+
+    .page-container {
+      position: relative;
+      min-height: 279.4mm;
+      width: 215.9mm;
+      page-break-after: always;
+    }
+
+    .page-container:last-child {
+      page-break-after: auto;
+    }
+
+    /* ===== Fondo / membrete ===== */
+    .bg-page { 
+      position:absolute; 
+      inset:0; 
+      z-index:-1; 
+      pointer-events:none; 
+    }
+    .bg-page img{
+      width:100%; 
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .content-area {
+      position: relative;
+      padding-top: 10mm;
+      min-height: calc(279.4mm - 10mm);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Encabezado empresa 11 */
+    .company-header {
+      text-align: center;
+      margin-bottom: 5mm;
+    }
+    
+    .company-name {
+      font-size: 28px;
+      font-weight: bold;
+      color: #2c3e50;
+      margin-bottom: 3px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    
+    .company-subtitle {
+      font-size: 14px;
+      color: #7f8c8d;
+      letter-spacing: 1px;
+    }
+
+    /* Dinámico */
+    .fecha{ text-align:right; color:#333; margin:20px 5px 20px; font-weight:bold; }
+    .dest{ font-weight:800; line-height:1.45; margin:12px 5px 0; }
+    .presente{ font-weight:800; margin:10px 5px 0; }
+    .intro{ margin:10px 5px 0; line-height:1.55; color:#222; }
+    .label{ font-weight:400; }
+    .folio{ font-weight:800; margin:12px 5px 0; text-align:right; }
+
+    /* Contenedor de tabla */
+    .table-wrap{ position:relative; margin:12px 5px 0; }
+
+    /* ===== Tabla ===== */
+    table { width:100%; border-collapse:collapse; }
+    thead { display: table-header-group; }
+    tr, td, th { page-break-inside: avoid; }
+
+    thead th{
+      background:var(--thead); color:#fff; font-weight:700;
+      border:1px solid var(--thead); padding:8px; font-size:12px; text-align:left;
+    }
+    tbody td{ border:1px solid var(--line); padding:6px 8px; font-size:12px; background:#fff; }
+    .center{ text-align:center; } .right{ text-align:right; }
+
+    /* Totales a la derecha */
+    .totals{ display:flex; justify-content:flex-end; margin:10px 5px 0; }
+    .totals table{ width:70mm; border-collapse:collapse; }
+    .totals td{ padding:6px 8px; border-left:1px solid var(--line); border-right:1px solid var(--line); }
+    .totals tr:first-child td{ border-top:1px solid var(--line); }
+    .totals tr:last-child  td{ border-bottom:1px solid var(--line); }
+    .totals .label{ font-weight:700; background:#f6f6f6; }
+    .totals .value{ text-align:right; }
+
+    /* ===== Firma ===== */
+    .firma{
+      margin: 12mm 0 0;
+      text-align: center;
+    }
+    .firma img{
+      height: 95px;
+      display: block;
+      margin: 0 auto 8px auto;
+    }
+
+    .footer-section {
+      margin-top: auto;
+      padding-bottom: 15mm;
+    }
+
+    .important-content {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    /* Información de contacto */
+    .contact-info {
+      margin: 8mm 5px 0;
+      font-size: 11px;
+      color: #333;
+      line-height: 1.4;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<!-- PÁGINAS CON PAGINACIÓN INTELIGENTE -->
+  <div class="page-container">
+    <div class="bg-page"><img src="assets/emp11.png" alt="membrete"></div>
+    <div class="content-area">
+
+      <!-- ENCABEZADO SOLO EN PRIMERA PÁGINA -->
+      
+      <div class="folio">Folio</div>
+      <div class="fecha">Lugar, a 2026-02-08</div>
+      <div class="dest">Destinatario</div>
+      <div class="presente">Encabezado</div>
+
+      <div class="intro" style="margin-top:10px;">
+        Descripcion
+      </div>
+
+      <!-- EN PÁGINAS SUBSECUENTES, LA TABLA COMIENZA MÁS ARRIBA -->
+
+      <!-- TABLA DE ITEMS -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="center" style="width:16mm;">Número</th>
+              <th>Concepto</th>
+              <th class="center" style="width:22mm;">Cantidad</th>
+              <th class="center" style="width:22mm;">Unidad</th>
+              <th class="right" style="width:30mm;">Precio Unitario</th>
+              <th class="right" style="width:30mm;">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="center">1</td>
+              <td>Camioneta 2.7L, 4 cilindros, 164 HP, transmisión manual, pantalla 8", cámara de reversa, rines 17" y 7 bolsas de aire.</td>
+              <td class="center">5</td>
+              <td class="center">pieza</td>
+              <td class="right">$676,315.00</td>
+              <td class="right">$3,381,575.00</td>
+            </tr>
+            <tr>
+              <td class="center">2</td>
+              <td>Yoghurt bebible deslactosado Alpura multisabor 12 piezas de 220 gramos</td>
+              <td class="center">8</td>
+              <td class="center">pieza</td>
+              <td class="right">$117.63</td>
+              <td class="right">$941.04</td>
+            </tr>
+            <tr>
+              <td class="center">3</td>
+              <td>Yoghurt Griego Oikos Surtido Sin Azúcar 12 piezas de 150 gramos cada uno </td>
+              <td class="center">5</td>
+              <td class="center">pieza</td>
+              <td class="right">$229.40</td>
+              <td class="right">$1,147.00</td>
+            </tr>
+            <tr>
+              <td class="center">4</td>
+              <td>Paleta Tutsi Pop 80 piezas</td>
+              <td class="center">18</td>
+              <td class="center">pieza</td>
+              <td class="right">$272.91</td>
+              <td class="right">$4,912.38</td>
+            </tr>
+            <tr>
+              <td class="center">5</td>
+              <td>Dulce enchilado Skwinkles salsagheti 24 piezas</td>
+              <td class="center">12</td>
+              <td class="center">pieza</td>
+              <td class="right">$218.80</td>
+              <td class="right">$2,625.60</td>
+            </tr>
+            <tr>
+              <td class="center">6</td>
+              <td>Chocolate Carlos V Nestlé 27 piezas de 18 gramos cada uno</td>
+              <td class="center">11</td>
+              <td class="center">pieza</td>
+              <td class="right">$241.14</td>
+              <td class="right">$2,652.54</td>
+            </tr>
+            <tr>
+              <td class="center">7</td>
+              <td>Agua Mineral Peñafiel paquete de 24 piezas de 296 ml cada uno </td>
+              <td class="center">5</td>
+              <td class="center">pieza</td>
+              <td class="right">$352.91</td>
+              <td class="right">$1,764.55</td>
+            </tr>
+            <tr>
+              <td class="center">8</td>
+              <td>Agua Purificada paquete de 40 piezas de 355 ml cada uno</td>
+              <td class="center">2</td>
+              <td class="center">pieza</td>
+              <td class="right">$110.57</td>
+              <td class="right">$221.14</td>
+            </tr>
+            <tr>
+              <td class="center">9</td>
+              <td>Aromatizante en aerosol Febreze  paquete con 3 piezas de 250 gramos cada uno</td>
+              <td class="center">11</td>
+              <td class="center">pieza</td>
+              <td class="right">$234.11</td>
+              <td class="right">$2,575.21</td>
+            </tr>
+            <tr>
+              <td class="center">10</td>
+              <td>Cacahuate  tostado sin sal bolsa de 600 gramos</td>
+              <td class="center">10</td>
+              <td class="center">pieza</td>
+              <td class="right">$143.74</td>
+              <td class="right">$1,437.40</td>
+            </tr>
+            <tr>
+              <td class="center">11</td>
+              <td>Toallitas húmedas Huggies paquete con 80 toallas</td>
+              <td class="center">15</td>
+              <td class="center">pieza</td>
+              <td class="right">$48.29</td>
+              <td class="right">$724.35</td>
+            </tr>
+            <tr>
+              <td class="center">12</td>
+              <td>Almendras naturales bolsa con 907 gramos </td>
+              <td class="center">13</td>
+              <td class="center">pieza</td>
+              <td class="right">$211.75</td>
+              <td class="right">$2,752.75</td>
+            </tr>
+            <tr>
+              <td class="center">13</td>
+              <td>Bebida Jumex jugo de frutas sabores surtidos paquete con 24 piezas de 335 mililitros cada uno</td>
+              <td class="center">15</td>
+              <td class="center">pieza</td>
+              <td class="right">$347.05</td>
+              <td class="right">$5,205.75</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- SECCIÓN IMPORTANTE SOLO EN ÚLTIMA PÁGINA SI HAY ESPACIO -->
+        <!-- Información de contacto en páginas intermedias -->
+        <div class="contact-info" style="margin-top: 20px;">
+          Este documento es una cotización oficial de GRUPO ÁLAMO ALTO S.A. de C.V.<br>
+          
+          
+          
+          
+        </div>
+    </div>
+  </div>
+  <div class="page-container">
+    <div class="bg-page"><img src="assets/emp11.png" alt="membrete"></div>
+    <div class="content-area">
+
+      <!-- ENCABEZADO SOLO EN PRIMERA PÁGINA -->
+
+      <!-- EN PÁGINAS SUBSECUENTES, LA TABLA COMIENZA MÁS ARRIBA -->
+      <div style="margin-top: 100px;"></div> <!-- Espacio similar a donde va la fecha en primera página -->
+
+      <!-- TABLA DE ITEMS -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="center" style="width:16mm;">Número</th>
+              <th>Concepto</th>
+              <th class="center" style="width:22mm;">Cantidad</th>
+              <th class="center" style="width:22mm;">Unidad</th>
+              <th class="right" style="width:30mm;">Precio Unitario</th>
+              <th class="right" style="width:30mm;">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="center">14</td>
+              <td>Caramelo macizo Halls mix paquete con 18 piezas</td>
+              <td class="center">11</td>
+              <td class="center">pieza</td>
+              <td class="right">$132.92</td>
+              <td class="right">$1,462.12</td>
+            </tr>
+            <tr>
+              <td class="center">15</td>
+              <td>Pañuelos Kleenex paquete con 12 cajas y con 90 pañuelos cada una</td>
+              <td class="center">11</td>
+              <td class="center">pieza</td>
+              <td class="right">$375.28</td>
+              <td class="right">$4,128.08</td>
+            </tr>
+            <tr>
+              <td class="center">16</td>
+              <td>Cucharas desechables tamaño pastelero paquete con 60 piezas</td>
+              <td class="center">11</td>
+              <td class="center">pieza</td>
+              <td class="right">$23.00</td>
+              <td class="right">$253.00</td>
+            </tr>
+            <tr>
+              <td class="center">17</td>
+              <td>Café soluble Taster's Choice sabor vainilla frasco con 100 gramos</td>
+              <td class="center">8</td>
+              <td class="center">pieza</td>
+              <td class="right">$229.99</td>
+              <td class="right">$1,839.92</td>
+            </tr>
+            <tr>
+              <td class="center">18</td>
+              <td>Surtido de botanas Sabritas  paquete con 43 piezas</td>
+              <td class="center">21</td>
+              <td class="center">pieza</td>
+              <td class="right">$551.72</td>
+              <td class="right">$11,586.12</td>
+            </tr>
+            <tr>
+              <td class="center">19</td>
+              <td>impresión de lona de 5x3metros. sin diseño incluido</td>
+              <td class="center">14</td>
+              <td class="center">pieza</td>
+              <td class="right">$1,351.25</td>
+              <td class="right">$18,917.50</td>
+            </tr>
+            <tr>
+              <td class="center">20</td>
+              <td>Bushnell Core DS-4K Cámara de Rastro sin Brillo. Cámara de Caza con Video 4K e imágenes de 32 MP, Camuflaje de Corteza de árbol</td>
+              <td class="center">10</td>
+              <td class="center">pieza</td>
+              <td class="right">$3,264.85</td>
+              <td class="right">$32,648.50</td>
+            </tr>
+            <tr>
+              <td class="center">21</td>
+              <td>Arco marca STANLEY</td>
+              <td class="center">2</td>
+              <td class="center">pieza</td>
+              <td class="right">$171.35</td>
+              <td class="right">$342.70</td>
+            </tr>
+            <tr>
+              <td class="center">22</td>
+              <td>Segueta Hecort Suki diente fino </td>
+              <td class="center">4</td>
+              <td class="center">pieza</td>
+              <td class="right">$40.24</td>
+              <td class="right">$160.96</td>
+            </tr>
+            <tr>
+              <td class="center">23</td>
+              <td>Marca KNOVA
+</td>
+              <td class="center">6</td>
+              <td class="center">pieza</td>
+              <td class="right">$138.00</td>
+              <td class="right">$828.00</td>
+            </tr>
+            <tr>
+              <td class="center">24</td>
+              <td>Marca KNOVA</td>
+              <td class="center">10</td>
+              <td class="center">pieza</td>
+              <td class="right">$569.25</td>
+              <td class="right">$5,692.50</td>
+            </tr>
+            <tr>
+              <td class="center">25</td>
+              <td>Gafas de visión nocturna 4K con zoom digital 16x, alcance hasta 1000 m, batería recargable y control por app para exteriores.</td>
+              <td class="center">9</td>
+              <td class="center">pieza</td>
+              <td class="right">$6,438.85</td>
+              <td class="right">$57,949.65</td>
+            </tr>
+            <tr>
+              <td class="center">26</td>
+              <td>Marca: KNOVA</td>
+              <td class="center">15</td>
+              <td class="center">pieza</td>
+              <td class="right">$977.50</td>
+              <td class="right">$14,662.50</td>
+            </tr>
+            <tr>
+              <td class="center">27</td>
+              <td>Binocular resistente al agua con objetivo 50 mm, zoom 20x, prisma Porro, enfoque individual y diseño ideal para senderismo.</td>
+              <td class="center">5</td>
+              <td class="center">pieza</td>
+              <td class="right">$4,088.25</td>
+              <td class="right">$20,441.25</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- SECCIÓN IMPORTANTE SOLO EN ÚLTIMA PÁGINA SI HAY ESPACIO -->
+        <!-- Información de contacto en páginas intermedias -->
+        <div class="contact-info" style="margin-top: 20px;">
+          Este documento es una cotización oficial de GRUPO ÁLAMO ALTO S.A. de C.V.<br>
+          
+          
+          
+          
+        </div>
+    </div>
+  </div>
+  <div class="page-container">
+    <div class="bg-page"><img src="assets/emp11.png" alt="membrete"></div>
+    <div class="content-area">
+
+      <!-- ENCABEZADO SOLO EN PRIMERA PÁGINA -->
+
+      <!-- EN PÁGINAS SUBSECUENTES, LA TABLA COMIENZA MÁS ARRIBA -->
+      <div style="margin-top: 100px;"></div> <!-- Espacio similar a donde va la fecha en primera página -->
+
+      <!-- TABLA DE ITEMS -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="center" style="width:16mm;">Número</th>
+              <th>Concepto</th>
+              <th class="center" style="width:22mm;">Cantidad</th>
+              <th class="center" style="width:22mm;">Unidad</th>
+              <th class="right" style="width:30mm;">Precio Unitario</th>
+              <th class="right" style="width:30mm;">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="center">28</td>
+              <td>Cámara con obturador 1/8000 s, pantalla 1", enfoque manual y automático, lente Nikkor 18-140 mm y conectividad Wi-Fi.</td>
+              <td class="center">9</td>
+              <td class="center">pieza</td>
+              <td class="right">$51,750.00</td>
+              <td class="right">$465,750.00</td>
+            </tr>
+            <tr>
+              <td class="center">29</td>
+              <td>Kit herpetológico con ganchos y pinza de 100 cm, bote con tapa y caja transportadora para manejo seguro de serpientes.</td>
+              <td class="center">2</td>
+              <td class="center">pieza</td>
+              <td class="right">$8,337.50</td>
+              <td class="right">$16,675.00</td>
+            </tr>
+            <tr>
+              <td class="center">30</td>
+              <td>Cámara trampa con fotos de 30 MP, video Full HD, flash IR invisible, disparo 0.2 s y pantalla a color de 1.5".</td>
+              <td class="center">9</td>
+              <td class="center">pieza</td>
+              <td class="right">$4,743.75</td>
+              <td class="right">$42,693.75</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- SECCIÓN IMPORTANTE SOLO EN ÚLTIMA PÁGINA SI HAY ESPACIO -->
+        <div class="important-content" style="margin-top: 12px;">
+          <!-- Totales -->
+          <div class="totals">
+            <table>
+              <tr><td class="label">IVA</td><td class="value">$656,730.60</td></tr>
+              <tr><td class="label">Total</td><td class="value">$4,761,296.86</td></tr>
+            </table>
+          </div>
+
+          <!-- Cantidad en letra -->
+          <div style="margin:6px 5px 0; font-size:12px;">
+            <span class="label" style="font-weight:bold;">MONTO TOTAL EN LETRA: CUATRO MILLONES SETECIENTOS SESENTA Y UN MIL DOSCIENTOS NOVENTA Y SEIS PESOS 86/100 M.N.</span> 
+          </div>
+
+          <!-- Condiciones -->
+          <div style="margin:10px 5px 0;">
+            <div class="label" style="margin-bottom:6px; font-weight: bold;">Condiciones:</div>
+            <div style="line-height:1.55; color:#222;">
+              <ul><li>Precios en MXN</li><li>Entrega: 7 días</li><li>Garantía: 12 meses</li></ul>
+            </div>
+          </div>
+
+          <!-- Firma -->
+          <div class="firma">
+            <span style="font-weight:600; display:block; margin-bottom:8px;">A T E N T A M E N T E</span>
+              <img src="assets/firma_emp11.png" alt="firma">
+            <div style="font-weight:600; margin-top:10px;">
+              Firmante<br>Cargo
+            </div>
+          </div>
+
+          <!-- Información de contacto -->
+          <div class="contact-info">
+            Este documento es una cotización oficial de GRUPO ÁLAMO ALTO S.A. de C.V.<br>
+            
+            
+            
+            
+          </div>
+        </div>
+    </div>
+  </div>
+
+  <!-- PÁGINA SEPARADA PARA INFORMACIÓN IMPORTANTE SI NO CABE EN LA ÚLTIMA -->
+</body>
+</html>

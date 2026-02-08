@@ -19,6 +19,7 @@ import { PdfService7 } from 'src/pdf/e7_chalor/pdf.service';
 import { PdfService8 } from 'src/pdf/e8_leyses/pdf.service';
 import { PdfService9 } from 'src/pdf/e9_es/pdf.service';
 import { PdfService10 } from 'src/pdf/e10_jessica/pdf.service';
+import { PdfService11 } from 'src/pdf/e11_alamo/pdf.service';
 import { GeneratePdfDto } from './dto/generate-pdf.dto';
 import { BatchUpdateItemDto } from './dto/batch-update-item.dto';
 
@@ -36,7 +37,8 @@ export class QuotesController {
     private readonly pdf7: PdfService7,
     private readonly pdf8: PdfService8,
     private readonly pdf9: PdfService9,
-    private readonly pdf10: PdfService10
+    private readonly pdf10: PdfService10,
+    private readonly pdf11: PdfService11
   ) { }
 
   /* ▶ 1. Todas las enviadas (ADMIN) */
@@ -114,7 +116,7 @@ export class QuotesController {
     return this.quotes.sendQuote(id);
   }
 
-  /* Descargar UN PDF (empresa=1..10) */
+  /* Descargar UN PDF (empresa=1..11) */
   @Post(':id/pdf')
   @Roles(Role.Admin, Role.Cotizador)
   async buildOne(
@@ -247,6 +249,19 @@ export class QuotesController {
         break;
       case 10:
         pdfBuffer = await this.pdf10.generateOneBuffer(quote, dto.empresa, {
+          destinatario: dto.destinatario,
+          descripcion: dto.descripcion,
+          fecha: dto.fecha,
+          folio: dto.folio,
+          lugar: dto.lugar,
+          presente: dto.presente,
+          condiciones: dto.condiciones,
+          incluirFirma: dto.incluirFirma,
+          firmanteNombre: dto.firmanteNombre,
+        });
+        break;
+      case 11:
+        pdfBuffer = await this.pdf11.generateOneBuffer(quote, dto.empresa, {
           destinatario: dto.destinatario,
           descripcion: dto.descripcion,
           fecha: dto.fecha,
