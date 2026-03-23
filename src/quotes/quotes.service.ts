@@ -28,7 +28,7 @@ export class QuotesService {
     return quote;
   }
 
-  private sumSubtotals(quote: Quote, field: `subtotal${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11}`) {
+  private sumSubtotals(quote: Quote, field: `subtotal${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12}`) {
     return quote.items.reduce((a, it) => a + Number((it as any)[field] ?? 0), 0);
   }
 
@@ -80,13 +80,13 @@ export class QuotesService {
       });
 
       // precálculo de sub/precios cuando haya margen definido
-      const apply = (m: number | null | undefined, idx: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11) => {
+      const apply = (m: number | null | undefined, idx: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12) => {
         if (m === null || m === undefined) return;
         const price = +(costo * (1 + m / 100)).toFixed(2);
         (item as any)[`precioFinal${idx}`] = price;
         (item as any)[`subtotal${idx}`] = +(price * cantidad).toFixed(2);
       };
-      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].forEach((k) => apply((item as any)[`margenPct${k}`], k as any));
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].forEach((k) => apply((item as any)[`margenPct${k}`], k as any));
 
       await this.itemsRepo.save(item);
     }
@@ -105,7 +105,7 @@ export class QuotesService {
 
     const round2 = (n: number) => Math.round(n * 100) / 100;
 
-    for (let i = 1; i <= 11; i++) {
+    for (let i = 1; i <= 12; i++) {
       const marginKey = `margenPct${i}` as keyof QuoteItem;
       const precioKey = `precioFinal${i}` as keyof QuoteItem;
       const subtotalKey = `subtotal${i}` as keyof QuoteItem;
@@ -143,7 +143,7 @@ export class QuotesService {
     const round2 = (n: number) => Math.round(n * 100) / 100;
     const ivaPct = Number(quote.ivaPct ?? 0);
 
-    for (let i = 1; i <= 11; i++) {
+    for (let i = 1; i <= 12; i++) {
       const lineTotals = items
         .map(it => {
           const price = Number((it as any)[`precioFinal${i}`]);
@@ -223,6 +223,7 @@ export class QuotesService {
       if (dto.margenPct9 !== undefined) item.margenPct9 = validateMargin(dto.margenPct9);
       if (dto.margenPct10 !== undefined) item.margenPct10 = validateMargin(dto.margenPct10);
       if (dto.margenPct11 !== undefined) item.margenPct11 = validateMargin(dto.margenPct11);
+      if (dto.margenPct12 !== undefined) item.margenPct12 = validateMargin(dto.margenPct12);
 
       // Recalcular el ítem
       this.recalculateItem(item);
@@ -286,14 +287,14 @@ export class QuotesService {
     if (quote.status !== 'draft') throw new ForbiddenException('La cotización ya fue enviada');
 
     const subtotales: Record<number, number> = {};
-    ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] as const).forEach(k => {
+    ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const).forEach(k => {
       const sub = +this.sumSubtotals(quote, `subtotal${k}`).toFixed(2);
       subtotales[k] = sub;
       (quote as any)[`totalMargen${k}`] = sub; // mantenemos "totalMargen*" como subtotal pre-IVA
     });
 
     const ivaPct = Number(quote.ivaPct ?? 16);
-    ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] as const).forEach(k => {
+    ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const).forEach(k => {
       const iva = +(subtotales[k] * (ivaPct / 100)).toFixed(2);
       const total = +(subtotales[k] + iva).toFixed(2);
       (quote as any)[`totalIva${k}`] = iva;
@@ -319,6 +320,7 @@ export class QuotesService {
         9: { subtotal: subtotales[9], iva: (saved as any).totalIva9, total: (saved as any).totalFinal9 },
         10: { subtotal: subtotales[10], iva: (saved as any).totalIva10, total: (saved as any).totalFinal10 },
         11: { subtotal: subtotales[11], iva: (saved as any).totalIva11, total: (saved as any).totalFinal11 },
+        12: { subtotal: subtotales[12], iva: (saved as any).totalIva12, total: (saved as any).totalFinal12 }
       },
     };
   }
@@ -355,6 +357,7 @@ export class QuotesService {
         totalMargen9: true,
         totalMargen10: true,
         totalMargen11: true,
+        totalMargen12: true,
         totalIva1: true,
         totalIva2: true,
         totalIva3: true,
@@ -366,6 +369,7 @@ export class QuotesService {
         totalIva9: true,
         totalIva10: true,
         totalIva11: true,
+        totalIva12: true,
         totalFinal1: true,
         totalFinal2: true,
         totalFinal3: true,
@@ -377,6 +381,7 @@ export class QuotesService {
         totalFinal9: true,
         totalFinal10: true,
         totalFinal11: true,
+        totalFinal12: true,
 
         // Campos de los Items
         items: {
@@ -396,6 +401,7 @@ export class QuotesService {
           margenPct9: true,
           margenPct10: true,
           margenPct11: true,
+          margenPct12: true,
           precioFinal1: true,
           precioFinal2: true,
           precioFinal3: true,
@@ -407,6 +413,7 @@ export class QuotesService {
           precioFinal9: true,
           precioFinal10: true,
           precioFinal11: true,
+          precioFinal12: true,
           subtotal1: true,
           subtotal2: true,
           subtotal3: true,
@@ -418,6 +425,7 @@ export class QuotesService {
           subtotal9: true,
           subtotal10: true,
           subtotal11: true,
+          subtotal12: true,
 
           // Campos del Producto (¡El importante!)
           product: {
@@ -483,6 +491,7 @@ export class QuotesService {
         totalMargen9: true,
         totalMargen10: true,
         totalMargen11: true,
+        totalMargen12: true,
         totalIva1: true,
         totalIva2: true,
         totalIva3: true,
@@ -494,6 +503,7 @@ export class QuotesService {
         totalIva9: true,
         totalIva10: true,
         totalIva11: true,
+        totalIva12: true,
         totalFinal1: true,
         totalFinal2: true,
         totalFinal3: true,
@@ -505,6 +515,7 @@ export class QuotesService {
         totalFinal9: true,
         totalFinal10: true,
         totalFinal11: true,
+        totalFinal12: true,
 
         // Campos de los Items
         items: {
@@ -562,6 +573,7 @@ export class QuotesService {
         totalMargen9: true,
         totalMargen10: true,
         totalMargen11: true,
+        totalMargen12: true,
         totalIva1: true,
         totalIva2: true,
         totalIva3: true,
@@ -573,6 +585,7 @@ export class QuotesService {
         totalIva9: true,
         totalIva10: true,
         totalIva11: true,
+        totalIva12: true,
         totalFinal1: true,
         totalFinal2: true,
         totalFinal3: true,
@@ -584,6 +597,7 @@ export class QuotesService {
         totalFinal9: true,
         totalFinal10: true,
         totalFinal11: true,
+        totalFinal12: true,
 
         // Campos de los Items
         items: {
@@ -637,6 +651,7 @@ export class QuotesService {
         totalMargen9: true,
         totalMargen10: true,
         totalMargen11: true,
+        totalMargen12: true,
         totalIva1: true,
         totalIva2: true,
         totalIva3: true,
@@ -648,6 +663,7 @@ export class QuotesService {
         totalIva9: true,
         totalIva10: true,
         totalIva11: true,
+        totalIva12: true,
         totalFinal1: true,
         totalFinal2: true,
         totalFinal3: true,
@@ -659,6 +675,7 @@ export class QuotesService {
         totalFinal9: true,
         totalFinal10: true,
         totalFinal11: true,
+        totalFinal12: true,
 
         // Campos de los Items
         items: {

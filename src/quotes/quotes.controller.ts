@@ -20,6 +20,7 @@ import { PdfService8 } from 'src/pdf/e8_leyses/pdf.service';
 import { PdfService9 } from 'src/pdf/e9_es/pdf.service';
 import { PdfService10 } from 'src/pdf/e10_jessica/pdf.service';
 import { PdfService11 } from 'src/pdf/e11_alamo/pdf.service';
+import { PdfService12 } from 'src/pdf/e12_hugo/pdf.service';
 import { GeneratePdfDto } from './dto/generate-pdf.dto';
 import { BatchUpdateItemDto } from './dto/batch-update-item.dto';
 
@@ -38,7 +39,8 @@ export class QuotesController {
     private readonly pdf8: PdfService8,
     private readonly pdf9: PdfService9,
     private readonly pdf10: PdfService10,
-    private readonly pdf11: PdfService11
+    private readonly pdf11: PdfService11,
+    private readonly pdf12: PdfService12,
   ) { }
 
   /* ▶ 1. Todas las enviadas (ADMIN) */
@@ -262,6 +264,19 @@ export class QuotesController {
         break;
       case 11:
         pdfBuffer = await this.pdf11.generateOneBuffer(quote, dto.empresa, {
+          destinatario: dto.destinatario,
+          descripcion: dto.descripcion,
+          fecha: dto.fecha,
+          folio: dto.folio,
+          lugar: dto.lugar,
+          presente: dto.presente,
+          condiciones: dto.condiciones,
+          incluirFirma: dto.incluirFirma,
+          firmanteNombre: dto.firmanteNombre,
+        });
+        break;
+      case 12:
+        pdfBuffer = await this.pdf12.generateOneBuffer(quote, dto.empresa, {
           destinatario: dto.destinatario,
           descripcion: dto.descripcion,
           fecha: dto.fecha,

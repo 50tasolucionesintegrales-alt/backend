@@ -113,6 +113,12 @@ export class Quote {
   })
   totalMargen11?: number | null;
 
+  @Column('decimal', {
+    name: 'total_margen12', precision: 12, scale: 2,
+    nullable: true, transformer: DecimalTransformer
+  })
+  totalMargen12?: number | null;
+
   /* IVA*/
   @Column('decimal', { name: 'total_iva1', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
   totalIva1?: number | null;
@@ -136,6 +142,8 @@ export class Quote {
   totalIva10?: number | null;
   @Column('decimal', { name: 'total_iva11', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
   totalIva11?: number | null;
+  @Column('decimal', { name: 'total_iva12', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
+  totalIva12?: number | null;
 
   /* Totales con IVA*/
   @Column('decimal', { name: 'total_final1', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
@@ -160,6 +168,8 @@ export class Quote {
   totalFinal10?: number | null;
   @Column('decimal', { name: 'total_final11', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
   totalFinal11?: number | null;
+  @Column('decimal', { name: 'total_final12', precision: 12, scale: 2, nullable: true, transformer: DecimalTransformer })
+  totalFinal12?: number | null;
 
   /* ---------- Ítems ---------- */
   @OneToMany(() => QuoteItem, (qi) => qi.quote, { cascade: true })

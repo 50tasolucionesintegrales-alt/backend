@@ -17,6 +17,7 @@ import { PdfService8 } from 'src/pdf/e8_leyses/pdf.service';
 import { PdfService9 } from 'src/pdf/e9_es/pdf.service';
 import { PdfService10 } from 'src/pdf/e10_jessica/pdf.service';
 import { PdfService11 } from 'src/pdf/e11_alamo/pdf.service';
+import { PdfService12 } from 'src/pdf/e12_hugo/pdf.service';
 import { Service } from 'src/services/entities/service.entity';
 import { HtmlPdfService1 } from 'src/pdf/e1_goltech/html-pdf.service';
 import { HtmlPdfService2 } from 'src/pdf/e2_juan_angel/html-pdf.service';
@@ -29,6 +30,7 @@ import { HtmlPdfService8 } from 'src/pdf/e8_leyses/html-pdf.service';
 import { HtmlPdfService9 } from 'src/pdf/e9_es/html-pdf.service';
 import { HtmlPdfService10 } from 'src/pdf/e10_jessica/html-pdf.service';
 import { HtmlPdfService11 } from 'src/pdf/e11_alamo/html-pdf.service';
+import { HtmlPdfService12 } from 'src/pdf/e12_hugo/html-pdf.service';
 
 @Module({
   imports: [
@@ -48,6 +50,7 @@ import { HtmlPdfService11 } from 'src/pdf/e11_alamo/html-pdf.service';
     PdfService9, 
     PdfService10,
     PdfService11,
+    PdfService12,
     HtmlPdfService1, 
     HtmlPdfService2, 
     HtmlPdfService3, 
@@ -59,6 +62,7 @@ import { HtmlPdfService11 } from 'src/pdf/e11_alamo/html-pdf.service';
     HtmlPdfService9, 
     HtmlPdfService10,
     HtmlPdfService11,
+    HtmlPdfService12
   ],
 })
 export class QuotesModule { }

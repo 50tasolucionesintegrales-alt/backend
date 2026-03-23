@@ -56,6 +56,10 @@ export class UpdateItemDto {
   @Min(0, { message: 'margenPct11 no puede ser negativo' })
   margenPct11?: number;  
 
+  @IsOptional() @toNum() @IsNumber({}, { message: 'margenPct12 debe ser un número' })
+  @Min(0, { message: 'margenPct12 no puede ser negativo' })
+  margenPct12?: number;
+
   @IsOptional()
   @IsInt({ message: 'La cantidad debe ser un entero' })
   @Min(1, { message: 'La cantidad mínima es 1' })

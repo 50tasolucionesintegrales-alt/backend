@@ -67,4 +67,9 @@ export class BatchUpdateItemDto {
   @IsOptional()
   @Allow()
   margenPct11?: number | null;
+
+  @IsNumber()
+  @IsOptional()
+  @Allow()
+  margenPct12?: number | null;
 }

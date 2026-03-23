@@ -54,6 +54,6 @@ export class AddItemsDto {
     @IsArray({ message: 'items debe ser un arreglo' })
     @ArrayNotEmpty({ message: 'items no puede estar vacío' })
     @ValidateNested({ each: true, message: 'Cada elemento de items debe ser un AddItemDto válido' })
-    @Type(() => AddItemDto) // convierte elementos a AddItemDto
+    @Type(() => AddItemDto)
     items!: AddItemDto[];
 }

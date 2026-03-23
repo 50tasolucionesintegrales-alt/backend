@@ -2,34 +2,34 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Prueba de Margenes</title>
+  <title>Prueba</title>
   <style>
     :root{ --brand:#2c3e50; --ink:#111; --line:#bdc3c7; --thead: #93CEBC ; }
 
     @page { size: Letter; margin: 0 7mm 0; }
     
-    /* Oswald */
+    /* Calibri */
     @font-face{
-      font-family: "Oswald";
-      src: url("assets/fonts/Oswald.ttf") format("truetype");
+      font-family: "Calibri";
+      src: url("assets/fonts/Calibri.ttf") format("truetype");
       font-weight: 400;
       font-style: normal;
       font-display: swap;
     }
 
     @font-face{
-      font-family: "Oswald";
-      src: url("assets/fonts/Oswald-Bold.ttf") format("truetype");
+      font-family: "Calibri";
+      src: url("assets/fonts/Calibri-Bold.ttf") format("truetype");
       font-weight: 700;
       font-style: normal;
       font-display: swap;
     }
 
     body{ 
-      font-family: "Oswald", Arial, Helvetica, sans-serif;
+      font-family: "Calibri", Arial, Helvetica, sans-serif;
       margin: 0;
       padding: 0;
-      font-size: 12px;
+      font-size: 11pt;
     }
 
     .page-container {
@@ -65,25 +65,22 @@
       flex-direction: column;
     }
 
-    /* Encabezado empresa 11 */
+    /* Encabezado empresa 12 */
     .company-header {
       text-align: center;
       margin-bottom: 5mm;
     }
     
     .company-name {
-      font-size: 28px;
+      font-size: 24px;
       font-weight: bold;
       color: #2c3e50;
       margin-bottom: 3px;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
     }
     
     .company-subtitle {
-      font-size: 14px;
+      font-size: 12px;
       color: #7f8c8d;
-      letter-spacing: 1px;
     }
 
     /* Dinámico */
@@ -91,8 +88,8 @@
     .dest{ font-weight:800; line-height:1.45; margin:12px 5px 0; }
     .presente{ font-weight:800; margin:10px 5px 0; }
     .intro{ margin:10px 5px 0; line-height:1.55; color:#222; }
-    .label{ font-weight:400; }
-    .folio{ font-weight:800; margin:12px 5px 0; text-align:center; } /* Cambiado a center */
+    .label{ font-weight:400;}
+    .folio{ font-weight:800; margin:50px 5px 0; text-align:center; }
 
     /* Contenedor de tabla */
     .table-wrap{ position:relative; margin:12px 5px 0; }
@@ -108,43 +105,29 @@
     tr, td, th { page-break-inside: avoid; }
 
     thead th{
-      color: #93CEBC; /* Color cambiado a #93CEBC */
+      color: #2c3e50;
       font-weight:700;
       border: 1px solid var(--line);
       border-top: 1px solid var(--line);
       border-bottom: 1px solid var(--line);
       padding:8px; 
-      font-size:12px; 
-      text-align:center; /* Centrado para los títulos */
-      background: none; /* Sin fondo */
+      font-size:11pt; 
+      text-align:center;
+      background: none;
     }
     
-    /* Eliminar primer borde izquierdo de la tabla */
-    thead th:first-child {
-      border-left: none;
-    }
-    
-    /* Eliminar último borde derecho de la tabla */
-    thead th:last-child {
-      border-right: none;
-    }
+    thead th:first-child { border-left: none; }
+    thead th:last-child { border-right: none; }
     
     tbody td{ 
       border:1px solid var(--line); 
       padding:6px 8px; 
-      font-size:12px; 
+      font-size:11pt; 
       background:#fff; 
     }
     
-    /* Eliminar primer borde izquierdo de las celdas del cuerpo */
-    tbody td:first-child {
-      border-left: none;
-    }
-    
-    /* Eliminar último borde derecho de las celdas del cuerpo */
-    tbody td:last-child {
-      border-right: none;
-    }
+    tbody td:first-child { border-left: none; }
+    tbody td:last-child { border-right: none; }
     
     .center{ text-align:center; } 
     .right{ text-align:right; }
@@ -166,31 +149,29 @@
       border-left:1px solid var(--line); 
       border-right:1px solid var(--line); 
     }
-    .totals tr:first-child td{ 
-      border-top:1px solid var(--line); 
-    }
-    .totals tr:last-child  td{ 
-      border-bottom:1px solid var(--line); 
-    }
-    .totals .label{ 
-      font-weight:700; 
-      background:none; /* Sin fondo azul */
-      color: #93CEBC; /* Color cambiado a #93CEBC */
-    }
-    .totals .value{ 
-      text-align:right; 
-    }
+    .totals tr:first-child td{ border-top:1px solid var(--line); }
+    .totals tr:last-child  td{ border-bottom:1px solid var(--line); }
+    .totals .label{ font-weight:700; background:none; color:#2c3e50; }
+    .totals .value{ text-align:right; }
 
     /* ===== Firma ===== */
     .firma{
       margin: 12mm 0 0;
-      text-align: right; /* Cambiado a right (derecha) */
-      padding-right: 20mm; /* Ajuste para posición */
+      text-align: right;
     }
+
+    .firma-content {
+      text-align: right;
+      margin-left: auto;
+      width: fit-content;
+      max-width: 80%;
+    }
+
     .firma img{
-      height: 95px;
+      height: 80px;
       display: block;
-      margin: 0 auto 8px 0; /* Ajustado para alinear a la izquierda dentro del contenedor derecho */
+      margin: auto;
+      margin-bottom: 8px;
     }
 
     .footer-section {
@@ -202,33 +183,22 @@
       page-break-inside: avoid;
       break-inside: avoid;
     }
-
-    /* Información de contacto */
-    .contact-info {
-      margin: 8mm 5px 0;
-      font-size: 11px;
-      color: #333;
-      line-height: 1.4;
-      text-align: center;
-    }
   </style>
 </head>
 <body>
 
 <!-- PÁGINAS CON PAGINACIÓN INTELIGENTE -->
   <div class="page-container">
-    <div class="bg-page"><img src="assets/emp11.png" alt="membrete"></div>
+    <div class="bg-page"><img src="assets/emp12.png" alt="membrete"></div>
     <div class="content-area">
 
       <!-- ENCABEZADO SOLO EN PRIMERA PÁGINA -->
-      
-      <div class="folio">Folio</div>
-      <div class="fecha">Lugar, a 2026-02-08</div>
-      <div class="dest">Destinatario</div>
-      <div class="presente">Encabezado</div>
-
+      <div class="folio">asdas</div>
+      <div class="fecha">asd, a 2026-03-23</div>
+      <div class="dest">asd</div>
+      <div class="presente">sadad</div>
       <div class="intro" style="margin-top:10px;">
-        Descripcion
+        dadssd
       </div>
 
       <!-- EN PÁGINAS SUBSECUENTES, LA TABLA COMIENZA MÁS ARRIBA -->
@@ -249,27 +219,27 @@
           <tbody>
             <tr>
               <td class="center">1</td>
-              <td>Camioneta 2.7L, 4 cilindros, 164 HP, transmisión manual, pantalla 8", cámara de reversa, rines 17" y 7 bolsas de aire.</td>
-              <td class="center">5</td>
+              <td class="center">SIFILIS (ANTI-TP) 40 PBAS INTEC</td>
+              <td class="center">6</td>
               <td class="center">pieza</td>
-              <td class="right">$676,315.00</td>
-              <td class="right">$3,381,575.00</td>
+              <td class="right">$742.00</td>
+              <td class="right">$4,452.00</td>
             </tr>
             <tr>
               <td class="center">2</td>
-              <td>Aromatizante en aerosol Febreze  paquete con 3 piezas de 250 gramos cada uno</td>
-              <td class="center">11</td>
+              <td class="center">Tablet Celular Lenovo Tab M10 5g 10.6 2k (2000×1200), Snapdragon 695, 6gb Ram, 128gb, Android 13, 5g Nano-sim (chip), Color Azul</td>
+              <td class="center">1</td>
               <td class="center">pieza</td>
-              <td class="right">$234.11</td>
-              <td class="right">$2,575.21</td>
+              <td class="right">$5,544.99</td>
+              <td class="right">$5,544.99</td>
             </tr>
             <tr>
               <td class="center">3</td>
-              <td>Cacahuate  tostado sin sal bolsa de 600 gramos</td>
-              <td class="center">10</td>
+              <td class="center">PANEL 5: COC-THC-AMP-MET-OPI C/25</td>
+              <td class="center">1</td>
               <td class="center">pieza</td>
-              <td class="right">$143.74</td>
-              <td class="right">$1,437.40</td>
+              <td class="right">$1,438.00</td>
+              <td class="right">$1,438.00</td>
             </tr>
           </tbody>
         </table>
@@ -280,19 +250,19 @@
           <!-- Totales -->
           <div class="totals">
             <table>
-              <tr><td class="label">IVA</td><td class="value">$541,694.02</td></tr>
-              <tr><td class="label">Total</td><td class="value">$3,927,281.63</td></tr>
+              <tr><td class="label">IVA</td><td class="value">$1,829.60</td></tr>
+              <tr><td class="label">Total</td><td class="value">$13,264.59</td></tr>
             </table>
           </div>
 
           <!-- Cantidad en letra -->
-          <div style="margin:6px 5px 0; font-size:12px;">
-            <span class="label" style="font-weight:bold;">MONTO TOTAL EN LETRA: TRES MILLONES NOVECIENTOS VEINTISIETE MIL DOSCIENTOS OCHENTA Y UN PESOS 63/100 M.N.</span> 
+          <div style="margin:6px 5px 0; font-size:11pt;">
+            <span class="label" style="font-weight:bold;">MONTO TOTAL EN LETRA: TRECE MIL DOSCIENTOS SESENTA Y CUATRO PESOS 59/100 M.N.</span> 
           </div>
 
           <!-- Condiciones -->
           <div style="margin:10px 5px 0;">
-            <div class="label" style="margin-bottom:6px; font-weight: bold;">Condiciones:</div>
+            <div class="label" style="margin-bottom:6px; font-weight: bold;">Condiciones Generales:</div>
             <div style="line-height:1.55; color:#222;">
               <ul><li>Precios en MXN</li><li>Entrega: 7 días</li><li>Garantía: 12 meses</li></ul>
             </div>
@@ -300,20 +270,13 @@
 
           <!-- Firma -->
           <div class="firma">
-            <span style="font-weight:600; display:block; margin-bottom:8px; text-align: right;">A T E N T A M E N T E</span>
-              <img src="assets/firma_emp11.png" alt="firma" style="margin-left: auto;">
-            <div style="font-weight:600; margin-top:10px; text-align: right;">
-              Firmante<br>Puesto
+            <div class="firma-content">
+              <span style="font-weight:600; display:block; margin-bottom:8px;">A T E N T A M E N T E</span>
+                <img src="assets/firma_emp12.png" alt="firma">
+              <div style="font-weight:600; margin-top:10px;">
+                dasdasd<br>asdasd
+              </div>
             </div>
-          </div>
-
-          <!-- Información de contacto -->
-          <div class="contact-info">
-            Este documento es una cotización oficial de GRUPO ÁLAMO ALTO S.A. de C.V.<br>
-            
-            
-            
-            
           </div>
         </div>
     </div>
