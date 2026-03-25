@@ -32,4 +32,20 @@ export class CreateProductDto {
 
   @IsString({ message: 'El ID de categoría es obligatorio' })
   categoryId!: string;
+
+  @IsOptional()
+  @IsString({ message: 'El nombre de la tienda debe ser texto' })
+  tienda_fisica: string;
+
+  @IsOptional()
+  @IsString({ message: 'La dirección debe ser texto' })
+  direccion: string;
+
+  @IsOptional()
+  @IsUrl({}, { message: 'El link de compra debe ser una URL válida' })
+  link_compra2?: string;
+
+  @IsOptional()
+  @IsUrl({}, { message: 'El link de compra debe ser una URL válida' })
+  link_compra3?: string;
 }

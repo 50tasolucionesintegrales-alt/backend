@@ -39,6 +39,10 @@ export class ProductsService {
       precio: dto.precio,
       especificaciones: dto.especificaciones,
       link_compra: dto.link_compra,
+      tienda_fisica: dto.tienda_fisica,
+      direccion: dto.direccion,
+      link_compra2: dto.link_compra2,
+      link_compra3: dto.link_compra3,
       category,
     };
 
@@ -57,7 +61,7 @@ export class ProductsService {
     const product = this.productRepo.create(baseData);
     await this.productRepo.save(product);
 
-    return {message:"Producto Agregado"}
+    return { message: "Producto Agregado" }
   }
 
   async update(id: string, dto: UpdateProductDto, file?: Express.Multer.File) {
@@ -87,11 +91,15 @@ export class ProductsService {
       precio: dto.precio ?? product.precio,
       especificaciones: dto.especificaciones ?? product.especificaciones,
       link_compra: dto.link_compra ?? product.link_compra,
+      tienda_fisica: dto.tienda_fisica ?? product.tienda_fisica,
+      direccion: dto.direccion ?? product.direccion,
+      link_compra2: dto.link_compra2 ?? product.link_compra2,
+      link_compra3: dto.link_compra3 ?? product.link_compra3,
     });
 
     await this.productRepo.save(product);
 
-    return {message:"Producto Actualizado"}
+    return { message: "Producto Actualizado" }
   }
 
   async remove(id: string) {
@@ -101,7 +109,7 @@ export class ProductsService {
     if (!product) throw new NotFoundException('Producto no encontrado');
     
     const nom = product.nombre
-    await this.productRepo.delete(id); // o await this.productRepo.remove(product);
+    await this.productRepo.delete(id);
     return { message: `Producto ${nom} eliminado` };
   }
 
@@ -114,6 +122,10 @@ export class ProductsService {
         precio: true,
         especificaciones: true,
         link_compra: true,
+        tienda_fisica: true,
+        direccion: true,
+        link_compra2: true,
+        link_compra3: true,
         createdAt: true,
         category: {
           id: true,
@@ -124,7 +136,6 @@ export class ProductsService {
           nombre: true, 
         },
       },
-      // --- FIN DEL CAMBIO ---
       relations: { createdBy: true, category: true },
       order: { createdAt: 'DESC' },
     });
@@ -140,6 +151,10 @@ export class ProductsService {
         precio: true,
         especificaciones: true,
         link_compra: true,
+        tienda_fisica: true,
+        direccion: true,
+        link_compra2: true,
+        link_compra3: true,
         createdAt: true,
         category: {
           id: true,

@@ -60,6 +60,18 @@ export class Product {
   @Column('int', { name: 'image_size', nullable: true })
   imageSize?: number | null;
 
+  @Column('varchar', { length: 255, nullable: true })
+  tienda_fisica?: string | null;
+
+  @Column('varchar', { length: 512, nullable: true })
+  direccion?: string | null;
+
+  @Column('varchar', { length: 512, nullable: true })
+  link_compra2?: string | null;
+
+  @Column('varchar', { length: 512, nullable: true })
+  link_compra3?: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 }
