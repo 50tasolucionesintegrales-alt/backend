@@ -1,4 +1,16 @@
-import { Controller, Post, Patch, Get, Param, Body, Req, UseGuards, Delete, Query, Res } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Patch,
+  Get,
+  Param,
+  Body,
+  Req,
+  UseGuards,
+  Delete,
+  Query,
+  Res,
+} from '@nestjs/common';
 import { QuotesService } from './quotes.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
@@ -23,6 +35,17 @@ import { PdfService11 } from 'src/pdf/e11_alamo/pdf.service';
 import { PdfService12 } from 'src/pdf/e12_hugo/pdf.service';
 import { GeneratePdfDto } from './dto/generate-pdf.dto';
 import { BatchUpdateItemDto } from './dto/batch-update-item.dto';
+import {
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import { FileValidationPipe } from 'src/common/pipes/file-validation/file-validation.pipe';
+import { ImportExcelDto } from './dto/import-excel.dto';
+import { ExcelTemplateService } from './excel/excel-template.service';
+import { ExcelImportService } from './excel/excel-import.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('quotes')
@@ -41,7 +64,76 @@ export class QuotesController {
     private readonly pdf10: PdfService10,
     private readonly pdf11: PdfService11,
     private readonly pdf12: PdfService12,
-  ) { }
+    private readonly excelTemplate: ExcelTemplateService,
+    private readonly excelImport: ExcelImportService,
+  ) {}
+
+  @Get('excel/template')
+  async downloadTemplate(
+    @Query('empresas') empresas: string,
+    @Query('numProductos') numProductos: string,
+    @Res() res: Response,
+  ) {
+    const empresaIds = empresas.split(',').map(Number);
+    const n = parseInt(numProductos ?? '10');
+    const buffer = await this.excelTemplate.generateTemplate(
+      empresaIds,
+      isNaN(n) || n < 1 ? 10 : Math.min(n, 200),
+    );
+    res.set({
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': 'attachment; filename=cotizacion_plantilla.xlsx',
+    });
+    res.send(buffer);
+  }
+
+  @Post('import-excel')
+  @Roles(Role.Admin, Role.Cotizador)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 10 * 1024 * 1024 },
+    }),
+  )
+  async importFromExcel(
+    @UploadedFile(
+      new FileValidationPipe({
+        required: true,
+        maxSizeBytes: 10 * 1024 * 1024,
+        allowedMimes: [
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'application/octet-stream',
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+    @Body() dto: ImportExcelDto,
+    @Req() req,
+  ) {
+    const result = await this.excelImport.importFromExcel(
+      file.buffer,
+      dto.empresas,
+      req.user.sub,
+    );
+
+    if (!result.ok) {
+      throw new BadRequestException({
+        message:
+          'El archivo contiene errores de validación. No se insertó ningún dato.',
+        errors: result.errors,
+      });
+    }
+
+    return {
+      message: 'Cotización creada exitosamente desde Excel',
+      quoteId: result.quoteId,
+      empresas: dto.empresas,
+      productosCreados: result.productosCreados,
+      productosReutilizados: result.productosReutilizados,
+      advertencias: result.advertencias ?? [],
+    };
+  }
 
   /* ▶ 1. Todas las enviadas (ADMIN) */
   @Get('sent')
@@ -60,10 +152,7 @@ export class QuotesController {
   /* ▶ 3. Reabrir cotización para editar */
   @Patch(':id/reopen')
   @Roles(Role.Admin, Role.Cotizador)
-  reopen(
-    @Param('id', IdValidationPipe) id: string,
-    @Req() req,
-  ) {
+  reopen(@Param('id', IdValidationPipe) id: string, @Req() req) {
     return this.quotes.reopenQuote(id, req.user);
   }
 
@@ -71,7 +160,12 @@ export class QuotesController {
   @Post()
   @Roles(Role.Admin, Role.Cotizador)
   createDraft(@Req() req, @Body() dto: CreateQuoteDto) {
-    return this.quotes.createDraft(req.user.sub, dto.tipo, dto.titulo, dto.descripcion);
+    return this.quotes.createDraft(
+      req.user.sub,
+      dto.tipo,
+      dto.titulo,
+      dto.descripcion,
+    );
   }
 
   /* 2️⃣  Agregar ítems */
@@ -127,10 +221,10 @@ export class QuotesController {
     @Res() res: Response,
   ) {
     const quote = await this.quotes.loadForPdf(id);
-    
+
     // Seleccionar el servicio de PDF según la empresa
     let pdfBuffer: Buffer;
-    
+
     switch (dto.empresa) {
       case 1:
         pdfBuffer = await this.pdf1.generateOneBuffer(quote, dto.empresa, {
@@ -314,7 +408,7 @@ export class QuotesController {
   }
 
   @Delete(':id')
-  @Roles(Role.Admin)                          // ← solo administradores
+  @Roles(Role.Admin) // ← solo administradores
   remove(@Param('id', IdValidationPipe) id: string) {
     return this.quotes.deleteQuote(id);
   }

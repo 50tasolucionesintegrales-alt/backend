@@ -19,13 +19,9 @@ import { TemplatesModule } from './templates/templates.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
+      imports: [ConfigModule], // ← agrega esto
       useFactory: (configService: ConfigService) => ({
         ...typeOrmConfig(configService),
-        extra: {
-          ssl: {
-            rejectUnauthorized: false,
-          },
-        },
       }),
       inject: [ConfigService],
     }),
