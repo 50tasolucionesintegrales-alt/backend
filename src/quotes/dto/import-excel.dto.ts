@@ -1,5 +1,13 @@
 import { Transform } from 'class-transformer';
-import { ArrayNotEmpty, IsArray, IsInt, Max, Min } from 'class-validator';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsIn,
+  IsInt,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class ImportExcelDto {
   @IsArray({ message: 'empresas debe ser un arreglo' })
@@ -15,10 +23,13 @@ export class ImportExcelDto {
         return value;
       }
     }
-    if (Array.isArray(value)) {
-      return value.map((v) => Number(v));
-    }
+    if (Array.isArray(value)) return value.map((v) => Number(v));
     return value;
   })
   empresas!: number[];
+
+  @IsString()
+  @IsIn(['productos', 'servicios'])
+  @Transform(({ value }) => value ?? 'productos')
+  tipo!: 'productos' | 'servicios';
 }

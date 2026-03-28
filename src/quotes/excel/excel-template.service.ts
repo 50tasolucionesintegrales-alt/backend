@@ -39,6 +39,9 @@ const C = {
   IVA_F: 'D6EAF8',
   IVA_T: '145A32',
   TOT_F: '1A5276',
+  ORANGE: 'E67E22',
+  ORANGE_F: 'FEF5EC',
+  LOCKED_F: 'D5D8DC',
 };
 
 const THIN: ExcelJS.Border = { style: 'thin', color: { argb: 'FF000000' } };
@@ -81,9 +84,8 @@ function fillRange(
   row: number,
   color: string,
 ) {
-  for (let c = startCol; c <= endCol; c++) {
+  for (let c = startCol; c <= endCol; c++)
     ws.getCell(row, c).fill = fill(color);
-  }
 }
 function outerBorder(
   ws: ExcelJS.Worksheet,
@@ -126,6 +128,7 @@ export class ExcelTemplateService {
   async generateTemplate(
     empresaIds: number[],
     numProductos: number = 10,
+    tipo: 'productos' | 'servicios' = 'productos',
   ): Promise<Buffer> {
     const empresas = empresaIds.map((id) => {
       const emp = EMPRESA_MAP[id];
@@ -137,6 +140,7 @@ export class ExcelTemplateService {
       order: { nombre: 'ASC' },
     });
     const catNames = categories.map((c) => c.nombre);
+    const esServicios = tipo === 'servicios'; // ← flag principal
 
     const wb = new ExcelJS.Workbook();
     wb.creator = 'SinCuenta';
@@ -152,9 +156,16 @@ export class ExcelTemplateService {
       wsCat.getCell(i + 1, 1).value = name;
     });
 
+    const wsMeta = wb.addWorksheet('_Meta');
+    wsMeta.state = 'hidden';
+    wsMeta.getCell(1, 1).value = 'SINCUENTA_V2';
+    wsMeta.getCell(2, 1).value = empresaIds.join(',');
+    wsMeta.getCell(3, 1).value = numProductos;
+    wsMeta.getCell(4, 1).value = tipo; // ← guardar tipo
+
     const N_EMP = empresas.length;
     const LAST_COL = 7 + N_EMP * 5;
-    const DATA_START = 12;
+    const DATA_START = 13;
     const DATA_END = DATA_START + numProductos - 1;
     const ROW_SUBTOT = DATA_END + 1;
     const ROW_IVA = DATA_END + 2;
@@ -183,11 +194,12 @@ export class ExcelTemplateService {
     ws.getRow(4).height = 4.5;
     ws.getRow(5).height = 24;
     ws.getRow(6).height = 24;
-    ws.getRow(7).height = 4.5;
-    ws.getRow(8).height = 28;
-    ws.getRow(9).height = 24;
-    ws.getRow(10).height = 30;
-    ws.getRow(11).height = 4.5;
+    ws.getRow(7).height = 24;
+    ws.getRow(8).height = 4.5;
+    ws.getRow(9).height = 28;
+    ws.getRow(10).height = 24;
+    ws.getRow(11).height = 30;
+    ws.getRow(12).height = 4.5;
     for (let r = DATA_START; r <= DATA_END; r++) ws.getRow(r).height = 22;
     ws.getRow(ROW_SUBTOT).height = 24;
     ws.getRow(ROW_IVA).height = 24;
@@ -248,10 +260,10 @@ export class ExcelTemplateService {
     const r5b = ws.getCell(5, 3);
     r5b.font = font(C.MED_GRN, 11, true);
     r5b.alignment = align('left');
-    r5b.protection = { locked: false }; // ← editable
+    r5b.protection = { locked: false };
     outerBorder(ws, 3, titleEnd, 5, 5);
 
-    // ── FILA 6 – Tipo ──
+    // ── FILA 6 – Tipo (pre-llenado y bloqueado) ──
     fillRange(ws, 1, 2, 6, C.MED_GRN);
     ws.mergeCells(6, 1, 6, 2);
     const r6a = ws.getCell(6, 1);
@@ -264,26 +276,35 @@ export class ExcelTemplateService {
     fillRange(ws, 3, titleEnd, 6, C.LIGHT_GY);
     ws.mergeCells(6, 3, 6, titleEnd);
     const r6b = ws.getCell(6, 3);
-    r6b.value = 'productos';
+    r6b.value = tipo; // ← pre-llenado con el tipo
     r6b.font = font(C.MED_GRN, 11, true);
     r6b.alignment = align('left');
-    r6b.protection = { locked: false }; // ← editable
+    r6b.protection = { locked: true }; // ← bloqueado
     outerBorder(ws, 3, titleEnd, 6, 6);
 
-    (ws as any).dataValidations.add('C6', {
-      type: 'list',
-      allowBlank: false,
-      formulae: ['"productos,servicios"'],
-      showErrorMessage: true,
-      errorTitle: 'Valor inválido',
-      error: 'Solo "productos" o "servicios"',
-    });
+    // ── FILA 7 – Descripción ──
+    fillRange(ws, 1, 2, 7, C.MED_GRN);
+    ws.mergeCells(7, 1, 7, 2);
+    const r7a = ws.getCell(7, 1);
+    r7a.value = '  Descripción:';
+    r7a.font = font(C.WHITE, 11, true);
+    r7a.alignment = align('center');
+    r7a.protection = { locked: true };
+    outerBorder(ws, 1, 2, 7, 7);
 
-    // ── FILA 7 ──
-    fillRange(ws, 1, LAST_COL, 7, C.MED_GRN);
-    ws.mergeCells(7, 1, 7, LAST_COL);
+    fillRange(ws, 3, titleEnd, 7, C.LIGHT_GY);
+    ws.mergeCells(7, 3, 7, titleEnd);
+    const r7b = ws.getCell(7, 3);
+    r7b.font = font(C.MED_GRN, 11);
+    r7b.alignment = align('left');
+    r7b.protection = { locked: false };
+    outerBorder(ws, 3, titleEnd, 7, 7);
 
-    // ── FILAS 8-9 – Headers ──
+    // ── FILA 8 – Separador verde ──
+    fillRange(ws, 1, LAST_COL, 8, C.MED_GRN);
+    ws.mergeCells(8, 1, 8, LAST_COL);
+
+    // ── FILAS 9-10 – Headers ──
     const fixedHdrs: [number, string, boolean][] = [
       [1, '#', false],
       [2, 'Nombre\n(referencia)', true],
@@ -294,15 +315,17 @@ export class ExcelTemplateService {
       [7, 'Costo\nUnitario', true],
     ];
     for (const [colIdx, label, wrap] of fixedHdrs) {
-      fillRange(ws, colIdx, colIdx, 8, C.MED_GRN);
-      fillRange(ws, colIdx, colIdx, 9, C.MED_GRN);
-      ws.mergeCells(8, colIdx, 9, colIdx);
-      const c = ws.getCell(8, colIdx);
-      c.value = label;
+      // Columna D en gris si es servicios
+      const hColor = esServicios && colIdx === 4 ? C.ARROW_T : C.MED_GRN;
+      fillRange(ws, colIdx, colIdx, 9, hColor);
+      fillRange(ws, colIdx, colIdx, 10, hColor);
+      ws.mergeCells(9, colIdx, 10, colIdx);
+      const c = ws.getCell(9, colIdx);
+      c.value = esServicios && colIdx === 4 ? 'N/A' : label;
       c.font = font(C.WHITE, 11, true);
       c.alignment = align('center', wrap);
       c.protection = { locked: true };
-      outerBorder(ws, colIdx, colIdx, 8, 9);
+      outerBorder(ws, colIdx, colIdx, 9, 10);
     }
 
     for (let ei = 0; ei < N_EMP; ei++) {
@@ -310,14 +333,14 @@ export class ExcelTemplateService {
       const bc = 8 + ei * 5;
       const ec = bc + 4;
 
-      fillRange(ws, bc, ec, 8, emp.color);
-      ws.mergeCells(8, bc, 8, ec);
-      const hdr = ws.getCell(8, bc);
+      fillRange(ws, bc, ec, 9, emp.color);
+      ws.mergeCells(9, bc, 9, ec);
+      const hdr = ws.getCell(9, bc);
       hdr.value = emp.nombre.toUpperCase();
       hdr.font = font(C.WHITE, 11, true);
       hdr.alignment = align('center');
       hdr.protection = { locked: true };
-      outerBorder(ws, bc, ec, 8, 8);
+      outerBorder(ws, bc, ec, 9, 9);
 
       const subLabels = [
         '% Ítem',
@@ -327,7 +350,7 @@ export class ExcelTemplateService {
         'Ganancia ($)',
       ];
       for (let ci = 0; ci < 5; ci++) {
-        const c = ws.getCell(9, bc + ci);
+        const c = ws.getCell(10, bc + ci);
         c.value = subLabels[ci];
         c.fill = fill(C.SUB_H);
         c.font = font(C.WHITE, 10, true);
@@ -337,43 +360,44 @@ export class ExcelTemplateService {
       }
     }
 
-    // ── FILA 10 – % Margen global ──
-    fillRange(ws, 1, 7, 10, C.MED_GRN);
-    ws.mergeCells(10, 1, 10, 7);
-    const r10 = ws.getCell(10, 1);
-    r10.value = '  % MARGEN GLOBAL';
-    r10.font = font(C.WHITE, 11, true);
-    r10.alignment = align('left');
-    r10.border = border(MED, MED, MED, MED);
-    r10.protection = { locked: true };
+    // ── FILA 11 – % Margen global ──
+    fillRange(ws, 1, 7, 11, C.MED_GRN);
+    ws.mergeCells(11, 1, 11, 7);
+    const r11 = ws.getCell(11, 1);
+    r11.value = '  % MARGEN GLOBAL';
+    r11.font = font(C.WHITE, 11, true);
+    r11.alignment = align('left');
+    r11.border = border(MED, MED, MED, MED);
+    r11.protection = { locked: true };
 
     for (let ei = 0; ei < N_EMP; ei++) {
       const bc = 8 + ei * 5;
       const arrowSt = bc + 1;
       const arrowEn = bc + 4;
 
-      // Celda amarilla — EDITABLE para que el usuario pueda poner el %
-      const pctCell = ws.getCell(10, bc);
+      const pctCell = ws.getCell(11, bc);
       pctCell.fill = fill(C.GOLD);
       pctCell.font = font(C.MED_GRN, 14, true);
       pctCell.alignment = align('center');
       pctCell.numFmt = '0.00';
       pctCell.border = border(MED, MED, MED, THIN);
-      pctCell.protection = { locked: false }; // ← editable
+      pctCell.protection = { locked: false };
 
-      fillRange(ws, arrowSt, arrowEn, 10, C.FORM_F);
-      ws.mergeCells(10, arrowSt, 10, arrowEn);
-      const arrowCell = ws.getCell(10, arrowSt);
-      arrowCell.value = '← % que aplica a todos los productos';
+      fillRange(ws, arrowSt, arrowEn, 11, C.FORM_F);
+      ws.mergeCells(11, arrowSt, 11, arrowEn);
+      const arrowCell = ws.getCell(11, arrowSt);
+      arrowCell.value = esServicios
+        ? '← % que aplica a todos los servicios'
+        : '← % que aplica a todos los productos';
       arrowCell.font = font(C.ARROW_T, 9);
       arrowCell.alignment = align('left');
       arrowCell.protection = { locked: true };
-      outerBorder(ws, arrowSt, arrowEn, 10, 10, 'medium');
+      outerBorder(ws, arrowSt, arrowEn, 11, 11, 'medium');
     }
 
-    // ── FILA 11 – Separador ──
-    fillRange(ws, 1, LAST_COL, 11, C.SEP_C);
-    ws.mergeCells(11, 1, 11, LAST_COL);
+    // ── FILA 12 – Separador gris ──
+    fillRange(ws, 1, LAST_COL, 12, C.SEP_C);
+    ws.mergeCells(12, 1, 12, LAST_COL);
 
     // ── FILAS DE DATOS ──
     for (let r = DATA_START; r <= DATA_END; r++) {
@@ -399,12 +423,22 @@ export class ExcelTemplateService {
       cC.border = ALL_B;
       cC.protection = { locked: false };
 
+      // ── Columna D: N/A bloqueada para servicios ──
       const cD = ws.getCell(r, 4);
-      cD.fill = fill(C.DATA_F);
-      cD.font = font(C.DATA_T, 11);
-      cD.alignment = align('left');
-      cD.border = ALL_B;
-      cD.protection = { locked: false };
+      if (esServicios) {
+        cD.value = 'N/A';
+        cD.fill = fill(C.LOCKED_F);
+        cD.font = font(C.ARROW_T, 11);
+        cD.alignment = align('center');
+        cD.border = ALL_B;
+        cD.protection = { locked: true };
+      } else {
+        cD.fill = fill(C.DATA_F);
+        cD.font = font(C.DATA_T, 11);
+        cD.alignment = align('left');
+        cD.border = ALL_B;
+        cD.protection = { locked: false };
+      }
 
       const cE = ws.getCell(r, 5);
       cE.fill = fill(C.DATA_F);
@@ -414,6 +448,7 @@ export class ExcelTemplateService {
       cE.numFmt = '#,##0';
       cE.protection = { locked: false };
 
+      // ── Unidad pre-llenada según tipo ──
       const cF = ws.getCell(r, 6);
       cF.value = 'pieza';
       cF.fill = fill(C.DATA_F);
@@ -439,10 +474,7 @@ export class ExcelTemplateService {
           ganCol = bc + 4;
         const pctL = colLetter(pctCol);
         const pfL = colLetter(pfCol);
-        const sbL = colLetter(sbCol);
-        const smL = colLetter(smCol);
-        const ganL = colLetter(ganCol);
-        const gRef = `$${pctL}$10`;
+        const gRef = `$${pctL}$11`;
 
         const cPct = ws.getCell(r, pctCol);
         cPct.fill = fill(C.DATA_F);
@@ -454,7 +486,7 @@ export class ExcelTemplateService {
 
         const cPf = ws.getCell(r, pfCol);
         cPf.value = {
-          formula: `IF(G${r}="","",ROUND(G${r}*(1+(IF(${pctL}${r}<>"",${pctL}${r},${gRef}))/100),2))`,
+          formula: `IF(G${r}="","",ROUND(G${r}*(1+(IF(${pctL}${r}<>"",${pctL}${r},${gRef}))/100)-0.0000000001,2))`,
         };
         cPf.fill = fill(C.FORM_F);
         cPf.font = font('333333', 11);
@@ -473,7 +505,9 @@ export class ExcelTemplateService {
         cSb.protection = { locked: true };
 
         const cSm = ws.getCell(r, smCol);
-        cSm.value = { formula: `IF(G${r}="","",ROUND(${pfL}${r}*E${r},2))` };
+        cSm.value = {
+          formula: `IF(G${r}="","",ROUND(${pfL}${r}*E${r}-0.0000000001,2))`,
+        };
         cSm.fill = fill(C.FORM_F);
         cSm.font = font('333333', 11);
         cSm.alignment = align('right');
@@ -482,7 +516,9 @@ export class ExcelTemplateService {
         cSm.protection = { locked: true };
 
         const cGan = ws.getCell(r, ganCol);
-        cGan.value = { formula: `IF(G${r}="","",${smL}${r}-${sbL}${r})` };
+        cGan.value = {
+          formula: `IF(G${r}="","",ROUND(G${r}*E${r}*(IF(${pctL}${r}<>"",${pctL}${r},${gRef}))/100-0.0000000001,2))`,
+        };
         cGan.fill = fill(C.GAN_F);
         cGan.font = font(C.GAN_T, 11, true);
         cGan.alignment = align('right');
@@ -513,14 +549,19 @@ export class ExcelTemplateService {
       errorTitle: 'Descripción inválida',
       error: 'La descripción debe tener entre 20 y 128 caracteres',
     });
-    dv.add(`D${DATA_START}:D${DATA_END}`, {
-      type: 'list',
-      allowBlank: true,
-      formulae: [`_Categorias!$A$1:$A$${catNames.length}`],
-      showErrorMessage: true,
-      errorTitle: 'Categoría inválida',
-      error: 'Selecciona una categoría de la lista',
-    });
+
+    // ── Categoría solo para productos ──
+    if (!esServicios) {
+      dv.add(`D${DATA_START}:D${DATA_END}`, {
+        type: 'list',
+        allowBlank: true,
+        formulae: [`_Categorias!$A$1:$A$${catNames.length}`],
+        showErrorMessage: true,
+        errorTitle: 'Categoría inválida',
+        error: 'Selecciona una categoría de la lista',
+      });
+    }
+
     dv.add(`E${DATA_START}:E${DATA_END}`, {
       type: 'whole',
       operator: 'greaterThan',
@@ -544,11 +585,11 @@ export class ExcelTemplateService {
       dv.add(`${pctL}${DATA_START}:${pctL}${DATA_END}`, {
         type: 'decimal',
         operator: 'between',
-        formulae: [0, 1000],
+        formulae: [0, 100],
         allowBlank: true,
         showErrorMessage: true,
         errorTitle: '% inválido',
-        error: 'Ingresa un porcentaje entre 0 y 1000',
+        error: 'Ingresa un porcentaje entre 0 y 100',
       });
     }
 
@@ -613,20 +654,33 @@ export class ExcelTemplateService {
           fGan = `ROUND(${ganL}${ROW_SUBTOT}+${ganL}${ROW_IVA},2)`;
         }
 
-        for (const [colIdx, formula, useColor] of [
-          [sbCol, fSb, fcolor],
-          [smCol, fSm, fcolor],
-          [ganCol, fGan, fcg],
-        ] as [number, string, string][]) {
-          const tc = ws.getCell(row, colIdx);
-          tc.value = { formula };
-          tc.fill = fill(bg);
-          tc.font = font(useColor, 11, true);
-          tc.alignment = align('right');
-          tc.border = ALL_B;
-          tc.numFmt = '$#,##0.00';
-          tc.protection = { locked: true };
-        }
+        const tcSb = ws.getCell(row, sbCol);
+        tcSb.value = { formula: fSb };
+        tcSb.fill = fill(bg);
+        tcSb.font = font(fcolor, 11, true);
+        tcSb.alignment = align('right');
+        tcSb.border = ALL_B;
+        tcSb.numFmt = '$#,##0.00';
+        tcSb.protection = { locked: true };
+
+        const tcSm = ws.getCell(row, smCol);
+        tcSm.value = { formula: fSm };
+        tcSm.fill = fill(row === ROW_TOTAL ? C.ORANGE : bg);
+        tcSm.font = font(row === ROW_TOTAL ? C.WHITE : fcolor, 11, true);
+        tcSm.alignment = align('right');
+        tcSm.border = ALL_B;
+        tcSm.numFmt = '$#,##0.00';
+        tcSm.protection = { locked: true };
+
+        const tcGan = ws.getCell(row, ganCol);
+        tcGan.value = { formula: fGan };
+        tcGan.fill = fill(bg);
+        tcGan.font = font(fcg, 11, true);
+        tcGan.alignment = align('right');
+        tcGan.border = ALL_B;
+        tcGan.numFmt = '$#,##0.00';
+        tcGan.protection = { locked: true };
+
         ws.getCell(row, pctCol).fill = fill(bg);
         ws.getCell(row, pctCol).border = border(MED, MED, MED);
         ws.getCell(row, pctCol).protection = { locked: true };
@@ -634,11 +688,10 @@ export class ExcelTemplateService {
         ws.getCell(row, pfCol).border = border(MED, MED);
         ws.getCell(row, pfCol).protection = { locked: true };
         ws.getCell(row, ganCol).border = border(MED, MED, THIN, MED);
-        ws.getCell(row, ganCol).protection = { locked: true };
       }
     }
 
-    ws.views = [{ state: 'frozen', xSplit: 1, ySplit: 11 }];
+    ws.views = [{ state: 'frozen', xSplit: 1, ySplit: 12 }];
 
     await (ws as any).protect('sincuenta2024', {
       sheet: true,

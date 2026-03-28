@@ -35,11 +35,7 @@ import { PdfService11 } from 'src/pdf/e11_alamo/pdf.service';
 import { PdfService12 } from 'src/pdf/e12_hugo/pdf.service';
 import { GeneratePdfDto } from './dto/generate-pdf.dto';
 import { BatchUpdateItemDto } from './dto/batch-update-item.dto';
-import {
-  UseInterceptors,
-  UploadedFile,
-  BadRequestException,
-} from '@nestjs/common';
+import { UseInterceptors, UploadedFile } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { FileValidationPipe } from 'src/common/pipes/file-validation/file-validation.pipe';
@@ -72,13 +68,16 @@ export class QuotesController {
   async downloadTemplate(
     @Query('empresas') empresas: string,
     @Query('numProductos') numProductos: string,
+    @Query('tipo') tipo: string,
     @Res() res: Response,
   ) {
     const empresaIds = empresas.split(',').map(Number);
     const n = parseInt(numProductos ?? '10');
+    const tipoValido = tipo === 'servicios' ? 'servicios' : 'productos';
     const buffer = await this.excelTemplate.generateTemplate(
       empresaIds,
       isNaN(n) || n < 1 ? 10 : Math.min(n, 200),
+      tipoValido,
     );
     res.set({
       'Content-Type':
@@ -110,29 +109,40 @@ export class QuotesController {
     file: Express.Multer.File,
     @Body() dto: ImportExcelDto,
     @Req() req,
+    @Res() res: Response,
   ) {
-    const result = await this.excelImport.importFromExcel(
-      file.buffer,
-      dto.empresas,
-      req.user.sub,
-    );
+    try {
+      const result = await this.excelImport.importFromExcel(
+        file.buffer,
+        dto.empresas,
+        req.user.sub,
+        dto.tipo
+      );
 
-    if (!result.ok) {
-      throw new BadRequestException({
-        message:
-          'El archivo contiene errores de validación. No se insertó ningún dato.',
-        errors: result.errors,
+      if (!result.ok) {
+        return res.status(400).json({
+          ok: false,
+          message:
+            'El archivo contiene errores de validación. No se insertó ningún dato.',
+          errors: result.errors ?? [],
+        });
+      }
+
+      return res.status(200).json({
+        message: 'Cotización creada exitosamente desde Excel',
+        quoteId: result.quoteId,
+        empresas: dto.empresas,
+        productosCreados: result.productosCreados,
+        productosReutilizados: result.productosReutilizados,
+        advertencias: result.advertencias ?? [],
+      });
+    } catch (error) {
+      return res.status(400).json({
+        ok: false,
+        message: error?.message ?? 'Error al procesar el archivo',
+        errors: [],
       });
     }
-
-    return {
-      message: 'Cotización creada exitosamente desde Excel',
-      quoteId: result.quoteId,
-      empresas: dto.empresas,
-      productosCreados: result.productosCreados,
-      productosReutilizados: result.productosReutilizados,
-      advertencias: result.advertencias ?? [],
-    };
   }
 
   /* ▶ 1. Todas las enviadas (ADMIN) */
