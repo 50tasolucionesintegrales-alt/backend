@@ -101,7 +101,7 @@ export class QuotesService {
   private recalculateItem(item: QuoteItem) {
     const cost = Number(item.costo_unitario ?? 0);
     const qty = Number(item.cantidad ?? 0);
-    const subtotalBase = cost * qty; // Subtotal sin margen
+    const subtotalBase = cost * qty;
 
     const round2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -114,23 +114,15 @@ export class QuotesService {
       const marginRaw = item[marginKey];
       
       if (marginRaw === null || marginRaw === undefined || marginRaw === 0) {
-        // Sin margen - todos los valores iguales
-        (item as any)[precioKey] = round2(cost); // Precio final = costo unitario
-        (item as any)[subtotalKey] = round2(subtotalBase); // Subtotal sin margen = subtotal con margen
-        // GANANCIA = subtotalConMargen - subtotalBase (que debería ser 0)
+        (item as any)[precioKey] = round2(cost);
+        (item as any)[subtotalKey] = round2(subtotalBase);
         (item as any)[gananciaKey] = 0;
         continue;
       }
 
       const margin = Number(marginRaw);
-      
-      // Precio final con margen
       const precioFinal = round2(cost * (1 + margin / 100));
-      
-      // Subtotal con margen
       const subtotalConMargen = round2(precioFinal * qty);
-      
-      // GANANCIA CORRECTA: subtotal con margen - subtotal base
       const ganancia = round2(subtotalConMargen - subtotalBase);
       
       (item as any)[precioKey] = precioFinal;
@@ -161,11 +153,8 @@ export class QuotesService {
       }
 
       const subtotalFinal = round2(lineTotals.reduce((a, b) => a + b, 0));
-
       const totalIva = round2(subtotalFinal * ivaPct / 100);
-
       const totalFinal = round2(subtotalFinal + totalIva);
-
       const totalMargen = round2(
         items.reduce((acc, it) => {
           const price = Number((it as any)[`precioFinal${i}`]);
@@ -187,7 +176,6 @@ export class QuotesService {
     if (!quote) throw new NotFoundException('Cotización no encontrada');
     if (quote.status !== 'draft') throw new ForbiddenException('La cotización ya fue enviada');
 
-    // Obtener items con relaciones
     const items = await this.itemsRepo.find({ 
       where: { quote: { id: quoteId } },
       relations: ['product', 'service']
@@ -201,11 +189,9 @@ export class QuotesService {
         continue;
       }
 
-      // Actualizar campos
       if (dto.cantidad !== undefined) item.cantidad = dto.cantidad;
       if (dto.costo_unitario !== undefined) item.costo_unitario = dto.costo_unitario;
       
-      // Validar márgenes (no permitir negativos)
       const validateMargin = (margin: number | null | undefined): number | null => {
         if (margin === null || margin === undefined) return null;
         if (margin < 0) throw new ForbiddenException('Los márgenes no pueden ser negativos');
@@ -225,23 +211,17 @@ export class QuotesService {
       if (dto.margenPct11 !== undefined) item.margenPct11 = validateMargin(dto.margenPct11);
       if (dto.margenPct12 !== undefined) item.margenPct12 = validateMargin(dto.margenPct12);
 
-      // Recalcular el ítem
       this.recalculateItem(item);
     }
 
-    // Guardar todos los ítems
     await this.itemsRepo.save(items);
-
-    // Recalcular totales de la cotización
     this.recalculateQuoteTotals(quote, items);
     await this.quotesRepo.save(quote);
 
-    // Recalcular con nueva lógica para cada ítem
     for (const item of items) {
       this.recalculateItem(item);
     }
 
-    // Obtener la cotización completa actualizada
     const updatedQuote = await this.quotesRepo.findOne({
       where: { id: quoteId },
       relations: ['items', 'items.product', 'items.service'],
@@ -253,7 +233,7 @@ export class QuotesService {
     };
   }
 
-  /* ───────── Actualizar ítem (Refactorizado) ───────── */
+  /* ───────── Actualizar ítem ───────── */
   async updateItem(itemId: string, dto: UpdateItemDto) {
     const item = await this.itemsRepo.findOne({
       where: { id: itemId },
@@ -276,7 +256,6 @@ export class QuotesService {
     return { message: 'Ítem actualizado', item: fresh };
   }
 
-
   /* ───────── Enviar cotización (genera PDFs) ───────── */
   async sendQuote(id: string) {
     const quote = await this.quotesRepo.findOne({
@@ -290,7 +269,7 @@ export class QuotesService {
     ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const).forEach(k => {
       const sub = +this.sumSubtotals(quote, `subtotal${k}`).toFixed(2);
       subtotales[k] = sub;
-      (quote as any)[`totalMargen${k}`] = sub; // mantenemos "totalMargen*" como subtotal pre-IVA
+      (quote as any)[`totalMargen${k}`] = sub;
     });
 
     const ivaPct = Number(quote.ivaPct ?? 16);
@@ -335,7 +314,6 @@ export class QuotesService {
           service: true,
         },
       },
-
       select: {
         id: true,
         status: true,
@@ -345,89 +323,29 @@ export class QuotesService {
         titulo: true,
         descripcion: true,
         ivaPct: true,
-        // Totales
-        totalMargen1: true,
-        totalMargen2: true,
-        totalMargen3: true,
-        totalMargen4: true,
-        totalMargen5: true,
-        totalMargen6: true,
-        totalMargen7: true,
-        totalMargen8: true,
-        totalMargen9: true,
-        totalMargen10: true,
-        totalMargen11: true,
-        totalMargen12: true,
-        totalIva1: true,
-        totalIva2: true,
-        totalIva3: true,
-        totalIva4: true,
-        totalIva5: true,
-        totalIva6: true,
-        totalIva7: true,
-        totalIva8: true,
-        totalIva9: true,
-        totalIva10: true,
-        totalIva11: true,
-        totalIva12: true,
-        totalFinal1: true,
-        totalFinal2: true,
-        totalFinal3: true,
-        totalFinal4: true,
-        totalFinal5: true,
-        totalFinal6: true,
-        totalFinal7: true,
-        totalFinal8: true,
-        totalFinal9: true,
-        totalFinal10: true,
-        totalFinal11: true,
-        totalFinal12: true,
-
-        // Campos de los Items
+        totalMargen1: true, totalMargen2: true, totalMargen3: true, totalMargen4: true,
+        totalMargen5: true, totalMargen6: true, totalMargen7: true, totalMargen8: true,
+        totalMargen9: true, totalMargen10: true, totalMargen11: true, totalMargen12: true,
+        totalIva1: true, totalIva2: true, totalIva3: true, totalIva4: true,
+        totalIva5: true, totalIva6: true, totalIva7: true, totalIva8: true,
+        totalIva9: true, totalIva10: true, totalIva11: true, totalIva12: true,
+        totalFinal1: true, totalFinal2: true, totalFinal3: true, totalFinal4: true,
+        totalFinal5: true, totalFinal6: true, totalFinal7: true, totalFinal8: true,
+        totalFinal9: true, totalFinal10: true, totalFinal11: true, totalFinal12: true,
         items: {
           id: true,
           cantidad: true,
           unidad: true,
           costo_unitario: true,
-          // Márgenes y precios
-          margenPct1: true,
-          margenPct2: true,
-          margenPct3: true,
-          margenPct4: true,
-          margenPct5: true,
-          margenPct6: true,
-          margenPct7: true,
-          margenPct8: true,
-          margenPct9: true,
-          margenPct10: true,
-          margenPct11: true,
-          margenPct12: true,
-          precioFinal1: true,
-          precioFinal2: true,
-          precioFinal3: true,
-          precioFinal4: true,
-          precioFinal5: true,
-          precioFinal6: true,
-          precioFinal7: true,
-          precioFinal8: true,
-          precioFinal9: true,
-          precioFinal10: true,
-          precioFinal11: true,
-          precioFinal12: true,
-          subtotal1: true,
-          subtotal2: true,
-          subtotal3: true,
-          subtotal4: true,
-          subtotal5: true,
-          subtotal6: true,
-          subtotal7: true,
-          subtotal8: true,
-          subtotal9: true,
-          subtotal10: true,
-          subtotal11: true,
-          subtotal12: true,
-
-          // Campos del Producto (¡El importante!)
+          margenPct1: true, margenPct2: true, margenPct3: true, margenPct4: true,
+          margenPct5: true, margenPct6: true, margenPct7: true, margenPct8: true,
+          margenPct9: true, margenPct10: true, margenPct11: true, margenPct12: true,
+          precioFinal1: true, precioFinal2: true, precioFinal3: true, precioFinal4: true,
+          precioFinal5: true, precioFinal6: true, precioFinal7: true, precioFinal8: true,
+          precioFinal9: true, precioFinal10: true, precioFinal11: true, precioFinal12: true,
+          subtotal1: true, subtotal2: true, subtotal3: true, subtotal4: true,
+          subtotal5: true, subtotal6: true, subtotal7: true, subtotal8: true,
+          subtotal9: true, subtotal10: true, subtotal11: true, subtotal12: true,
           product: {
             id: true,
             nombre: true,
@@ -436,14 +354,8 @@ export class QuotesService {
             especificaciones: true,
             link_compra: true,
             createdAt: true,
-            category: {
-              id: true,
-              nombre: true,
-            },
-            createdBy: {
-              id: true,
-              nombre: true,
-            },
+            category: { id: true, nombre: true },
+            createdBy: { id: true, nombre: true },
           },
           service: {
             id: true,
@@ -451,10 +363,7 @@ export class QuotesService {
             descripcion: true,
             precioBase: true,
             createdAt: true,
-            createdBy: {
-              id: true,
-              nombre: true,
-            },
+            createdBy: { id: true, nombre: true },
           },
         },
       },
@@ -471,232 +380,76 @@ export class QuotesService {
       relations: ['items', 'items.product', 'items.service'],
       order: { sentAt: 'DESC' },
       select: {
-        id: true,
-        status: true,
-        createdAt: true,
-        sentAt: true,
-        tipo: true,
-        titulo: true,
-        descripcion: true,
-        ivaPct: true,
-        // Totales
-        totalMargen1: true,
-        totalMargen2: true,
-        totalMargen3: true,
-        totalMargen4: true,
-        totalMargen5: true,
-        totalMargen6: true,
-        totalMargen7: true,
-        totalMargen8: true,
-        totalMargen9: true,
-        totalMargen10: true,
-        totalMargen11: true,
-        totalMargen12: true,
-        totalIva1: true,
-        totalIva2: true,
-        totalIva3: true,
-        totalIva4: true,
-        totalIva5: true,
-        totalIva6: true,
-        totalIva7: true,
-        totalIva8: true,
-        totalIva9: true,
-        totalIva10: true,
-        totalIva11: true,
-        totalIva12: true,
-        totalFinal1: true,
-        totalFinal2: true,
-        totalFinal3: true,
-        totalFinal4: true,
-        totalFinal5: true,
-        totalFinal6: true,
-        totalFinal7: true,
-        totalFinal8: true,
-        totalFinal9: true,
-        totalFinal10: true,
-        totalFinal11: true,
-        totalFinal12: true,
-
-        // Campos de los Items
+        id: true, status: true, createdAt: true, sentAt: true, tipo: true,
+        titulo: true, descripcion: true, ivaPct: true,
+        totalMargen1: true, totalMargen2: true, totalMargen3: true, totalMargen4: true,
+        totalMargen5: true, totalMargen6: true, totalMargen7: true, totalMargen8: true,
+        totalMargen9: true, totalMargen10: true, totalMargen11: true, totalMargen12: true,
+        totalIva1: true, totalIva2: true, totalIva3: true, totalIva4: true,
+        totalIva5: true, totalIva6: true, totalIva7: true, totalIva8: true,
+        totalIva9: true, totalIva10: true, totalIva11: true, totalIva12: true,
+        totalFinal1: true, totalFinal2: true, totalFinal3: true, totalFinal4: true,
+        totalFinal5: true, totalFinal6: true, totalFinal7: true, totalFinal8: true,
+        totalFinal9: true, totalFinal10: true, totalFinal11: true, totalFinal12: true,
         items: {
-          id: true,
-          cantidad: true,
-          unidad: true,
-          costo_unitario: true,
-
-          // Campos del Producto (¡El importante!)
-          product: {
-            id: true,
-            nombre: true,
-            descripcion: true,
-            precio: true,
-          },
-          service: {
-            id: true,
-            nombre: true,
-            descripcion: true,
-            precioBase: true,
-          },
+          id: true, cantidad: true, unidad: true, costo_unitario: true,
+          product: { id: true, nombre: true, descripcion: true, precio: true },
+          service: { id: true, nombre: true, descripcion: true, precioBase: true },
         },
       },
     });
-    return quotes;                        // o { message:'Enviadas', quotes }
+    return quotes;
   }
 
   /* 2 ── borradores de un usuario */
   async listUserDrafts(userId: string) {
     return this.quotesRepo.find({
-      where: {
-        status: 'draft',
-        user: { id: userId } as any,
-      },
+      where: { status: 'draft', user: { id: userId } as any },
       relations: ['items', 'items.product', 'items.service'],
       order: { createdAt: 'DESC' },
       select: {
-        id: true,
-        status: true,
-        createdAt: true,
-        sentAt: true,
-        tipo: true,
-        titulo: true,
-        descripcion: true,
-        ivaPct: true,
-        // Totales
-        totalMargen1: true,
-        totalMargen2: true,
-        totalMargen3: true,
-        totalMargen4: true,
-        totalMargen5: true,
-        totalMargen6: true,
-        totalMargen7: true,
-        totalMargen8: true,
-        totalMargen9: true,
-        totalMargen10: true,
-        totalMargen11: true,
-        totalMargen12: true,
-        totalIva1: true,
-        totalIva2: true,
-        totalIva3: true,
-        totalIva4: true,
-        totalIva5: true,
-        totalIva6: true,
-        totalIva7: true,
-        totalIva8: true,
-        totalIva9: true,
-        totalIva10: true,
-        totalIva11: true,
-        totalIva12: true,
-        totalFinal1: true,
-        totalFinal2: true,
-        totalFinal3: true,
-        totalFinal4: true,
-        totalFinal5: true,
-        totalFinal6: true,
-        totalFinal7: true,
-        totalFinal8: true,
-        totalFinal9: true,
-        totalFinal10: true,
-        totalFinal11: true,
-        totalFinal12: true,
-
-        // Campos de los Items
+        id: true, status: true, createdAt: true, sentAt: true, tipo: true,
+        titulo: true, descripcion: true, ivaPct: true,
+        totalMargen1: true, totalMargen2: true, totalMargen3: true, totalMargen4: true,
+        totalMargen5: true, totalMargen6: true, totalMargen7: true, totalMargen8: true,
+        totalMargen9: true, totalMargen10: true, totalMargen11: true, totalMargen12: true,
+        totalIva1: true, totalIva2: true, totalIva3: true, totalIva4: true,
+        totalIva5: true, totalIva6: true, totalIva7: true, totalIva8: true,
+        totalIva9: true, totalIva10: true, totalIva11: true, totalIva12: true,
+        totalFinal1: true, totalFinal2: true, totalFinal3: true, totalFinal4: true,
+        totalFinal5: true, totalFinal6: true, totalFinal7: true, totalFinal8: true,
+        totalFinal9: true, totalFinal10: true, totalFinal11: true, totalFinal12: true,
         items: {
-          id: true,
-          cantidad: true,
-          unidad: true,
-          costo_unitario: true,
-
-          // Campos del Producto (¡El importante!)
-          product: {
-            id: true,
-            nombre: true,
-            descripcion: true,
-            precio: true,
-          },
-          service: {
-            id: true,
-            nombre: true,
-            descripcion: true,
-            precioBase: true,
-          },
+          id: true, cantidad: true, unidad: true, costo_unitario: true,
+          product: { id: true, nombre: true, descripcion: true, precio: true },
+          service: { id: true, nombre: true, descripcion: true, precioBase: true },
         },
       },
     });
   }
 
-  /* 5‑B. Mis cotizaciones enviadas (nuevo) */
+  /* 5‑B. Mis cotizaciones enviadas */
   async listUserSent(userId: string) {
     const quotes = await this.quotesRepo.find({
       where: { status: 'sent', user: { id: userId } as any },
       relations: ['items', 'items.product', 'items.service'],
       order: { sentAt: 'DESC' },
       select: {
-        id: true,
-        status: true,
-        createdAt: true,
-        sentAt: true,
-        tipo: true,
-        titulo: true,
-        descripcion: true,
-        ivaPct: true,
-        // Totales
-        totalMargen1: true,
-        totalMargen2: true,
-        totalMargen3: true,
-        totalMargen4: true,
-        totalMargen5: true,
-        totalMargen6: true,
-        totalMargen7: true,
-        totalMargen8: true,
-        totalMargen9: true,
-        totalMargen10: true,
-        totalMargen11: true,
-        totalMargen12: true,
-        totalIva1: true,
-        totalIva2: true,
-        totalIva3: true,
-        totalIva4: true,
-        totalIva5: true,
-        totalIva6: true,
-        totalIva7: true,
-        totalIva8: true,
-        totalIva9: true,
-        totalIva10: true,
-        totalIva11: true,
-        totalIva12: true,
-        totalFinal1: true,
-        totalFinal2: true,
-        totalFinal3: true,
-        totalFinal4: true,
-        totalFinal5: true,
-        totalFinal6: true,
-        totalFinal7: true,
-        totalFinal8: true,
-        totalFinal9: true,
-        totalFinal10: true,
-        totalFinal11: true,
-        totalFinal12: true,
-
-        // Campos de los Items
+        id: true, status: true, createdAt: true, sentAt: true, tipo: true,
+        titulo: true, descripcion: true, ivaPct: true,
+        totalMargen1: true, totalMargen2: true, totalMargen3: true, totalMargen4: true,
+        totalMargen5: true, totalMargen6: true, totalMargen7: true, totalMargen8: true,
+        totalMargen9: true, totalMargen10: true, totalMargen11: true, totalMargen12: true,
+        totalIva1: true, totalIva2: true, totalIva3: true, totalIva4: true,
+        totalIva5: true, totalIva6: true, totalIva7: true, totalIva8: true,
+        totalIva9: true, totalIva10: true, totalIva11: true, totalIva12: true,
+        totalFinal1: true, totalFinal2: true, totalFinal3: true, totalFinal4: true,
+        totalFinal5: true, totalFinal6: true, totalFinal7: true, totalFinal8: true,
+        totalFinal9: true, totalFinal10: true, totalFinal11: true, totalFinal12: true,
         items: {
-          id: true,
-          cantidad: true,
-          unidad: true,
-          costo_unitario: true,
-
-          // Campos del Producto (¡El importante!)
-          product: {
-            id: true,
-            nombre: true,
-            descripcion: true,
-            precio: true,
-          },
-          service: {
-            id: true,
-            nombre: true,
-            descripcion: true,
-            precioBase: true,
-          },
+          id: true, cantidad: true, unidad: true, costo_unitario: true,
+          product: { id: true, nombre: true, descripcion: true, precio: true },
+          service: { id: true, nombre: true, descripcion: true, precioBase: true },
         },
       },
     });
@@ -711,25 +464,16 @@ export class QuotesService {
     });
     if (!quote) throw new NotFoundException('Cotización no encontrada');
 
-    /* ---------- Permisos ---------- */
-    const isOwner =
-      quote.user && String(quote.user.id) === String(user.sub);
-
+    const isOwner = quote.user && String(quote.user.id) === String(user.sub);
     const roles: string[] = Array.isArray(user.roles) ? user.roles.map(String) : [];
-    const isAdmin = roles.some(
-      (r) =>
-        r === Role.Admin ||               // enum →
-        r.toLowerCase() === 'admin',       // string "Admin"
-    );
+    const isAdmin = roles.some(r => r === Role.Admin || r.toLowerCase() === 'admin');
 
     if (!isOwner && !isAdmin) {
       throw new ForbiddenException('Sin permisos para editar esta cotización');
     }
 
-    /* ---------- Ya es borrador ---------- */
     if (quote.status === 'draft') return quote;
 
-    /* ---------- Volver a draft ---------- */
     quote.status = 'draft';
     quote.sentAt = null;
 
@@ -740,8 +484,6 @@ export class QuotesService {
   async deleteQuote(id: string) {
     const quote = await this.quotesRepo.findOne({ where: { id } });
     if (!quote) throw new NotFoundException('Cotización no encontrada');
-
-    /* ── borrar cotización (items → cascade) ── */
     await this.quotesRepo.delete(id);
     return { message: 'Cotización eliminada' };
   }

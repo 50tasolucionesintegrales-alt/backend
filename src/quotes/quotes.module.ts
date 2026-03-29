@@ -6,6 +6,7 @@ import { UsersModule } from 'src/users/users.module';
 import { Quote } from './entities/quote.entity';
 import { QuoteItem } from './entities/quote-item.entity';
 import { Product } from 'src/products/entities/product.entity';
+import { Template } from './entities/template.entity';
 import { PdfService1 } from 'src/pdf/e1_goltech/pdf.service';
 import { PdfService2 } from 'src/pdf/e2_juan_angel/pdf.service';
 import { PdfService3 } from 'src/pdf/e3_giselle/pdf.service';
@@ -34,7 +35,7 @@ import { HtmlPdfService12 } from 'src/pdf/e12_hugo/html-pdf.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Quote, QuoteItem, Product, Service]),
+    TypeOrmModule.forFeature([Quote, QuoteItem, Product, Service, Template]),
     UsersModule,
   ],
   controllers: [QuotesController],

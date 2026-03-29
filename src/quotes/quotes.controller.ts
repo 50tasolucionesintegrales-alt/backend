@@ -1,4 +1,4 @@
-import { Controller, Post, Patch, Get, Param, Body, Req, UseGuards, Delete, Query, Res } from '@nestjs/common';
+import { Controller, Post, Patch, Query, Get, Param, Body, Req, UseGuards, Delete, Res, Put, NotFoundException } from '@nestjs/common';
 import { QuotesService } from './quotes.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
@@ -23,12 +23,17 @@ import { PdfService11 } from 'src/pdf/e11_alamo/pdf.service';
 import { PdfService12 } from 'src/pdf/e12_hugo/pdf.service';
 import { GeneratePdfDto } from './dto/generate-pdf.dto';
 import { BatchUpdateItemDto } from './dto/batch-update-item.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Template } from './entities/template.entity';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('quotes')
 export class QuotesController {
   constructor(
     private readonly quotes: QuotesService,
+    @InjectRepository(Template)
+    private readonly templateRepo: Repository<Template>,
     private readonly pdf1: PdfService1,
     private readonly pdf2: PdfService2,
     private readonly pdf3: PdfService3,
@@ -42,6 +47,55 @@ export class QuotesController {
     private readonly pdf11: PdfService11,
     private readonly pdf12: PdfService12,
   ) { }
+
+  private async getDefaultPdfData(empresa: number) {
+    const template = await this.templateRepo.findOne({ where: { id: empresa } });
+    
+    if (!template) {
+      return {
+        destinatario: '',
+        presente: 'PRESENTE',
+        descripcion: '',
+        folio: '',
+        lugar: 'Pachuca de Soto, Hidalgo',
+        incluirFirma: false,
+        firmanteNombre: '',
+        firmanteCargo: '',
+        condicionesItems: [],
+        condicionesText: '',
+        condicionesMode: 'list',
+      };
+    }
+
+    // Construir firmanteNombre con cargo
+    let firmanteCompleto = template.firmanteNombre || '';
+    if (template.firmanteCargo) {
+      firmanteCompleto = firmanteCompleto ? `${firmanteCompleto}<br>${template.firmanteCargo}` : template.firmanteCargo;
+    }
+
+    return {
+      destinatario: template.destinatario || '',
+      presente: template.presente || 'PRESENTE',
+      descripcion: template.descripcion || '',
+      folio: template.folio || '', // Usar el folio guardado directamente, sin generar
+      lugar: template.lugar || 'Pachuca de Soto, Hidalgo',
+      incluirFirma: template.incluirFirma ?? false,
+      firmanteNombre: firmanteCompleto,
+      firmanteCargo: template.firmanteCargo || '',
+      condicionesItems: template.condicionesItems || [],
+      condicionesText: template.condicionesText || '',
+      condicionesMode: template.condicionesMode || 'list',
+    };
+  }
+
+  private escapeHtml(text: string): string {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
 
   /* ▶ 1. Todas las enviadas (ADMIN) */
   @Get('sent')
@@ -81,7 +135,6 @@ export class QuotesController {
     @Param('id', IdValidationPipe) id: string,
     @Body() dto: AddItemsDto,
   ) {
-    console.log({ dto });
     return this.quotes.addItems(id, dto);
   }
 
@@ -118,7 +171,7 @@ export class QuotesController {
     return this.quotes.sendQuote(id);
   }
 
-  /* Descargar UN PDF (empresa=1..11) */
+  /* Descargar UN PDF (empresa=1..12) */
   @Post(':id/pdf')
   @Roles(Role.Admin, Role.Cotizador)
   async buildOne(
@@ -128,165 +181,69 @@ export class QuotesController {
   ) {
     const quote = await this.quotes.loadForPdf(id);
     
+    // Obtener datos por defecto de la plantilla
+    const defaultData = await this.getDefaultPdfData(dto.empresa);
+    
+    // Construir condiciones HTML a partir de los datos por defecto
+    let defaultCondicionesHtml = '';
+    if (defaultData.condicionesItems && defaultData.condicionesItems.length > 0) {
+      defaultCondicionesHtml = `<ul>${defaultData.condicionesItems.map(item => `<li>${this.escapeHtml(item)}</li>`).join('')}</ul>`;
+    } else if (defaultData.condicionesText) {
+      defaultCondicionesHtml = defaultData.condicionesText;
+    }
+    
+    // Combinar datos: lo que viene en el DTO tiene prioridad sobre los defaults
+    const metaData = {
+      destinatario: dto.destinatario || defaultData.destinatario,
+      descripcion: dto.descripcion || defaultData.descripcion,
+      fecha: dto.fecha || new Date().toISOString().split('T')[0],
+      folio: dto.folio || defaultData.folio,
+      lugar: dto.lugar || defaultData.lugar,
+      presente: dto.presente || defaultData.presente,
+      condiciones: dto.condiciones || defaultCondicionesHtml,
+      incluirFirma: dto.incluirFirma ?? defaultData.incluirFirma,
+      firmanteNombre: dto.firmanteNombre || defaultData.firmanteNombre,
+    };
+
     // Seleccionar el servicio de PDF según la empresa
     let pdfBuffer: Buffer;
     
     switch (dto.empresa) {
       case 1:
-        pdfBuffer = await this.pdf1.generateOneBuffer(quote, dto.empresa, {
-          destinatario: dto.destinatario,
-          descripcion: dto.descripcion,
-          fecha: dto.fecha,
-          folio: dto.folio,
-          lugar: dto.lugar,
-          presente: dto.presente,
-          condiciones: dto.condiciones,
-          incluirFirma: dto.incluirFirma,
-          firmanteNombre: dto.firmanteNombre,
-        });
+        pdfBuffer = await this.pdf1.generateOneBuffer(quote, dto.empresa, metaData);
         break;
       case 2:
-        pdfBuffer = await this.pdf2.generateOneBuffer(quote, dto.empresa, {
-          destinatario: dto.destinatario,
-          descripcion: dto.descripcion,
-          fecha: dto.fecha,
-          folio: dto.folio,
-          lugar: dto.lugar,
-          presente: dto.presente,
-          condiciones: dto.condiciones,
-          incluirFirma: dto.incluirFirma,
-          firmanteNombre: dto.firmanteNombre,
-        });
+        pdfBuffer = await this.pdf2.generateOneBuffer(quote, dto.empresa, metaData);
         break;
       case 3:
-        pdfBuffer = await this.pdf3.generateOneBuffer(quote, dto.empresa, {
-          destinatario: dto.destinatario,
-          descripcion: dto.descripcion,
-          fecha: dto.fecha,
-          folio: dto.folio,
-          lugar: dto.lugar,
-          presente: dto.presente,
-          condiciones: dto.condiciones,
-          incluirFirma: dto.incluirFirma,
-          firmanteNombre: dto.firmanteNombre,
-        });
+        pdfBuffer = await this.pdf3.generateOneBuffer(quote, dto.empresa, metaData);
         break;
       case 4:
-        pdfBuffer = await this.pdf4.generateOneBuffer(quote, dto.empresa, {
-          destinatario: dto.destinatario,
-          descripcion: dto.descripcion,
-          fecha: dto.fecha,
-          folio: dto.folio,
-          lugar: dto.lugar,
-          presente: dto.presente,
-          condiciones: dto.condiciones,
-          incluirFirma: dto.incluirFirma,
-          firmanteNombre: dto.firmanteNombre,
-        });
+        pdfBuffer = await this.pdf4.generateOneBuffer(quote, dto.empresa, metaData);
         break;
       case 5:
-        pdfBuffer = await this.pdf5.generateOneBuffer(quote, dto.empresa, {
-          destinatario: dto.destinatario,
-          descripcion: dto.descripcion,
-          fecha: dto.fecha,
-          folio: dto.folio,
-          lugar: dto.lugar,
-          presente: dto.presente,
-          condiciones: dto.condiciones,
-          incluirFirma: dto.incluirFirma,
-          firmanteNombre: dto.firmanteNombre,
-        });
+        pdfBuffer = await this.pdf5.generateOneBuffer(quote, dto.empresa, metaData);
         break;
       case 6:
-        pdfBuffer = await this.pdf6.generateOneBuffer(quote, dto.empresa, {
-          destinatario: dto.destinatario,
-          descripcion: dto.descripcion,
-          fecha: dto.fecha,
-          folio: dto.folio,
-          lugar: dto.lugar,
-          presente: dto.presente,
-          condiciones: dto.condiciones,
-          incluirFirma: dto.incluirFirma,
-          firmanteNombre: dto.firmanteNombre,
-        });
+        pdfBuffer = await this.pdf6.generateOneBuffer(quote, dto.empresa, metaData);
         break;
       case 7:
-        pdfBuffer = await this.pdf7.generateOneBuffer(quote, dto.empresa, {
-          destinatario: dto.destinatario,
-          descripcion: dto.descripcion,
-          fecha: dto.fecha,
-          folio: dto.folio,
-          lugar: dto.lugar,
-          presente: dto.presente,
-          condiciones: dto.condiciones,
-          incluirFirma: dto.incluirFirma,
-          firmanteNombre: dto.firmanteNombre,
-        });
+        pdfBuffer = await this.pdf7.generateOneBuffer(quote, dto.empresa, metaData);
         break;
       case 8:
-        pdfBuffer = await this.pdf8.generateOneBuffer(quote, dto.empresa, {
-          destinatario: dto.destinatario,
-          descripcion: dto.descripcion,
-          fecha: dto.fecha,
-          folio: dto.folio,
-          lugar: dto.lugar,
-          presente: dto.presente,
-          condiciones: dto.condiciones,
-          incluirFirma: dto.incluirFirma,
-          firmanteNombre: dto.firmanteNombre,
-        });
+        pdfBuffer = await this.pdf8.generateOneBuffer(quote, dto.empresa, metaData);
         break;
       case 9:
-        pdfBuffer = await this.pdf9.generateOneBuffer(quote, dto.empresa, {
-          destinatario: dto.destinatario,
-          descripcion: dto.descripcion,
-          fecha: dto.fecha,
-          folio: dto.folio,
-          lugar: dto.lugar,
-          presente: dto.presente,
-          condiciones: dto.condiciones,
-          incluirFirma: dto.incluirFirma,
-          firmanteNombre: dto.firmanteNombre,
-        });
+        pdfBuffer = await this.pdf9.generateOneBuffer(quote, dto.empresa, metaData);
         break;
       case 10:
-        pdfBuffer = await this.pdf10.generateOneBuffer(quote, dto.empresa, {
-          destinatario: dto.destinatario,
-          descripcion: dto.descripcion,
-          fecha: dto.fecha,
-          folio: dto.folio,
-          lugar: dto.lugar,
-          presente: dto.presente,
-          condiciones: dto.condiciones,
-          incluirFirma: dto.incluirFirma,
-          firmanteNombre: dto.firmanteNombre,
-        });
+        pdfBuffer = await this.pdf10.generateOneBuffer(quote, dto.empresa, metaData);
         break;
       case 11:
-        pdfBuffer = await this.pdf11.generateOneBuffer(quote, dto.empresa, {
-          destinatario: dto.destinatario,
-          descripcion: dto.descripcion,
-          fecha: dto.fecha,
-          folio: dto.folio,
-          lugar: dto.lugar,
-          presente: dto.presente,
-          condiciones: dto.condiciones,
-          incluirFirma: dto.incluirFirma,
-          firmanteNombre: dto.firmanteNombre,
-        });
+        pdfBuffer = await this.pdf11.generateOneBuffer(quote, dto.empresa, metaData);
         break;
       case 12:
-        pdfBuffer = await this.pdf12.generateOneBuffer(quote, dto.empresa, {
-          destinatario: dto.destinatario,
-          descripcion: dto.descripcion,
-          fecha: dto.fecha,
-          folio: dto.folio,
-          lugar: dto.lugar,
-          presente: dto.presente,
-          condiciones: dto.condiciones,
-          incluirFirma: dto.incluirFirma,
-          firmanteNombre: dto.firmanteNombre,
-        });
+        pdfBuffer = await this.pdf12.generateOneBuffer(quote, dto.empresa, metaData);
         break;
       default:
         throw new Error(`Empresa ${dto.empresa} no válida`);
@@ -314,8 +271,60 @@ export class QuotesController {
   }
 
   @Delete(':id')
-  @Roles(Role.Admin)                          // ← solo administradores
+  @Roles(Role.Admin)
   remove(@Param('id', IdValidationPipe) id: string) {
     return this.quotes.deleteQuote(id);
+  }
+
+  @Get('templates/default-data')
+  @Roles(Role.Admin, Role.Cotizador)
+  async getTemplateDefaultData(@Query('empresa') empresa: string) {
+    const empresaNum = parseInt(empresa, 10);
+    if (isNaN(empresaNum) || empresaNum < 1 || empresaNum > 12) {
+      throw new Error('Empresa no válida');
+    }
+    return this.getDefaultPdfData(empresaNum);
+  }
+
+  @Put('templates/update')
+  @Roles(Role.Admin, Role.Cotizador)
+  async updateTemplateData(
+    @Body() data: {
+      empresa: number;
+      destinatario?: string;
+      presente?: string;
+      descripcion?: string;
+      folio?: string; // Cambiar de folioPrefix a folio
+      lugar?: string;
+      incluirFirma?: boolean;
+      firmanteNombre?: string;
+      firmanteCargo?: string;
+      condicionesItems?: string[] | null;
+      condicionesText?: string;
+      condicionesMode?: 'list' | 'text';
+    }
+  ) {
+    const { empresa, ...updateData } = data;
+    
+    const template = await this.templateRepo.findOne({ where: { id: empresa } });
+    if (!template) {
+      throw new NotFoundException(`Plantilla con ID ${empresa} no encontrada`);
+    }
+
+    // Actualizar solo los campos que vienen en la petición
+    Object.keys(updateData).forEach(key => {
+      const value = updateData[key as keyof typeof updateData];
+      if (value !== undefined && value !== null) {
+        (template as any)[key] = value;
+      }
+    });
+
+    const updated = await this.templateRepo.save(template);
+    
+    return { 
+      success: true, 
+      message: 'Plantilla actualizada correctamente',
+      data: updated 
+    };
   }
 }

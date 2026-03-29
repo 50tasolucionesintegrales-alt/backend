@@ -59,96 +59,128 @@
     .content-area {
       position: relative;
       padding-top: 26mm;
+      padding-left: 15mm;
+      padding-right: 15mm;
       min-height: calc(279.4mm - 26mm);
       display: flex;
       flex-direction: column;
     }
 
-    .fecha    { text-align:left; color:#333; margin:10px 15px 12px; font-weight:700; }
-    .folioRow { margin:10px 15px 0; display:flex; gap:30px; flex-wrap:wrap; }
-    .folioRow .cell { min-width:220px; }
-    .label   { font-weight:700; }
+    /* Estilos de encabezado */
+    .folio {
+      font-weight: 700;
+      margin: 10px 0 15px 0;
+      text-align: left;
+      font-size: 12px;
+    }
 
-    .dest     { font-weight:700; line-height:1.45; margin:12px 15px 0; }
-    .presente { font-weight:800; margin:6px 15px 0; }
-    .intro    { margin:10px 15px 0; line-height:1.55; color:#222; }
+    .fecha {
+      text-align: left;
+      color: #333;
+      margin: 5px 0 20px 0;
+      font-weight: 500;
+    }
+
+    .destinatario {
+      font-weight: 700;
+      margin: 0 0 5px 0;
+    }
+
+    .presente {
+      font-weight: 800;
+      margin: 0 0 15px 0;
+    }
+
+    .intro {
+      margin: 10px 0 0;
+      line-height: 1.55;
+      color: #222;
+    }
+
+    .label { 
+      font-weight: 700; 
+    }
 
     /* ===== Tabla principal ===== */
-    .table-wrap{ position:relative; margin:12px 15px 0; }
-    table{
-      width:96%;
-      margin:0 auto;
-      border-collapse:collapse;
+    .table-wrap{ 
+      position: relative; 
+      margin: 12px 0 0; 
     }
-    thead{ display:table-header-group; }
-    tr, td, th{ page-break-inside:avoid; }
+    table{
+      width: 100%;
+      border-collapse: collapse;
+    }
+    thead{ display: table-header-group; }
+    tr, td, th{ page-break-inside: avoid; }
 
     thead th{
-      background:transparent;
-      color:#333;
-      font-weight:700;
-      border:1px solid var(--theadBorder);
-      padding:8px;
-      font-size:12px;
-      text-align:left;
-      vertical-align:middle;
+      background: transparent;
+      color: #333;
+      font-weight: 700;
+      border: 1px solid var(--theadBorder);
+      padding: 8px;
+      font-size: 12px;
+      text-align: left;
+      vertical-align: middle;
     }
 
     tbody td{
-      border:1px solid var(--line);
-      padding:6px 8px;
-      font-size:12px;
-      background:transparent;
-      vertical-align:top;
+      border: 1px solid var(--line);
+      padding: 6px 8px;
+      font-size: 12px;
+      background: transparent;
+      vertical-align: top;
     }
 
-    .center{ text-align:center; }
-    .right { text-align:right; }
+    .center{ text-align: center; }
+    .right { text-align: right; }
 
     .summaryRow{
-      width:96%;
-      margin:16px 30px 0;
-      display:grid;
+      width: 100%;
+      margin: 16px 0 0;
+      display: grid;
       grid-template-columns: 220px 1fr;
-      align-items:start;
+      align-items: start;
+      gap: 20px;
     }
 
     .rightCol{
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-      max-width:483px;
-      margin-left:15px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
     }
 
-    .totals table{ width:100%; border-collapse:collapse; }
-    .totals td{
-      padding:8px 10px;
-      border-left:1px solid var(--line);
-      border-right:1px solid var(--line);
-      background:transparent;
+    .totals table{ 
+      width: 100%; 
+      border-collapse: collapse; 
     }
-    .totals tr:first-child td{ border-top:1px solid var(--line); }
-    .totals tr:last-child  td{ border-bottom:1px solid var(--line); }
-    .totals .label{ font-weight:700; }
-    .totals .value{ text-align:right; }
+    .totals td{
+      padding: 8px 10px;
+      border-left: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      background: transparent;
+    }
+    .totals tr:first-child td{ border-top: 1px solid var(--line); }
+    .totals tr:last-child  td{ border-bottom: 1px solid var(--line); }
+    .totals .label{ font-weight: 700; }
+    .totals .value{ text-align: right; }
 
     .enletra{
-      border:1px solid var(--line);
-      background:transparent;
-      padding:12px 16px;
-      line-height:1.6;
+      border: 1px solid var(--line);
+      background: transparent;
+      padding: 12px 16px;
+      line-height: 1.6;
     }
-    .enletra .title{ font-weight:800; color:#000; margin-bottom:8px; }
+    .enletra .title{ font-weight: 800; color: #000; margin-bottom: 8px; }
 
     .cond-box{
-      border:1px solid var(--line);
-      background:transparent;
-      padding:12px 16px;
-      line-height:1.6;
+      border: 1px solid var(--line);
+      background: transparent;
+      padding: 12px 16px;
+      line-height: 1.6;
     }
-    .cond-box .title{ font-weight:800; color:#000; margin-bottom:8px; }
-    .cond-box .content{ color:#111; }
+    .cond-box .title{ font-weight: 800; color: #000; margin-bottom: 8px; }
+    .cond-box .content{ color: #111; }
 
     /* ===== Firma ===== */
     .firma{
@@ -167,7 +199,7 @@
 
     /* Información de contacto */
     .contact-info {
-      margin: 8mm 15px 0;
+      margin: 8mm 0 0;
       font-size: 11px;
       color: #333;
       line-height: 1.4;
@@ -184,17 +216,19 @@
 
     <!-- ENCABEZADO SOLO EN PRIMERA PÁGINA -->
     {{#if (eq @index 0)}}
-    <div class="folioRow">
-      <div class="cell"><span class="label"><span class="font-weight:bold">{{../folio}}</span></div>
-    </div>
+    <!-- Folio - solo una vez -->
+    <div class="folio">{{../folio}}</div>
 
-    <!-- Fecha -->
-    <div class="fecha">{{../fecha}}</div><br>
+    <!-- Lugar y fecha juntos -->
+    <div class="fecha">{{../lugar}}, a {{../fecha}}</div>
 
-    <!-- A quién va dirigido -->
-    <div class="dest">{{../destinatario}}</div>
-    <div class="presente">{{../presente}}</div><br>
+    <!-- Destinatario - debe aparecer aquí -->
+    <div class="destinatario">{{../destinatario}}</div>
+    
+    <!-- Presente -->
+    <div class="presente">{{../presente}}</div>
 
+    <!-- Descripción -->
     <div class="intro">
       {{{../descripcion}}}
     </div>
@@ -207,15 +241,15 @@
 
     <!-- TABLA DE ITEMS -->
     <div class="table-wrap">
-      <table>
+        <table>
         <thead>
           <tr>
-            <th class="center" style="width:16mm;">NO.</th>
-            <th class="center" style="width:26mm;">UNIDAD<br>DE MEDIDA</th>
+            <th class="center" style="width:10mm;">NO.</th>
+            <th class="center" style="width:20mm;">UNIDAD<br>DE MEDIDA</th>
             <th>DESCRIPCIÓN</th>
-            <th class="center" style="width:22mm;">CANTIDAD</th>
-            <th class="right" style="width:30mm;">PRECIO UNITARIO</th>
-            <th class="right" style="width:30mm;">SUBTOTAL</th>
+            <th class="center" style="width:18mm;">CANTIDAD</th>
+            <th class="right" style="width:28mm;">PRECIO UNITARIO</th>
+            <th class="right" style="width:28mm;">SUBTOTAL</th>
           </tr>
         </thead>
         <tbody>
@@ -230,7 +264,7 @@
           </tr>
           {{/each}}
         </tbody>
-      </table>
+        </table>
     </div>
 
     <!-- SECCIÓN IMPORTANTE SOLO EN ÚLTIMA PÁGINA SI HAY ESPACIO -->
@@ -266,18 +300,17 @@
 
         <!-- Firma -->
         <div class="firma">
-          <span style="font-weight:800; display:block; margin-left:18px; margin-bottom:8px;">ATENTAMENTE</span>
+          <span style="font-weight:800; display:block; margin-bottom:8px;">ATENTAMENTE</span>
           {{#if ../incluirFirma}}
-            {{#if ../firmaUrl}}<img src="{{../firmaUrl}}" alt="firma" style="height:100px; display:block; margin-left:18px; margin-bottom:8px;">{{/if}}
+            {{#if ../firmaUrl}}<img src="{{../firmaUrl}}" alt="firma" style="height:100px; display:block; margin-bottom:8px;">{{/if}}
           {{else}}
-            <!-- Espacio reservado para la firma cuando no hay imagen -->
-            <div style="height:100px; margin-left:18px; margin-bottom:8px;"></div>
+            <div style="height:100px; margin-bottom:8px;"></div>
           {{/if}}
-          <div style="font-weight:800; margin-left:18px; margin-top:10px;">
+          <div style="font-weight:800; margin-top:10px;">
             {{#if ../firmanteNombre}}{{{../firmanteNombre}}}{{else}}Responsable de Ventas{{/if}}
           </div>
           {{#if ../firmantePuesto}}
-            <div style="margin-left:18px; margin-top: 4px;">{{../firmantePuesto}}</div>
+            <div style="margin-top: 4px;">{{../firmantePuesto}}</div>
           {{/if}}
         </div>
 
@@ -317,7 +350,6 @@
   <div class="bg-page"><img src="assets/emp3.png" alt="membrete"></div>
   <div class="content-area">
     
-    <!-- Espacio desde arriba -->
     <div style="margin-top: 20px;"></div>
     
     <div class="important-content">
@@ -350,18 +382,17 @@
 
       <!-- Firma -->
       <div class="firma">
-        <span style="font-weight:800; display:block; margin-left:18px; margin-bottom:8px;">ATENTAMENTE</span>
+        <span style="font-weight:800; display:block; margin-bottom:8px;">ATENTAMENTE</span>
         {{#if incluirFirma}}
-          {{#if firmaUrl}}<img src="{{firmaUrl}}" alt="firma" style="height:100px; display:block; margin-left:18px; margin-bottom:8px;">{{/if}}
+          {{#if firmaUrl}}<img src="{{firmaUrl}}" alt="firma" style="height:100px; display:block; margin-bottom:8px;">{{/if}}
         {{else}}
-          <!-- Espacio reservado para la firma cuando no hay imagen -->
-          <div style="height:100px; margin-left:18px; margin-bottom:8px;"></div>
+          <div style="height:100px; margin-bottom:8px;"></div>
         {{/if}}
-        <div style="font-weight:800; margin-left:18px; margin-top:10px;">
+        <div style="font-weight:800; margin-top:10px;">
           {{#if firmanteNombre}}{{{firmanteNombre}}}{{else}}Responsable de Ventas{{/if}}
         </div>
         {{#if firmantePuesto}}
-          <div style="margin-left:18px; margin-top: 4px;">{{firmantePuesto}}</div>
+          <div style="margin-top: 4px;">{{firmantePuesto}}</div>
         {{/if}}
       </div>
 

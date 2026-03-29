@@ -22,7 +22,7 @@ hbs.registerHelper('multiply', (a: any, b: any) => Number(a) * Number(b));
 hbs.registerHelper('not', (a: any) => !a);
 hbs.registerHelper('and', (a: any, b: any) => !!(a && b));
 
-// Helper para dividir strings (para condiciones) - AGREGADO
+// Helper para dividir strings (para condiciones)
 hbs.registerHelper('split', function(str: string, delimiter: string) {
     if (!str) return [];
     return str.split(delimiter);
@@ -35,17 +35,15 @@ hbs.registerHelper('smartChunk', function(items: any[]) {
     const chunks: any[][] = [];
     let currentChunk: any[] = [];
     
-    // Variables de control
     let currentLines = 0;
     const MAX_LINES_PER_PAGE = 24;
-    const IMPORTANT_SECTION_LINES = 10; // Líneas que ocupa la sección importante
+    const IMPORTANT_SECTION_LINES = 10;
     
     for (let i = 0; i < items.length; i++) {
         const item = items[i];
         
-        // Calcular líneas aproximadas que ocupa este item
         const descLength = item.nombre ? item.nombre.length : 0;
-        let itemLines = 1; // mínimo una línea
+        let itemLines = 1;
         
         if (descLength > 80) itemLines = 3;
         else if (descLength > 50) itemLines = 2;
@@ -62,7 +60,7 @@ hbs.registerHelper('smartChunk', function(items: any[]) {
         if (currentLines + itemLines <= maxAllowedLines) {
             currentChunk.push({
                 ...item,
-                globalIndex: i + 1 // Guardamos el índice global aquí
+                globalIndex: i + 1
             });
             currentLines += itemLines;
         } else {
@@ -105,7 +103,7 @@ hbs.registerHelper('needsSeparateImportantPage', function(items: any[]) {
         lastPageLines += itemLines;
     }
     
-    return lastPageLines + 10 > 24; // 24 líneas máximas por página
+    return lastPageLines + 10 > 24;
 });
 
 function resolveBaseDir() {
@@ -127,49 +125,38 @@ export class HtmlPdfService12 implements OnModuleInit, OnModuleDestroy {
     private baseDir = resolveBaseDir();
 
     async onModuleInit() {
-        console.log('Iniciando HtmlPdfService12, baseDir:', this.baseDir);
-        console.log('Template path:', path.join(this.baseDir, 'templates', 'empresa-12.hbs'));
-        
         const partialsDir = path.join(this.baseDir, 'templates', 'partials');
 
         if (fs.existsSync(partialsDir)) {
-            console.log('Cargando partials desde:', partialsDir);
             for (const f of fs.readdirSync(partialsDir)) {
                 if (f.endsWith('.hbs')) {
                     const name = path.basename(f, '.hbs');
                     const str = fs.readFileSync(path.join(partialsDir, f), 'utf8');
                     hbs.registerPartial(name, str);
-                    console.log('  - Registrado partial:', name);
                 }
             }
-        } else {
-            console.log('No se encontró directorio de partials:', partialsDir);
         }
 
         this.browser = await chromium.launch({ 
             args: ['--no-sandbox'] 
         });
-        console.log('Navegador Chromium iniciado para HtmlPdfService12');
     }
 
     async onModuleDestroy() {
         if (this.browser) {
             await this.browser.close();
-            console.log('Navegador Chromium cerrado para HtmlPdfService12');
         }
     }
 
     private getTemplate(name: string) {
         if (!this.templates.has(name)) {
             const file = path.join(this.baseDir, 'templates', `${name}.hbs`);
-            console.log('Buscando template:', file);
             
             if (!fs.existsSync(file)) {
-                throw new Error(`Template ${name} no encontrado en ${file}. Directorio base: ${this.baseDir}`);
+                throw new Error(`Template ${name} no encontrado en ${file}`);
             }
             
             const str = fs.readFileSync(file, 'utf8');
-            console.log(`Template ${name} cargado (${str.length} bytes)`);
             const tpl = hbs.compile(str, { noEscape: true });
             this.templates.set(name, tpl);
         }
@@ -177,67 +164,41 @@ export class HtmlPdfService12 implements OnModuleInit, OnModuleDestroy {
     }
 
     async renderToPdf(templateName: string, data: any): Promise<Buffer> {
-        console.log(`Renderizando PDF para template: ${templateName}`);
-        
         const tpl = this.getTemplate(templateName);
+        const html = tpl(data);
         
-        try {
-            const html = tpl(data);
-            console.log(`HTML generado (${html.length} bytes)`);
-            
-            // Guardar HTML temporal para depuración
-            const debugDir = path.join(this.baseDir, 'debug');
-            if (!fs.existsSync(debugDir)) {
-                fs.mkdirSync(debugDir, { recursive: true });
-            }
-            const debugFile = path.join(debugDir, `debug_${templateName}_${Date.now()}.html`);
-            fs.writeFileSync(debugFile, html, 'utf8');
-            console.log(`HTML guardado para depuración: ${debugFile}`);
-            
-            const tmpDir = this.baseDir;
-            const tmpFile = path.join(tmpDir, `__tmp_${templateName}_${Date.now()}.html`);
-            console.log(`Creando archivo temporal: ${tmpFile}`);
+        const tmpFile = path.join(this.baseDir, `__tmp_${templateName}_${Date.now()}.html`);
+        fs.writeFileSync(tmpFile, html, 'utf8');
 
-            fs.writeFileSync(tmpFile, html, 'utf8');
+        const ctx = await this.browser.newContext();
+        const page = await ctx.newPage();
 
-            const ctx = await this.browser.newContext();
-            const page = await ctx.newPage();
+        const fileUrl = 'file://' + tmpFile.replace(/\\/g, '/');
+        await page.goto(fileUrl, { 
+            waitUntil: 'load',
+            timeout: 30000
+        });
 
-            const fileUrl = 'file://' + tmpFile.replace(/\\/g, '/');
-            console.log(`Navegando a: ${fileUrl}`);
-            
-            await page.goto(fileUrl, { 
-                waitUntil: 'load',
-                timeout: 30000
-            });
+        const pdf = await page.pdf({
+            format: 'Letter',
+            printBackground: true,
+            margin: {
+                top: '0.5cm',
+                right: '0.5cm',
+                bottom: '0.5cm',
+                left: '0.5cm'
+            },
+            preferCSSPageSize: true
+        });
 
-            console.log('Página cargada, generando PDF...');
-            const pdf = await page.pdf({
-                format: 'Letter',
-                printBackground: true,
-                margin: {
-                    top: '0.5cm',
-                    right: '0.5cm',
-                    bottom: '0.5cm',
-                    left: '0.5cm'
-                },
-                preferCSSPageSize: true
-            });
+        await ctx.close();
 
-            await ctx.close();
-
-            try { 
-                fs.unlinkSync(tmpFile); 
-                console.log('Archivo temporal eliminado');
-            } catch (e) {
-                console.warn('No se pudo eliminar archivo temporal:', e);
-            }
-
-            console.log(`PDF generado (${pdf.length} bytes)`);
-            return pdf;
-        } catch (error) {
-            console.error('Error al generar PDF:', error);
-            throw error;
+        try { 
+            fs.unlinkSync(tmpFile); 
+        } catch (e) {
+            // Silenciar error de eliminación de archivo temporal
         }
+
+        return pdf;
     }
 }
