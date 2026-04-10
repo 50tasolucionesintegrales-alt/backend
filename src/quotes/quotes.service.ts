@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Quote } from './entities/quote.entity';
 import { QuoteItem } from './entities/quote-item.entity';
 import { Product } from 'src/products/entities/product.entity';
@@ -44,25 +44,40 @@ export class QuotesService {
     return { message: 'Borrador creado', quote: saved };
   }
 
-  /* ───────── Agregar ítems ───────── */
+  /* ───────── Agregar ítems OPTIMIZADO ───────── */
   async addItems(quoteId: string, dto: AddItemsDto) {
     const quote = await this.quotesRepo.findOne({ where: { id: quoteId }, relations: ['items'] });
     if (!quote) throw new NotFoundException('Cotización no encontrada');
 
+    // Separar productos y servicios para hacer queries batch
+    const productIds = dto.items.filter(i => i.tipo === 'producto').map(i => String(i.productId));
+    const serviceIds = dto.items.filter(i => i.tipo === 'servicio').map(i => String(i.serviceId));
+    
+    // Cargar todos los productos y servicios en UNA sola query cada uno
+    const [products, services] = await Promise.all([
+      productIds.length ? this.productRepo.findBy({ id: In(productIds) }) : Promise.resolve([]),
+      serviceIds.length ? this.serviceRepo.findBy({ id: In(serviceIds) }) : Promise.resolve([]),
+    ]);
+    
+    const productMap = new Map(products.map(p => [p.id, p]));
+    const serviceMap = new Map(services.map(s => [s.id, s]));
+
+    const itemsToSave: QuoteItem[] = [];
+
     for (const i of dto.items) {
-      // validación de tipo
       if ((quote.tipo === 'productos' && i.tipo !== 'producto') ||
-        (quote.tipo === 'servicios' && i.tipo !== 'servicio')) {
+          (quote.tipo === 'servicios' && i.tipo !== 'servicio')) {
         throw new ForbiddenException(`Esta cotización es de ${quote.tipo}; no puedes añadir un ${i.tipo}.`);
       }
 
       let product: Product | null = null;
       let service: Service | null = null;
+      
       if (i.tipo === 'producto') {
-        product = await this.productRepo.findOne({ where: { id: String(i.productId) } });
+        product = productMap.get(String(i.productId)) || null;
         if (!product) throw new NotFoundException(`Producto ${i.productId} inexistente`);
       } else {
-        service = await this.serviceRepo.findOne({ where: { id: String(i.serviceId) } });
+        service = serviceMap.get(String(i.serviceId)) || null;
         if (!service) throw new NotFoundException(`Servicio ${i.serviceId} inexistente`);
       }
 
@@ -79,7 +94,7 @@ export class QuotesService {
         unidad
       });
 
-      // precálculo de sub/precios cuando haya margen definido
+      // precálculo de sub/precios
       const apply = (m: number | null | undefined, idx: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12) => {
         if (m === null || m === undefined) return;
         const price = +(costo * (1 + m / 100)).toFixed(2);
@@ -88,7 +103,12 @@ export class QuotesService {
       };
       [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].forEach((k) => apply((item as any)[`margenPct${k}`], k as any));
 
-      await this.itemsRepo.save(item);
+      itemsToSave.push(item);
+    }
+
+    // Guardar todos los items en UNA sola query
+    if (itemsToSave.length) {
+      await this.itemsRepo.save(itemsToSave);
     }
 
     const updated = await this.quotesRepo.findOne({
@@ -102,7 +122,6 @@ export class QuotesService {
     const cost = Number(item.costo_unitario ?? 0);
     const qty = Number(item.cantidad ?? 0);
     const subtotalBase = cost * qty;
-
     const round2 = (n: number) => Math.round(n * 100) / 100;
 
     for (let i = 1; i <= 12; i++) {
@@ -110,7 +129,6 @@ export class QuotesService {
       const precioKey = `precioFinal${i}` as keyof QuoteItem;
       const subtotalKey = `subtotal${i}` as keyof QuoteItem;
       const gananciaKey = `ganancia${i}` as keyof any;
-
       const marginRaw = item[marginKey];
       
       if (marginRaw === null || marginRaw === undefined || marginRaw === 0) {
@@ -184,10 +202,7 @@ export class QuotesService {
 
     for (const dto of dtos) {
       const item = itemsMap.get(dto.id);
-      if (!item) {
-        console.warn(`Se intentó actualizar el ítem ${dto.id} pero no pertenece a la cotización ${quoteId}`);
-        continue;
-      }
+      if (!item) continue;
 
       if (dto.cantidad !== undefined) item.cantidad = dto.cantidad;
       if (dto.costo_unitario !== undefined) item.costo_unitario = dto.costo_unitario;
@@ -233,7 +248,6 @@ export class QuotesService {
     };
   }
 
-  /* ───────── Actualizar ítem ───────── */
   async updateItem(itemId: string, dto: UpdateItemDto) {
     const item = await this.itemsRepo.findOne({
       where: { id: itemId },
@@ -256,114 +270,81 @@ export class QuotesService {
     return { message: 'Ítem actualizado', item: fresh };
   }
 
-  /* ───────── Enviar cotización (genera PDFs) ───────── */
+  /* ───────── Enviar cotización OPTIMIZADO ───────── */
   async sendQuote(id: string) {
+    // 1. Obtener solo lo necesario
     const quote = await this.quotesRepo.findOne({
       where: { id },
-      relations: ['items', 'items.product', 'items.service'],
+      relations: ['items'],
     });
     if (!quote) throw new NotFoundException('Cotización no encontrada');
     if (quote.status !== 'draft') throw new ForbiddenException('La cotización ya fue enviada');
 
+    // 2. Calcular subtotales usando los valores ya almacenados
     const subtotales: Record<number, number> = {};
     ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const).forEach(k => {
-      const sub = +this.sumSubtotals(quote, `subtotal${k}`).toFixed(2);
+      const sub = +quote.items.reduce((a, it) => a + Number((it as any)[`subtotal${k}`] ?? 0), 0).toFixed(2);
       subtotales[k] = sub;
-      (quote as any)[`totalMargen${k}`] = sub;
     });
 
     const ivaPct = Number(quote.ivaPct ?? 16);
+    const totals: any = {};
+
     ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const).forEach(k => {
       const iva = +(subtotales[k] * (ivaPct / 100)).toFixed(2);
       const total = +(subtotales[k] + iva).toFixed(2);
-      (quote as any)[`totalIva${k}`] = iva;
-      (quote as any)[`totalFinal${k}`] = total;
+      totals[`totalMargen${k}`] = subtotales[k];
+      totals[`totalIva${k}`] = iva;
+      totals[`totalFinal${k}`] = total;
     });
 
-    quote.sentAt = new Date();
-    quote.status = 'sent';
-    const saved = await this.quotesRepo.save(quote);
+    // 3. Actualizar en UNA sola query usando QueryBuilder
+    await this.quotesRepo
+      .createQueryBuilder()
+      .update()
+      .set({
+        status: 'sent',
+        sentAt: new Date(),
+        ...totals
+      })
+      .where("id = :id", { id })
+      .execute();
+
+    // 4. Obtener el resultado actualizado
+    const saved = await this.quotesRepo.findOne({ where: { id } });
 
     return {
       message: 'Cotización enviada.',
       ivaPct,
       totales: {
-        1: { subtotal: subtotales[1], iva: (saved as any).totalIva1, total: (saved as any).totalFinal1 },
-        2: { subtotal: subtotales[2], iva: (saved as any).totalIva2, total: (saved as any).totalFinal2 },
-        3: { subtotal: subtotales[3], iva: (saved as any).totalIva3, total: (saved as any).totalFinal3 },
-        4: { subtotal: subtotales[4], iva: (saved as any).totalIva4, total: (saved as any).totalFinal4 },
-        5: { subtotal: subtotales[5], iva: (saved as any).totalIva5, total: (saved as any).totalFinal5 },
-        6: { subtotal: subtotales[6], iva: (saved as any).totalIva6, total: (saved as any).totalFinal6 },
-        7: { subtotal: subtotales[7], iva: (saved as any).totalIva7, total: (saved as any).totalFinal7 },
-        8: { subtotal: subtotales[8], iva: (saved as any).totalIva8, total: (saved as any).totalFinal8 },
-        9: { subtotal: subtotales[9], iva: (saved as any).totalIva9, total: (saved as any).totalFinal9 },
-        10: { subtotal: subtotales[10], iva: (saved as any).totalIva10, total: (saved as any).totalFinal10 },
-        11: { subtotal: subtotales[11], iva: (saved as any).totalIva11, total: (saved as any).totalFinal11 },
-        12: { subtotal: subtotales[12], iva: (saved as any).totalIva12, total: (saved as any).totalFinal12 }
+        1: { subtotal: subtotales[1], iva: totals.totalIva1, total: totals.totalFinal1 },
+        2: { subtotal: subtotales[2], iva: totals.totalIva2, total: totals.totalFinal2 },
+        3: { subtotal: subtotales[3], iva: totals.totalIva3, total: totals.totalFinal3 },
+        4: { subtotal: subtotales[4], iva: totals.totalIva4, total: totals.totalFinal4 },
+        5: { subtotal: subtotales[5], iva: totals.totalIva5, total: totals.totalFinal5 },
+        6: { subtotal: subtotales[6], iva: totals.totalIva6, total: totals.totalFinal6 },
+        7: { subtotal: subtotales[7], iva: totals.totalIva7, total: totals.totalFinal7 },
+        8: { subtotal: subtotales[8], iva: totals.totalIva8, total: totals.totalFinal8 },
+        9: { subtotal: subtotales[9], iva: totals.totalIva9, total: totals.totalFinal9 },
+        10: { subtotal: subtotales[10], iva: totals.totalIva10, total: totals.totalFinal10 },
+        11: { subtotal: subtotales[11], iva: totals.totalIva11, total: totals.totalFinal11 },
+        12: { subtotal: subtotales[12], iva: totals.totalIva12, total: totals.totalFinal12 }
       },
     };
   }
 
-  /* ───────── Obtener una cotización ───────── */
+  /* ───────── Obtener una cotización OPTIMIZADO (carga solo lo necesario) ───────── */
   async getOne(id: string) {
     const q = await this.quotesRepo.findOne({
       where: { id },
       relations: {
         items: {
-          product: true,
-          service: true,
-        },
-      },
-      select: {
-        id: true,
-        status: true,
-        createdAt: true,
-        sentAt: true,
-        tipo: true,
-        titulo: true,
-        descripcion: true,
-        ivaPct: true,
-        totalMargen1: true, totalMargen2: true, totalMargen3: true, totalMargen4: true,
-        totalMargen5: true, totalMargen6: true, totalMargen7: true, totalMargen8: true,
-        totalMargen9: true, totalMargen10: true, totalMargen11: true, totalMargen12: true,
-        totalIva1: true, totalIva2: true, totalIva3: true, totalIva4: true,
-        totalIva5: true, totalIva6: true, totalIva7: true, totalIva8: true,
-        totalIva9: true, totalIva10: true, totalIva11: true, totalIva12: true,
-        totalFinal1: true, totalFinal2: true, totalFinal3: true, totalFinal4: true,
-        totalFinal5: true, totalFinal6: true, totalFinal7: true, totalFinal8: true,
-        totalFinal9: true, totalFinal10: true, totalFinal11: true, totalFinal12: true,
-        items: {
-          id: true,
-          cantidad: true,
-          unidad: true,
-          costo_unitario: true,
-          margenPct1: true, margenPct2: true, margenPct3: true, margenPct4: true,
-          margenPct5: true, margenPct6: true, margenPct7: true, margenPct8: true,
-          margenPct9: true, margenPct10: true, margenPct11: true, margenPct12: true,
-          precioFinal1: true, precioFinal2: true, precioFinal3: true, precioFinal4: true,
-          precioFinal5: true, precioFinal6: true, precioFinal7: true, precioFinal8: true,
-          precioFinal9: true, precioFinal10: true, precioFinal11: true, precioFinal12: true,
-          subtotal1: true, subtotal2: true, subtotal3: true, subtotal4: true,
-          subtotal5: true, subtotal6: true, subtotal7: true, subtotal8: true,
-          subtotal9: true, subtotal10: true, subtotal11: true, subtotal12: true,
           product: {
-            id: true,
-            nombre: true,
-            descripcion: true,
-            precio: true,
-            especificaciones: true,
-            link_compra: true,
-            createdAt: true,
-            category: { id: true, nombre: true },
-            createdBy: { id: true, nombre: true },
+            category: true,
+            createdBy: true,
           },
           service: {
-            id: true,
-            nombre: true,
-            descripcion: true,
-            precioBase: true,
-            createdAt: true,
-            createdBy: { id: true, nombre: true },
+            createdBy: true,
           },
         },
       },
@@ -373,21 +354,15 @@ export class QuotesService {
     return q;
   }
 
-  /* 1 ── listar todas las enviadas */
+  /* 1 ── listar todas las enviadas OPTIMIZADO ── */
   async listSent() {
-    const quotes = await this.quotesRepo.find({
+    return this.quotesRepo.find({
       where: { status: 'sent' },
       relations: ['items', 'items.product', 'items.service'],
       order: { sentAt: 'DESC' },
       select: {
         id: true, status: true, createdAt: true, sentAt: true, tipo: true,
         titulo: true, descripcion: true, ivaPct: true,
-        totalMargen1: true, totalMargen2: true, totalMargen3: true, totalMargen4: true,
-        totalMargen5: true, totalMargen6: true, totalMargen7: true, totalMargen8: true,
-        totalMargen9: true, totalMargen10: true, totalMargen11: true, totalMargen12: true,
-        totalIva1: true, totalIva2: true, totalIva3: true, totalIva4: true,
-        totalIva5: true, totalIva6: true, totalIva7: true, totalIva8: true,
-        totalIva9: true, totalIva10: true, totalIva11: true, totalIva12: true,
         totalFinal1: true, totalFinal2: true, totalFinal3: true, totalFinal4: true,
         totalFinal5: true, totalFinal6: true, totalFinal7: true, totalFinal8: true,
         totalFinal9: true, totalFinal10: true, totalFinal11: true, totalFinal12: true,
@@ -398,10 +373,9 @@ export class QuotesService {
         },
       },
     });
-    return quotes;
   }
 
-  /* 2 ── borradores de un usuario */
+  /* 2 ── borradores de un usuario OPTIMIZADO ── */
   async listUserDrafts(userId: string) {
     return this.quotesRepo.find({
       where: { status: 'draft', user: { id: userId } as any },
@@ -410,15 +384,6 @@ export class QuotesService {
       select: {
         id: true, status: true, createdAt: true, sentAt: true, tipo: true,
         titulo: true, descripcion: true, ivaPct: true,
-        totalMargen1: true, totalMargen2: true, totalMargen3: true, totalMargen4: true,
-        totalMargen5: true, totalMargen6: true, totalMargen7: true, totalMargen8: true,
-        totalMargen9: true, totalMargen10: true, totalMargen11: true, totalMargen12: true,
-        totalIva1: true, totalIva2: true, totalIva3: true, totalIva4: true,
-        totalIva5: true, totalIva6: true, totalIva7: true, totalIva8: true,
-        totalIva9: true, totalIva10: true, totalIva11: true, totalIva12: true,
-        totalFinal1: true, totalFinal2: true, totalFinal3: true, totalFinal4: true,
-        totalFinal5: true, totalFinal6: true, totalFinal7: true, totalFinal8: true,
-        totalFinal9: true, totalFinal10: true, totalFinal11: true, totalFinal12: true,
         items: {
           id: true, cantidad: true, unidad: true, costo_unitario: true,
           product: { id: true, nombre: true, descripcion: true, precio: true },
@@ -428,21 +393,15 @@ export class QuotesService {
     });
   }
 
-  /* 5‑B. Mis cotizaciones enviadas */
+  /* 5‑B. Mis cotizaciones enviadas OPTIMIZADO ── */
   async listUserSent(userId: string) {
-    const quotes = await this.quotesRepo.find({
+    return this.quotesRepo.find({
       where: { status: 'sent', user: { id: userId } as any },
       relations: ['items', 'items.product', 'items.service'],
       order: { sentAt: 'DESC' },
       select: {
         id: true, status: true, createdAt: true, sentAt: true, tipo: true,
         titulo: true, descripcion: true, ivaPct: true,
-        totalMargen1: true, totalMargen2: true, totalMargen3: true, totalMargen4: true,
-        totalMargen5: true, totalMargen6: true, totalMargen7: true, totalMargen8: true,
-        totalMargen9: true, totalMargen10: true, totalMargen11: true, totalMargen12: true,
-        totalIva1: true, totalIva2: true, totalIva3: true, totalIva4: true,
-        totalIva5: true, totalIva6: true, totalIva7: true, totalIva8: true,
-        totalIva9: true, totalIva10: true, totalIva11: true, totalIva12: true,
         totalFinal1: true, totalFinal2: true, totalFinal3: true, totalFinal4: true,
         totalFinal5: true, totalFinal6: true, totalFinal7: true, totalFinal8: true,
         totalFinal9: true, totalFinal10: true, totalFinal11: true, totalFinal12: true,
@@ -453,15 +412,16 @@ export class QuotesService {
         },
       },
     });
-    return quotes;
   }
 
-  /* 3 ── reabrir para edición */
+  /* 3 ── reabrir para edición OPTIMIZADO ── */
   async reopenQuote(id: string, user: { sub: string | number; roles?: any[] }) {
+    // Solo cargar la cotización con el usuario para permisos
     const quote = await this.quotesRepo.findOne({
       where: { id },
-      relations: ['user', 'items', 'items.product', 'items.service'],
+      relations: ['user'],
     });
+    
     if (!quote) throw new NotFoundException('Cotización no encontrada');
 
     const isOwner = quote.user && String(quote.user.id) === String(user.sub);
@@ -474,10 +434,16 @@ export class QuotesService {
 
     if (quote.status === 'draft') return quote;
 
-    quote.status = 'draft';
-    quote.sentAt = null;
+    // Actualizar en UNA sola query
+    await this.quotesRepo
+      .createQueryBuilder()
+      .update()
+      .set({ status: 'draft', sentAt: null })
+      .where("id = :id", { id })
+      .execute();
 
-    const reopened = await this.quotesRepo.save(quote);
+    const reopened = await this.quotesRepo.findOne({ where: { id } });
+    
     return { message: 'Cotización vuelta a borrador', quote: reopened };
   }
 

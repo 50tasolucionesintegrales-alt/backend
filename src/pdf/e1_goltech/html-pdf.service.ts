@@ -22,52 +22,128 @@ hbs.registerHelper('multiply', (a: any, b: any) => Number(a) * Number(b));
 hbs.registerHelper('not', (a: any) => !a);
 hbs.registerHelper('and', (a: any, b: any) => !!(a && b));
 
-// Helper para calcular paginación inteligente
+// Helper para calcular líneas reales de texto
+function calculateTextLines(text: string, maxCharsPerLine: number = 55): number {
+    if (!text) return 0;
+    const plainText = text.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '');
+    const lines = plainText.split(/\r?\n/);
+    let totalLines = 0;
+    for (const line of lines) {
+        if (line.length === 0) {
+            totalLines += 1;
+        } else if (line.length > maxCharsPerLine) {
+            totalLines += Math.ceil(line.length / maxCharsPerLine);
+        } else {
+            totalLines += 1;
+        }
+    }
+    return Math.max(totalLines, 1);
+}
+
+// Función para dividir un item largo en múltiples partes
+function splitItemByLines(item: any, maxLines: number): any[] {
+    const text = item.nombre;
+    const words = text.split(' ');
+    
+    const parts: any[] = [];
+    let current = '';
+    
+    for (const w of words) {
+        const test = current + (current ? ' ' : '') + w;
+        const lines = calculateTextLines(test, 55);
+        
+        if (lines > maxLines && current.length > 0) {
+            parts.push(current.trim());
+            current = w;
+        } else {
+            current = test;
+        }
+    }
+    
+    if (current) {
+        parts.push(current.trim());
+    }
+    
+    return parts;
+}
+
+// Helper para calcular paginación inteligente con división de items largos
 hbs.registerHelper('smartChunk', function(items: any[]) {
     if (!items || items.length === 0) return [];
     
     const chunks: any[][] = [];
     let currentChunk: any[] = [];
-    
-    // Variables de control
     let currentLines = 0;
-    const MAX_LINES_PER_PAGE = 26; // Líneas máximas por página (estimado)
-    const IMPORTANT_SECTION_LINES = 10; // Líneas que ocupa la sección importante
+    
+    const MAX_FIRST_PAGE_LINES = 26;
+    const MAX_OTHER_PAGES_LINES = 30;
+    const FOOTER_LINES = 18;
+    const ROW_BASE_LINES = 1;
+    const MAX_ITEM_LINES_PER_PAGE = 20; // Máximo de líneas por item en una página
     
     for (let i = 0; i < items.length; i++) {
         const item = items[i];
         
-        // Calcular líneas aproximadas que ocupa este item
-        const descLength = item.nombre ? item.nombre.length : 0;
-        let itemLines = 1; // mínimo una línea
+        // Calcular líneas reales de la descripción
+        let descLines = calculateTextLines(item.nombre, 55);
+        let itemLines = ROW_BASE_LINES + descLines;
         
-        if (descLength > 80) itemLines = 3;
-        else if (descLength > 50) itemLines = 2;
-        else if (descLength > 30) itemLines = 1.5;
-        
+        const isFirstPage = chunks.length === 0 && currentChunk.length === 0;
+        const maxLines = isFirstPage ? MAX_FIRST_PAGE_LINES : MAX_OTHER_PAGES_LINES;
         const isLastItem = i === items.length - 1;
-        const wouldIncludeImportant = isLastItem && 
-            (currentLines + itemLines + IMPORTANT_SECTION_LINES <= MAX_LINES_PER_PAGE);
         
-        const maxAllowedLines = wouldIncludeImportant ? 
-            MAX_LINES_PER_PAGE - IMPORTANT_SECTION_LINES : 
-            MAX_LINES_PER_PAGE;
+        let availableLines = maxLines - currentLines;
         
-        if (currentLines + itemLines <= maxAllowedLines) {
+        if (isLastItem && currentChunk.length === 0) {
+            availableLines = maxLines - FOOTER_LINES;
+        }
+        
+        // 🔥 Si el item es muy largo, dividirlo en partes
+        if (itemLines > MAX_ITEM_LINES_PER_PAGE) {
+            const parts = splitItemByLines(item, MAX_ITEM_LINES_PER_PAGE);
+            
+            for (let p = 0; p < parts.length; p++) {
+                const partDescLines = calculateTextLines(parts[p], 55);
+                const partItemLines = ROW_BASE_LINES + partDescLines;
+                
+                // Verificar si la parte cabe en la página actual
+                const currentMaxLines = (chunks.length === 0 && currentChunk.length === 0) 
+                    ? MAX_FIRST_PAGE_LINES 
+                    : MAX_OTHER_PAGES_LINES;
+                let currentAvailable = currentMaxLines - currentLines;
+                
+                if (isLastItem && p === parts.length - 1 && currentChunk.length === 0) {
+                    currentAvailable = currentMaxLines - FOOTER_LINES;
+                }
+                
+                if (partItemLines > currentAvailable && currentChunk.length > 0) {
+                    // Guardar página actual y empezar nueva
+                    chunks.push([...currentChunk]);
+                    currentChunk = [];
+                    currentLines = 0;
+                }
+                
+                currentChunk.push({
+                    ...item,
+                    nombre: parts[p] + (parts.length > 1 && p < parts.length - 1 ? '...' : ''),
+                    globalIndex: p === 0 ? i + 1 : '',
+                    isContinuation: p > 0
+                });
+                currentLines += partItemLines;
+            }
+        } else {
+            // Item normal, manejo estándar
+            if (itemLines > availableLines && currentChunk.length > 0) {
+                chunks.push([...currentChunk]);
+                currentChunk = [];
+                currentLines = 0;
+            }
+            
             currentChunk.push({
                 ...item,
-                globalIndex: i + 1 // Guardamos el índice global aquí
+                globalIndex: i + 1
             });
             currentLines += itemLines;
-        } else {
-            if (currentChunk.length > 0) {
-                chunks.push([...currentChunk]);
-            }
-            currentChunk = [{
-                ...item,
-                globalIndex: i + 1
-            }];
-            currentLines = itemLines;
         }
     }
     
@@ -87,19 +163,19 @@ hbs.registerHelper('needsSeparateImportantPage', function(items: any[]) {
     
     const lastChunk = chunks[chunks.length - 1];
     let lastPageLines = 0;
+    const ROW_BASE_LINES = 1;
     
     for (const item of lastChunk) {
-        const descLength = item.nombre ? item.nombre.length : 0;
-        let itemLines = 1;
-        
-        if (descLength > 80) itemLines = 3;
-        else if (descLength > 50) itemLines = 2;
-        else if (descLength > 30) itemLines = 1.5;
-        
-        lastPageLines += itemLines;
+        const descLines = calculateTextLines(item.nombre, 55);
+        lastPageLines += ROW_BASE_LINES + descLines;
     }
     
-    return lastPageLines + 10 > 26; // 26 líneas máximas por página
+    const isFirstPage = chunks.length === 1;
+    const headerLines = isFirstPage ? 16 : 4;
+    const totalLinesOnLastPage = headerLines + lastPageLines;
+    const FOOTER_LINES = 18;
+    
+    return totalLinesOnLastPage + FOOTER_LINES > 52;
 });
 
 function resolveBaseDir() {
@@ -119,6 +195,18 @@ export class HtmlPdfService1 implements OnModuleInit, OnModuleDestroy {
     private templates = new Map<string, hbs.TemplateDelegate>();
     private browser!: Browser;
     private baseDir = resolveBaseDir();
+
+    private toBase64(filePath: string): string {
+        const abs = path.isAbsolute(filePath)
+            ? filePath
+            : path.join(this.baseDir, filePath);
+
+        const ext = path.extname(abs).replace('.', '');
+        const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
+
+        const file = fs.readFileSync(abs);
+        return `data:${mime};base64,${file.toString('base64')}`;
+    }
 
     async onModuleInit() {
         const partialsDir = path.join(this.baseDir, 'templates', 'partials');
@@ -151,6 +239,11 @@ export class HtmlPdfService1 implements OnModuleInit, OnModuleDestroy {
     }
 
     async renderToPdf(templateName: string, data: any): Promise<Buffer> {
+        data.assets = {
+            bg: this.toBase64('assets/emp1.png'),
+            firma: data.firmaUrl ? this.toBase64(data.firmaUrl) : ''
+        };
+
         const tpl = this.getTemplate(templateName);
         const html = tpl(data);
 
@@ -168,6 +261,13 @@ export class HtmlPdfService1 implements OnModuleInit, OnModuleDestroy {
         const pdf = await page.pdf({
             format: 'Letter',
             printBackground: true,
+            margin: {
+                top: '0mm',
+                right: '0mm',
+                bottom: '0mm',
+                left: '0mm'
+            },
+            preferCSSPageSize: true,
         });
 
         await ctx.close();
