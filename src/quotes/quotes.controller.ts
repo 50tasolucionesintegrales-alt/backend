@@ -1,4 +1,20 @@
-import { Controller, Post, Patch, Query, Get, Param, Body, Req, UseGuards, Delete, Res, Put, NotFoundException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Patch,
+  Get,
+  Param,
+  Body,
+  Req,
+  UseGuards,
+  Delete,
+  Query,
+  Res,
+  Put,
+  NotFoundException,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
 import { QuotesService } from './quotes.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
@@ -26,6 +42,12 @@ import { BatchUpdateItemDto } from './dto/batch-update-item.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Template } from './entities/template.entity';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import { FileValidationPipe } from 'src/common/pipes/file-validation/file-validation.pipe';
+import { ImportExcelDto } from './dto/import-excel.dto';
+import { ExcelTemplateService } from './excel/excel-template.service';
+import { ExcelImportService } from './excel/excel-import.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('quotes')
@@ -46,11 +68,93 @@ export class QuotesController {
     private readonly pdf10: PdfService10,
     private readonly pdf11: PdfService11,
     private readonly pdf12: PdfService12,
-  ) { }
+    private readonly excelTemplate: ExcelTemplateService,
+    private readonly excelImport: ExcelImportService,
+  ) {}
+
+  @Get('excel/template')
+  async downloadTemplate(
+    @Query('empresas') empresas: string,
+    @Query('numProductos') numProductos: string,
+    @Query('tipo') tipo: string,
+    @Res() res: Response,
+  ) {
+    const empresaIds = empresas.split(',').map(Number);
+    const n = parseInt(numProductos ?? '10');
+    const tipoValido = tipo === 'servicios' ? 'servicios' : 'productos';
+    const buffer = await this.excelTemplate.generateTemplate(
+      empresaIds,
+      isNaN(n) || n < 1 ? 10 : Math.min(n, 200),
+      tipoValido,
+    );
+    res.set({
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': 'attachment; filename=cotizacion_plantilla.xlsx',
+    });
+    res.send(buffer);
+  }
+
+  @Post('import-excel')
+  @Roles(Role.Admin, Role.Cotizador)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 10 * 1024 * 1024 },
+    }),
+  )
+  async importFromExcel(
+    @UploadedFile(
+      new FileValidationPipe({
+        required: true,
+        maxSizeBytes: 10 * 1024 * 1024,
+        allowedMimes: [
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'application/octet-stream',
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+    @Body() dto: ImportExcelDto,
+    @Req() req,
+    @Res() res: Response,
+  ) {
+    try {
+      const result = await this.excelImport.importFromExcel(
+        file.buffer,
+        dto.empresas,
+        req.user.sub,
+        dto.tipo,
+      );
+
+      if (!result.ok) {
+        return res.status(400).json({
+          ok: false,
+          message: 'El archivo contiene errores de validación. No se insertó ningún dato.',
+          errors: result.errors ?? [],
+        });
+      }
+
+      return res.status(200).json({
+        message: 'Cotización creada exitosamente desde Excel',
+        quoteId: result.quoteId,
+        empresas: dto.empresas,
+        productosCreados: result.productosCreados,
+        productosReutilizados: result.productosReutilizados,
+        advertencias: result.advertencias ?? [],
+      });
+    } catch (error) {
+      return res.status(400).json({
+        ok: false,
+        message: error?.message ?? 'Error al procesar el archivo',
+        errors: [],
+      });
+    }
+  }
 
   private async getDefaultPdfData(empresa: number) {
     const template = await this.templateRepo.findOne({ where: { id: empresa } });
-    
+
     if (!template) {
       return {
         destinatario: '',
@@ -67,17 +171,18 @@ export class QuotesController {
       };
     }
 
-    // Construir firmanteNombre con cargo
     let firmanteCompleto = template.firmanteNombre || '';
     if (template.firmanteCargo) {
-      firmanteCompleto = firmanteCompleto ? `${firmanteCompleto}<br>${template.firmanteCargo}` : template.firmanteCargo;
+      firmanteCompleto = firmanteCompleto
+        ? `${firmanteCompleto}<br>${template.firmanteCargo}`
+        : template.firmanteCargo;
     }
 
     return {
       destinatario: template.destinatario || '',
       presente: template.presente || 'PRESENTE',
       descripcion: template.descripcion || '',
-      folio: template.folio || '', // Usar el folio guardado directamente, sin generar
+      folio: template.folio || '',
       lugar: template.lugar || 'Pachuca de Soto, Hidalgo',
       incluirFirma: template.incluirFirma ?? false,
       firmanteNombre: firmanteCompleto,
@@ -114,10 +219,7 @@ export class QuotesController {
   /* ▶ 3. Reabrir cotización para editar */
   @Patch(':id/reopen')
   @Roles(Role.Admin, Role.Cotizador)
-  reopen(
-    @Param('id', IdValidationPipe) id: string,
-    @Req() req,
-  ) {
+  reopen(@Param('id', IdValidationPipe) id: string, @Req() req) {
     return this.quotes.reopenQuote(id, req.user);
   }
 
@@ -125,7 +227,12 @@ export class QuotesController {
   @Post()
   @Roles(Role.Admin, Role.Cotizador)
   createDraft(@Req() req, @Body() dto: CreateQuoteDto) {
-    return this.quotes.createDraft(req.user.sub, dto.tipo, dto.titulo, dto.descripcion);
+    return this.quotes.createDraft(
+      req.user.sub,
+      dto.tipo,
+      dto.titulo,
+      dto.descripcion,
+    );
   }
 
   /* 2️⃣  Agregar ítems */
@@ -180,19 +287,16 @@ export class QuotesController {
     @Res() res: Response,
   ) {
     const quote = await this.quotes.loadForPdf(id);
-    
-    // Obtener datos por defecto de la plantilla
+
     const defaultData = await this.getDefaultPdfData(dto.empresa);
-    
-    // Construir condiciones HTML a partir de los datos por defecto
+
     let defaultCondicionesHtml = '';
     if (defaultData.condicionesItems && defaultData.condicionesItems.length > 0) {
       defaultCondicionesHtml = `<ul>${defaultData.condicionesItems.map(item => `<li>${this.escapeHtml(item)}</li>`).join('')}</ul>`;
     } else if (defaultData.condicionesText) {
       defaultCondicionesHtml = defaultData.condicionesText;
     }
-    
-    // Combinar datos: lo que viene en el DTO tiene prioridad sobre los defaults
+
     const metaData = {
       destinatario: dto.destinatario || defaultData.destinatario,
       descripcion: dto.descripcion || defaultData.descripcion,
@@ -205,48 +309,22 @@ export class QuotesController {
       firmanteNombre: dto.firmanteNombre || defaultData.firmanteNombre,
     };
 
-    // Seleccionar el servicio de PDF según la empresa
     let pdfBuffer: Buffer;
-    
+
     switch (dto.empresa) {
-      case 1:
-        pdfBuffer = await this.pdf1.generateOneBuffer(quote, dto.empresa, metaData);
-        break;
-      case 2:
-        pdfBuffer = await this.pdf2.generateOneBuffer(quote, dto.empresa, metaData);
-        break;
-      case 3:
-        pdfBuffer = await this.pdf3.generateOneBuffer(quote, dto.empresa, metaData);
-        break;
-      case 4:
-        pdfBuffer = await this.pdf4.generateOneBuffer(quote, dto.empresa, metaData);
-        break;
-      case 5:
-        pdfBuffer = await this.pdf5.generateOneBuffer(quote, dto.empresa, metaData);
-        break;
-      case 6:
-        pdfBuffer = await this.pdf6.generateOneBuffer(quote, dto.empresa, metaData);
-        break;
-      case 7:
-        pdfBuffer = await this.pdf7.generateOneBuffer(quote, dto.empresa, metaData);
-        break;
-      case 8:
-        pdfBuffer = await this.pdf8.generateOneBuffer(quote, dto.empresa, metaData);
-        break;
-      case 9:
-        pdfBuffer = await this.pdf9.generateOneBuffer(quote, dto.empresa, metaData);
-        break;
-      case 10:
-        pdfBuffer = await this.pdf10.generateOneBuffer(quote, dto.empresa, metaData);
-        break;
-      case 11:
-        pdfBuffer = await this.pdf11.generateOneBuffer(quote, dto.empresa, metaData);
-        break;
-      case 12:
-        pdfBuffer = await this.pdf12.generateOneBuffer(quote, dto.empresa, metaData);
-        break;
-      default:
-        throw new Error(`Empresa ${dto.empresa} no válida`);
+      case 1:  pdfBuffer = await this.pdf1.generateOneBuffer(quote, dto.empresa, metaData);  break;
+      case 2:  pdfBuffer = await this.pdf2.generateOneBuffer(quote, dto.empresa, metaData);  break;
+      case 3:  pdfBuffer = await this.pdf3.generateOneBuffer(quote, dto.empresa, metaData);  break;
+      case 4:  pdfBuffer = await this.pdf4.generateOneBuffer(quote, dto.empresa, metaData);  break;
+      case 5:  pdfBuffer = await this.pdf5.generateOneBuffer(quote, dto.empresa, metaData);  break;
+      case 6:  pdfBuffer = await this.pdf6.generateOneBuffer(quote, dto.empresa, metaData);  break;
+      case 7:  pdfBuffer = await this.pdf7.generateOneBuffer(quote, dto.empresa, metaData);  break;
+      case 8:  pdfBuffer = await this.pdf8.generateOneBuffer(quote, dto.empresa, metaData);  break;
+      case 9:  pdfBuffer = await this.pdf9.generateOneBuffer(quote, dto.empresa, metaData);  break;
+      case 10: pdfBuffer = await this.pdf10.generateOneBuffer(quote, dto.empresa, metaData); break;
+      case 11: pdfBuffer = await this.pdf11.generateOneBuffer(quote, dto.empresa, metaData); break;
+      case 12: pdfBuffer = await this.pdf12.generateOneBuffer(quote, dto.empresa, metaData); break;
+      default: throw new Error(`Empresa ${dto.empresa} no válida`);
     }
 
     res.setHeader('Content-Type', 'application/pdf');
@@ -294,7 +372,7 @@ export class QuotesController {
       destinatario?: string;
       presente?: string;
       descripcion?: string;
-      folio?: string; // Cambiar de folioPrefix a folio
+      folio?: string;
       lugar?: string;
       incluirFirma?: boolean;
       firmanteNombre?: string;
@@ -302,17 +380,16 @@ export class QuotesController {
       condicionesItems?: string[] | null;
       condicionesText?: string;
       condicionesMode?: 'list' | 'text';
-    }
+    },
   ) {
     const { empresa, ...updateData } = data;
-    
+
     const template = await this.templateRepo.findOne({ where: { id: empresa } });
     if (!template) {
       throw new NotFoundException(`Plantilla con ID ${empresa} no encontrada`);
     }
 
-    // Actualizar solo los campos que vienen en la petición
-    Object.keys(updateData).forEach(key => {
+    Object.keys(updateData).forEach((key) => {
       const value = updateData[key as keyof typeof updateData];
       if (value !== undefined && value !== null) {
         (template as any)[key] = value;
@@ -320,11 +397,11 @@ export class QuotesController {
     });
 
     const updated = await this.templateRepo.save(template);
-    
-    return { 
-      success: true, 
+
+    return {
+      success: true,
       message: 'Plantilla actualizada correctamente',
-      data: updated 
+      data: updated,
     };
   }
 }

@@ -32,38 +32,51 @@ import { HtmlPdfService9 } from 'src/pdf/e9_es/html-pdf.service';
 import { HtmlPdfService10 } from 'src/pdf/e10_jessica/html-pdf.service';
 import { HtmlPdfService11 } from 'src/pdf/e11_alamo/html-pdf.service';
 import { HtmlPdfService12 } from 'src/pdf/e12_hugo/html-pdf.service';
+import { ExcelTemplateService } from './excel/excel-template.service';
+import { ExcelImportService } from './excel/excel-import.service';
+import { Category } from 'src/categories/entities/category.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Quote, QuoteItem, Product, Service, Template]),
+    TypeOrmModule.forFeature([
+      Quote,
+      QuoteItem,
+      Product,
+      Service,
+      Category,
+      Template,
+    ]),
     UsersModule,
   ],
   controllers: [QuotesController],
-  providers: [QuotesService, 
-    PdfService1, 
-    PdfService2, 
-    PdfService3, 
-    PdfService4, 
-    PdfService5, 
-    PdfService6, 
-    PdfService7, 
-    PdfService8, 
-    PdfService9, 
+  providers: [
+    QuotesService,
+    PdfService1,
+    PdfService2,
+    PdfService3,
+    PdfService4,
+    PdfService5,
+    PdfService6,
+    PdfService7,
+    PdfService8,
+    PdfService9,
     PdfService10,
     PdfService11,
     PdfService12,
-    HtmlPdfService1, 
-    HtmlPdfService2, 
-    HtmlPdfService3, 
-    HtmlPdfService4, 
-    HtmlPdfService5, 
-    HtmlPdfService6, 
-    HtmlPdfService7, 
-    HtmlPdfService8, 
-    HtmlPdfService9, 
+    HtmlPdfService1,
+    HtmlPdfService2,
+    HtmlPdfService3,
+    HtmlPdfService4,
+    HtmlPdfService5,
+    HtmlPdfService6,
+    HtmlPdfService7,
+    HtmlPdfService8,
+    HtmlPdfService9,
     HtmlPdfService10,
     HtmlPdfService11,
-    HtmlPdfService12
+    HtmlPdfService12,
+    ExcelTemplateService,
+    ExcelImportService,
   ],
 })
-export class QuotesModule { }
+export class QuotesModule {}
