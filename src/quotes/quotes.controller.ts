@@ -144,9 +144,11 @@ export class QuotesController {
         advertencias: result.advertencias ?? [],
       });
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Error al procesar el archivo';
       return res.status(400).json({
         ok: false,
-        message: error?.message ?? 'Error al procesar el archivo',
+        message,
         errors: [],
       });
     }

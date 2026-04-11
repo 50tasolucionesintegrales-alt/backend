@@ -18,7 +18,7 @@ const PLACEHOLDER_IMAGE_PATH = path.join(
   'src',
   'pdf',
   'assets',
-  'product-placeholder.png',
+  'product-placeholder-small.png',
 );
 
 const DANGEROUS_CHARS = /[<>"'`;=\-\-\/\*\\]/g;
