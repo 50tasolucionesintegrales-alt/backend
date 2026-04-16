@@ -47,6 +47,8 @@ export class ProductsController {
     @Res() res: Response,
   ) {
     const img = await this.productsService.getImage(id);
+    res.setHeader('Cache-Control', 'public, max-age=259200'); 
+    res.setHeader('ETag', `"product-${id}-${img.size}"`);
     res.setHeader('Content-Type', img.mime || 'application/octet-stream');
     res.setHeader('Content-Length', String(img.size || img.buffer.length));
     const filename = img.name || `product_${id}`;

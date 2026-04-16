@@ -203,6 +203,11 @@ export class ExcelImportService {
       if (val === null || val === undefined || val === '') return null;
       const n = Number(val);
       if (isNaN(n)) return null;
+      if (n < 0) {
+        throw new BadRequestException(
+          `El margen global de la organización ${empresaIds[ei]} no puede ser negativo.`,
+        );
+      }
       if (n === 0) {
         advertencias.push(
           `Advertencia: La organización ${empresaIds[ei]} tiene margen global 0%. El precio final será igual al costo.`,

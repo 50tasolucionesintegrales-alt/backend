@@ -593,6 +593,19 @@ export class ExcelTemplateService {
       });
     }
 
+    for (let ei = 0; ei < N_EMP; ei++) {
+      const pctL = colLetter(8 + ei * 5);
+      dv.add(`${pctL}11`, {
+        type: 'decimal',
+        operator: 'between',
+        formulae: [0, 100],
+        allowBlank: true,
+        showErrorMessage: true,
+        errorTitle: '% global inválido',
+        error: 'El margen global debe ser entre 0 y 100',
+      });
+    }
+
     // ── Totales ──
     const totalDefs = [
       {
