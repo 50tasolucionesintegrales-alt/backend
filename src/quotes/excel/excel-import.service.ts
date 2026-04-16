@@ -192,8 +192,8 @@ export class ExcelImportService {
       where: { user: { id: userId }, titulo: titulo.trim(), status: 'sent' },
     });
     if (tituloExistente) {
-      advertencias.push(
-        `Advertencia: Ya tienes una cotización enviada con el título "${titulo}". Se creará una nueva de todas formas.`,
+      throw new BadRequestException(
+        `Ya existe una cotización con el título "${titulo}". Cambia el título en el Excel e intenta de nuevo.`,
       );
     }
 
