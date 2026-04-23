@@ -242,7 +242,7 @@ export class ExcelImportService {
     const nombresVistos = new Set<string>();
 
     let rowNum = DATA_START;
-    while (rowNum <= DATA_START + 200) {
+    while (rowNum <= DATA_START + 1000) {
       const nombreRaw = this.cellStr(ws.getCell(rowNum, 2));
       if (!nombreRaw) break;
 

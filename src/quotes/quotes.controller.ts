@@ -84,7 +84,7 @@ export class QuotesController {
     const tipoValido = tipo === 'servicios' ? 'servicios' : 'productos';
     const buffer = await this.excelTemplate.generateTemplate(
       empresaIds,
-      isNaN(n) || n < 1 ? 10 : Math.min(n, 200),
+      isNaN(n) || n < 1 ? 10 : Math.min(n, 1000),
       tipoValido,
     );
     res.set({

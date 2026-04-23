@@ -189,17 +189,119 @@ export class QuotesService {
     }
   }
 
+  private async bulkUpdateItems(items: QuoteItem[]): Promise<void> {
+    if (!items.length) return;
+
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    const valueRows = items.map(item => {
+      const values = [
+        item.id,
+        item.cantidad,
+        item.costo_unitario,
+        item.margenPct1 ?? null, item.margenPct2 ?? null,
+        item.margenPct3 ?? null, item.margenPct4 ?? null,
+        item.margenPct5 ?? null, item.margenPct6 ?? null,
+        item.margenPct7 ?? null, item.margenPct8 ?? null,
+        item.margenPct9 ?? null, item.margenPct10 ?? null,
+        item.margenPct11 ?? null, item.margenPct12 ?? null,
+        (item as any).precioFinal1 ?? null, (item as any).precioFinal2 ?? null,
+        (item as any).precioFinal3 ?? null, (item as any).precioFinal4 ?? null,
+        (item as any).precioFinal5 ?? null, (item as any).precioFinal6 ?? null,
+        (item as any).precioFinal7 ?? null, (item as any).precioFinal8 ?? null,
+        (item as any).precioFinal9 ?? null, (item as any).precioFinal10 ?? null,
+        (item as any).precioFinal11 ?? null, (item as any).precioFinal12 ?? null,
+        (item as any).subtotal1 ?? null, (item as any).subtotal2 ?? null,
+        (item as any).subtotal3 ?? null, (item as any).subtotal4 ?? null,
+        (item as any).subtotal5 ?? null, (item as any).subtotal6 ?? null,
+        (item as any).subtotal7 ?? null, (item as any).subtotal8 ?? null,
+        (item as any).subtotal9 ?? null, (item as any).subtotal10 ?? null,
+        (item as any).subtotal11 ?? null, (item as any).subtotal12 ?? null,
+      ];
+      const placeholders = values.map(() => `$${paramIndex++}`).join(', ');
+      params.push(...values);
+      return `(${placeholders})`;
+    }).join(', ');
+
+    const sql = `
+      UPDATE quote_items SET
+        cantidad = tmp.cantidad::numeric,
+        costo_unitario = tmp.costo_unitario::numeric,
+        margen_pct1 = tmp.margen_pct1::numeric,
+        margen_pct2 = tmp.margen_pct2::numeric,
+        margen_pct3 = tmp.margen_pct3::numeric,
+        margen_pct4 = tmp.margen_pct4::numeric,
+        margen_pct5 = tmp.margen_pct5::numeric,
+        margen_pct6 = tmp.margen_pct6::numeric,
+        margen_pct7 = tmp.margen_pct7::numeric,
+        margen_pct8 = tmp.margen_pct8::numeric,
+        margen_pct9 = tmp.margen_pct9::numeric,
+        margen_pct10 = tmp.margen_pct10::numeric,
+        margen_pct11 = tmp.margen_pct11::numeric,
+        margen_pct12 = tmp.margen_pct12::numeric,
+        precio_final1 = tmp.precio_final1::numeric,
+        precio_final2 = tmp.precio_final2::numeric,
+        precio_final3 = tmp.precio_final3::numeric,
+        precio_final4 = tmp.precio_final4::numeric,
+        precio_final5 = tmp.precio_final5::numeric,
+        precio_final6 = tmp.precio_final6::numeric,
+        precio_final7 = tmp.precio_final7::numeric,
+        precio_final8 = tmp.precio_final8::numeric,
+        precio_final9 = tmp.precio_final9::numeric,
+        precio_final10 = tmp.precio_final10::numeric,
+        precio_final11 = tmp.precio_final11::numeric,
+        precio_final12 = tmp.precio_final12::numeric,
+        subtotal1 = tmp.subtotal1::numeric,
+        subtotal2 = tmp.subtotal2::numeric,
+        subtotal3 = tmp.subtotal3::numeric,
+        subtotal4 = tmp.subtotal4::numeric,
+        subtotal5 = tmp.subtotal5::numeric,
+        subtotal6 = tmp.subtotal6::numeric,
+        subtotal7 = tmp.subtotal7::numeric,
+        subtotal8 = tmp.subtotal8::numeric,
+        subtotal9 = tmp.subtotal9::numeric,
+        subtotal10 = tmp.subtotal10::numeric,
+        subtotal11 = tmp.subtotal11::numeric,
+        subtotal12 = tmp.subtotal12::numeric
+      FROM (VALUES ${valueRows}) AS tmp(
+        id,
+        cantidad, costo_unitario,
+        margen_pct1, margen_pct2, margen_pct3, margen_pct4,
+        margen_pct5, margen_pct6, margen_pct7, margen_pct8,
+        margen_pct9, margen_pct10, margen_pct11, margen_pct12,
+        precio_final1, precio_final2, precio_final3, precio_final4,
+        precio_final5, precio_final6, precio_final7, precio_final8,
+        precio_final9, precio_final10, precio_final11, precio_final12,
+        subtotal1, subtotal2, subtotal3, subtotal4,
+        subtotal5, subtotal6, subtotal7, subtotal8,
+        subtotal9, subtotal10, subtotal11, subtotal12
+      )
+      WHERE quote_items.id::text = tmp.id::text
+    `;
+
+    await this.itemsRepo.query(sql, params);
+  }
+
   async updateQuoteItems(quoteId: string, dtos: BatchUpdateItemDto[]) {
+    const t0 = Date.now();
+
     const quote = await this.quotesRepo.findOne({ where: { id: quoteId } });
+    console.log(`[1] findOne quote: ${Date.now() - t0}ms`);
+
     if (!quote) throw new NotFoundException('Cotización no encontrada');
     if (quote.status !== 'draft') throw new ForbiddenException('La cotización ya fue enviada');
 
+    const t1 = Date.now();
     const items = await this.itemsRepo.find({ 
       where: { quote: { id: quoteId } },
       relations: ['product', 'service']
     });
+    console.log(`[2] find items con relations: ${Date.now() - t1}ms`);
+
     const itemsMap = new Map(items.map(item => [item.id, item]));
 
+    const t2 = Date.now();
     for (const dto of dtos) {
       const item = itemsMap.get(dto.id);
       if (!item) continue;
@@ -228,23 +330,42 @@ export class QuotesService {
 
       this.recalculateItem(item);
     }
+    console.log(`[3] loop recalculate: ${Date.now() - t2}ms`);
 
-    await this.itemsRepo.save(items);
+    const t3 = Date.now();
+    await this.bulkUpdateItems(items);
+    console.log(`[4] bulkUpdateItems: ${Date.now() - t3}ms`);
+
+    const t4 = Date.now();
     this.recalculateQuoteTotals(quote, items);
     await this.quotesRepo.save(quote);
+    console.log(`[5] recalculateTotals + save quote: ${Date.now() - t4}ms`);
 
-    for (const item of items) {
-      this.recalculateItem(item);
-    }
-
-    const updatedQuote = await this.quotesRepo.findOne({
-      where: { id: quoteId },
-      relations: ['items', 'items.product', 'items.service'],
+    const t5 = Date.now();
+    const updatedItems = await this.itemsRepo.find({
+      where: { quote: { id: quoteId } },
+      select: {
+        id: true,
+        cantidad: true,
+        costo_unitario: true,
+        margenPct1: true, margenPct2: true, margenPct3: true, margenPct4: true,
+        margenPct5: true, margenPct6: true, margenPct7: true, margenPct8: true,
+        margenPct9: true, margenPct10: true, margenPct11: true, margenPct12: true,
+        precioFinal1: true, precioFinal2: true, precioFinal3: true, precioFinal4: true,
+        precioFinal5: true, precioFinal6: true, precioFinal7: true, precioFinal8: true,
+        precioFinal9: true, precioFinal10: true, precioFinal11: true, precioFinal12: true,
+        subtotal1: true, subtotal2: true, subtotal3: true, subtotal4: true,
+        subtotal5: true, subtotal6: true, subtotal7: true, subtotal8: true,
+        subtotal9: true, subtotal10: true, subtotal11: true, subtotal12: true,
+      },
     });
+    console.log(`[6] find updatedItems: ${Date.now() - t5}ms`);
+
+    console.log(`[TOTAL]: ${Date.now() - t0}ms`);
 
     return { 
       message: 'Ítems actualizados correctamente', 
-      items: updatedQuote?.items || [] 
+      items: updatedItems
     };
   }
 

@@ -170,9 +170,9 @@ export class ExcelTemplateService {
     const ROW_SUBTOT = DATA_END + 1;
     const ROW_IVA = DATA_END + 2;
     const ROW_TOTAL = DATA_END + 3;
-
+    
     // ── Anchos ──
-    ws.getColumn(1).width = 5;
+    ws.getColumn(1).width = 6;
     ws.getColumn(2).width = 25;
     ws.getColumn(3).width = 25;
     ws.getColumn(4).width = 20;
