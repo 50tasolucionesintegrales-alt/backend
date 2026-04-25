@@ -284,24 +284,19 @@ export class QuotesService {
   }
 
   async updateQuoteItems(quoteId: string, dtos: BatchUpdateItemDto[]) {
-    const t0 = Date.now();
-
+    
     const quote = await this.quotesRepo.findOne({ where: { id: quoteId } });
-    console.log(`[1] findOne quote: ${Date.now() - t0}ms`);
 
     if (!quote) throw new NotFoundException('Cotización no encontrada');
     if (quote.status !== 'draft') throw new ForbiddenException('La cotización ya fue enviada');
 
-    const t1 = Date.now();
     const items = await this.itemsRepo.find({ 
       where: { quote: { id: quoteId } },
       relations: ['product', 'service']
     });
-    console.log(`[2] find items con relations: ${Date.now() - t1}ms`);
 
     const itemsMap = new Map(items.map(item => [item.id, item]));
 
-    const t2 = Date.now();
     for (const dto of dtos) {
       const item = itemsMap.get(dto.id);
       if (!item) continue;
@@ -330,18 +325,12 @@ export class QuotesService {
 
       this.recalculateItem(item);
     }
-    console.log(`[3] loop recalculate: ${Date.now() - t2}ms`);
 
-    const t3 = Date.now();
     await this.bulkUpdateItems(items);
-    console.log(`[4] bulkUpdateItems: ${Date.now() - t3}ms`);
 
-    const t4 = Date.now();
     this.recalculateQuoteTotals(quote, items);
     await this.quotesRepo.save(quote);
-    console.log(`[5] recalculateTotals + save quote: ${Date.now() - t4}ms`);
 
-    const t5 = Date.now();
     const updatedItems = await this.itemsRepo.find({
       where: { quote: { id: quoteId } },
       select: {
@@ -359,9 +348,6 @@ export class QuotesService {
         subtotal9: true, subtotal10: true, subtotal11: true, subtotal12: true,
       },
     });
-    console.log(`[6] find updatedItems: ${Date.now() - t5}ms`);
-
-    console.log(`[TOTAL]: ${Date.now() - t0}ms`);
 
     return { 
       message: 'Ítems actualizados correctamente', 

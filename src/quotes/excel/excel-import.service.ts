@@ -24,14 +24,22 @@ const PLACEHOLDER_IMAGE_PATH = path.join(
 const DANGEROUS_CHARS = /[<>"'`;=\-\-\/\*\\]/g;
 const HTML_TAGS = /<[^>]*>/g;
 
-function getPlaceholderImage(): Buffer {
-  if (fs.existsSync(PLACEHOLDER_IMAGE_PATH)) {
-    return fs.readFileSync(PLACEHOLDER_IMAGE_PATH);
+let PLACEHOLDER_BUFFER: Buffer | null = null;
+let PLACEHOLDER_SIZE: number = 0;
+
+function getPlaceholderImage(): { buffer: Buffer; size: number } {
+  if (!PLACEHOLDER_BUFFER) {
+    if (fs.existsSync(PLACEHOLDER_IMAGE_PATH)) {
+      PLACEHOLDER_BUFFER = fs.readFileSync(PLACEHOLDER_IMAGE_PATH);
+    } else {
+      PLACEHOLDER_BUFFER = Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+        'base64',
+      );
+    }
+    PLACEHOLDER_SIZE = PLACEHOLDER_BUFFER.length;
   }
-  return Buffer.from(
-    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-    'base64',
-  );
+  return { buffer: PLACEHOLDER_BUFFER, size: PLACEHOLDER_SIZE };
 }
 
 function empBaseCol(ei: number): number {
@@ -85,9 +93,8 @@ export class ExcelImportService {
     buffer: Buffer,
     empresaIds: number[],
     userId: string,
-    tipoSeleccionado: 'productos' | 'servicios', // ← nuevo parámetro
+    tipoSeleccionado: 'productos' | 'servicios',
   ): Promise<ImportResult> {
-    // ── 1. Cargar workbook ──
     const wb = new ExcelJS.Workbook();
     try {
       await wb.xlsx.load(buffer as any);
@@ -97,7 +104,6 @@ export class ExcelImportService {
       );
     }
 
-    // ── 2. Verificar hoja Cotización ──
     const ws = wb.getWorksheet('Cotización');
     if (!ws) {
       throw new BadRequestException(
@@ -105,7 +111,6 @@ export class ExcelImportService {
       );
     }
 
-    // ── 3. Verificar fingerprint y mismatch de empresas ──
     const wsMeta = wb.getWorksheet('_Meta');
     if (!wsMeta) {
       throw new BadRequestException(
@@ -136,7 +141,6 @@ export class ExcelImportService {
       );
     }
 
-    // ── Validar tipo del archivo vs tipo seleccionado ──
     const tipoEnMeta = this.cellStr(wsMeta.getCell(4, 1));
     if (tipoEnMeta && tipoEnMeta !== tipoSeleccionado) {
       throw new BadRequestException(
@@ -145,7 +149,6 @@ export class ExcelImportService {
       );
     }
 
-    // ── 4. Detectar Excel duplicado ──
     const fileHash = hashBuffer(buffer);
     const recentQuotes = await this.quoteRepo.find({
       where: { user: { id: userId } },
@@ -159,7 +162,6 @@ export class ExcelImportService {
       );
     }
 
-    // ── 5. Leer título, tipo y descripción ──
     const tituloRaw = this.cellStr(ws.getCell(5, 3));
     const tipoRaw = this.cellStr(ws.getCell(6, 3)).toLowerCase().trim();
     const descripcionCotRaw = this.cellStr(ws.getCell(7, 3));
@@ -187,7 +189,6 @@ export class ExcelImportService {
       ? sanitize(descripcionCotRaw)
       : null;
 
-    // ── 6. Verificar título duplicado ──
     const tituloExistente = await this.quoteRepo.findOne({
       where: { user: { id: userId }, titulo: titulo.trim(), status: 'sent' },
     });
@@ -197,7 +198,6 @@ export class ExcelImportService {
       );
     }
 
-    // ── 7. Leer márgenes globales (fila 11) ──
     const globalMargins: (number | null)[] = empresaIds.map((_, ei) => {
       const val = ws.getCell(11, empBaseCol(ei)).value;
       if (val === null || val === undefined || val === '') return null;
@@ -216,7 +216,6 @@ export class ExcelImportService {
       return n;
     });
 
-    // ── 8. Cargar categorías (solo para productos) ──
     const catMap = new Map<string, Category>();
     if (!esServicios) {
       const allCategories = await this.categoryRepo.find();
@@ -225,7 +224,6 @@ export class ExcelImportService {
       }
     }
 
-    // ── 9. Leer filas de datos ──
     const DATA_START = 13;
     const errors: ImportRowError[] = [];
     const rows: {
@@ -262,7 +260,6 @@ export class ExcelImportService {
 
       let hasError = false;
 
-      // ── Nombre ──
       if (isBlankString(nombre)) {
         errors.push({
           fila: rowNum,
@@ -279,7 +276,6 @@ export class ExcelImportService {
         hasError = true;
       }
 
-      // ── Duplicados en el mismo archivo ──
       const nombreKey = nombre.toLowerCase().trim();
       if (nombresVistos.has(nombreKey)) {
         errors.push({
@@ -292,7 +288,6 @@ export class ExcelImportService {
         nombresVistos.add(nombreKey);
       }
 
-      // ── Descripción ──
       if (isBlankString(descripcion)) {
         errors.push({
           fila: rowNum,
@@ -316,7 +311,6 @@ export class ExcelImportService {
         hasError = true;
       }
 
-      // ── Categoría: solo para productos ──
       let category: Category | null = null;
       if (!esServicios) {
         category = catMap.get(catNombre.toLowerCase().trim()) ?? null;
@@ -330,7 +324,6 @@ export class ExcelImportService {
         }
       }
 
-      // ── Cantidad ──
       const cantidad = Number(cantRaw);
       if (!Number.isInteger(cantidad) || cantidad <= 0) {
         errors.push({
@@ -348,7 +341,6 @@ export class ExcelImportService {
         hasError = true;
       }
 
-      // ── Costo ──
       const costo = Number(costoRaw);
       if (!isFinite(costo) || costo <= 0) {
         errors.push({
@@ -366,7 +358,6 @@ export class ExcelImportService {
         hasError = true;
       }
 
-      // ── Unidad ──
       if (unidad.length > 30) {
         errors.push({
           fila: rowNum,
@@ -376,12 +367,10 @@ export class ExcelImportService {
         hasError = true;
       }
 
-      // ── % Ítem por empresa ──
       const margenesPorEmpresa = new Map<number, number | null>();
       for (let ei = 0; ei < empresaIds.length; ei++) {
         const empresaId = empresaIds[ei];
         const val = ws.getCell(rowNum, empBaseCol(ei)).value;
-
         if (val === null || val === undefined || val === '') {
           margenesPorEmpresa.set(empresaId, globalMargins[ei]);
         } else {
@@ -429,10 +418,11 @@ export class ExcelImportService {
       return { ok: false, errors };
     }
 
-    // ── 10. Transacción ──
     let productosCreados = 0;
     let productosReutilizados = 0;
     let quoteId = '';
+    const { buffer: placeholderBuffer, size: placeholderSize } =
+      getPlaceholderImage();
 
     await this.dataSource.transaction(async (manager) => {
       const productRepoTx = manager.getRepository(Product);
@@ -452,96 +442,246 @@ export class ExcelImportService {
       const savedQuote = await quoteRepoTx.save(quote);
       quoteId = savedQuote.id;
 
-      for (const row of rows) {
-        let itemProduct: Product | null = null;
-        let itemService: Service | null = null;
+      const nombresEnExcel = rows.map((r) => r.nombre.toLowerCase().trim());
+      let existingMap = new Map<string, { id: string }>();
 
-        if (esServicios) {
-          const existingService = await serviceRepoTx
-            .createQueryBuilder('s')
-            .where('LOWER(s.nombre) = LOWER(:nombre)', { nombre: row.nombre })
-            .getOne();
-
-          if (existingService) {
-            itemService = existingService;
-            productosReutilizados++;
-            advertencias.push(
-              `Fila ${row.rowNum}: servicio "${row.nombre}" ya existía — se reutilizó (ID: ${itemService.id})`,
-            );
-          } else {
-            itemService = serviceRepoTx.create({
-              nombre: row.nombre,
-              descripcion: row.descripcion,
-              precioBase: String(row.costo),
-              createdBy: { id: userId } as User,
-            });
-            await serviceRepoTx.save(itemService);
-            productosCreados++;
-          }
-        } else {
-          const existingProduct = await productRepoTx
-            .createQueryBuilder('p')
-            .where('LOWER(p.nombre) = LOWER(:nombre)', { nombre: row.nombre })
-            .getOne();
-
-          if (existingProduct) {
-            itemProduct = existingProduct;
-            productosReutilizados++;
-            advertencias.push(
-              `Fila ${row.rowNum}: producto "${row.nombre}" ya existía — se reutilizó (ID: ${itemProduct.id})`,
-            );
-          } else {
-            itemProduct = productRepoTx.create({
-              nombre: row.nombre,
-              descripcion: row.descripcion,
-              precio: String(row.costo),
-              category: row.categoria!,
-              createdBy: { id: userId } as User,
-              imageData: getPlaceholderImage(),
-              imageMime: 'image/png',
-              imageName: 'default-product.png',
-              imageSize: getPlaceholderImage().length,
-            });
-            await productRepoTx.save(itemProduct);
-            productosCreados++;
-          }
-        }
-
-        const item = itemRepoTx.create({
-          quote: savedQuote,
-          product: itemProduct ?? undefined,
-          service: itemService ?? undefined,
-          cantidad: row.cantidad,
-          unidad: row.unidad,
-          costo_unitario: row.costo,
-        });
-
-        for (const [empresaId, margen] of row.margenesPorEmpresa) {
-          const precioFinal =
-            margen !== null
-              ? +(row.costo * (1 + margen / 100)).toFixed(2)
-              : row.costo;
-          const subtotal = +(precioFinal * row.cantidad).toFixed(2);
-
-          (item as any)[`margenPct${empresaId}`] = margen;
-          (item as any)[`precioFinal${empresaId}`] = precioFinal;
-          (item as any)[`subtotal${empresaId}`] = subtotal;
-        }
-
-        await itemRepoTx.save(item);
+      if (esServicios) {
+        const existingServices = await serviceRepoTx
+          .createQueryBuilder('s')
+          .select(['s.id', 's.nombre'])
+          .where('LOWER(s.nombre) IN (:...nombres)', {
+            nombres: nombresEnExcel,
+          })
+          .getMany();
+        existingMap = new Map(
+          existingServices.map((s) => [
+            s.nombre.toLowerCase().trim(),
+            { id: s.id },
+          ]),
+        );
+      } else {
+        const existingProducts = await productRepoTx
+          .createQueryBuilder('p')
+          .select(['p.id', 'p.nombre'])
+          .where('LOWER(p.nombre) IN (:...nombres)', {
+            nombres: nombresEnExcel,
+          })
+          .getMany();
+        existingMap = new Map(
+          existingProducts.map((p) => [
+            p.nombre.toLowerCase().trim(),
+            { id: p.id },
+          ]),
+        );
       }
 
-      const allItems = await itemRepoTx.find({
-        where: { quote: { id: quoteId } },
+      const rowsNuevos = rows.filter(
+        (r) => !existingMap.has(r.nombre.toLowerCase().trim()),
+      );
+      const rowsExistentes = rows.filter((r) =>
+        existingMap.has(r.nombre.toLowerCase().trim()),
+      );
+
+      productosReutilizados = rowsExistentes.length;
+      productosCreados = rowsNuevos.length;
+
+      rowsExistentes.forEach((r) => {
+        advertencias.push(
+          `Fila ${r.rowNum}: ${esServicios ? 'servicio' : 'producto'} "${r.nombre}" ya existía — se reutilizó`,
+        );
       });
+
+      if (rowsNuevos.length > 0) {
+        if (esServicios) {
+          const params: any[] = [];
+          let paramIdx = 1;
+          const valueRows = rowsNuevos
+            .map((r) => {
+              params.push(r.nombre, r.descripcion, String(r.costo), userId);
+              return `($${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, NOW())`;
+            })
+            .join(', ');
+
+          const inserted = await serviceRepoTx.query(
+            `INSERT INTO services (nombre, descripcion, "precioBase", created_by, created_at)
+             VALUES ${valueRows}
+             ON CONFLICT (LOWER(nombre)) DO NOTHING
+             RETURNING id, nombre`,
+            params,
+          );
+
+          inserted.forEach((s: { id: string; nombre: string }) => {
+            existingMap.set(s.nombre.toLowerCase().trim(), { id: s.id });
+          });
+
+          // ── Recuperar IDs de los que DO NOTHING ignoró ──
+          const nombresInsertados = inserted.map((s: any) =>
+            s.nombre.toLowerCase().trim(),
+          );
+          const nombresFaltantes = rowsNuevos
+            .filter(
+              (r) => !nombresInsertados.includes(r.nombre.toLowerCase().trim()),
+            )
+            .map((r) => r.nombre.toLowerCase().trim());
+
+          if (nombresFaltantes.length > 0) {
+            const faltantes = await serviceRepoTx
+              .createQueryBuilder('s')
+              .select(['s.id', 's.nombre'])
+              .where('LOWER(s.nombre) IN (:...nombres)', {
+                nombres: nombresFaltantes,
+              })
+              .getMany();
+            faltantes.forEach((s) => {
+              existingMap.set(s.nombre.toLowerCase().trim(), { id: s.id });
+            });
+          }
+        } else {
+          const params: any[] = [];
+          let paramIdx = 1;
+          const valueRows = rowsNuevos
+            .map((r) => {
+              params.push(
+                r.nombre,
+                r.descripcion,
+                String(r.costo),
+                r.categoria!.id,
+                userId,
+                placeholderBuffer,
+                'image/png',
+                'default-product.png',
+                placeholderSize,
+              );
+              return `($${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, NOW())`;
+            })
+            .join(', ');
+
+          const inserted = await productRepoTx.query(
+            `INSERT INTO products (nombre, descripcion, precio, category_id, created_by, image_data, image_mime, image_name, image_size, created_at)
+             VALUES ${valueRows}
+             ON CONFLICT (LOWER(nombre)) DO NOTHING
+             RETURNING id, nombre`,
+            params,
+          );
+
+          inserted.forEach((p: { id: string; nombre: string }) => {
+            existingMap.set(p.nombre.toLowerCase().trim(), { id: p.id });
+          });
+
+          // ── Recuperar IDs de los que DO NOTHING ignoró ──
+          const nombresInsertados = inserted.map((p: any) =>
+            p.nombre.toLowerCase().trim(),
+          );
+          const nombresFaltantes = rowsNuevos
+            .filter(
+              (r) => !nombresInsertados.includes(r.nombre.toLowerCase().trim()),
+            )
+            .map((r) => r.nombre.toLowerCase().trim());
+
+          if (nombresFaltantes.length > 0) {
+            const faltantes = await productRepoTx
+              .createQueryBuilder('p')
+              .select(['p.id', 'p.nombre'])
+              .where('LOWER(p.nombre) IN (:...nombres)', {
+                nombres: nombresFaltantes,
+              })
+              .getMany();
+            faltantes.forEach((p) => {
+              existingMap.set(p.nombre.toLowerCase().trim(), { id: p.id });
+            });
+          }
+        }
+      }
+
+      if (rows.length > 0) {
+        const itemParams: any[] = [];
+        let itemParamIdx = 1;
+
+        const itemValueRows = rows
+          .map((r) => {
+            const entityId = existingMap.get(r.nombre.toLowerCase().trim())?.id;
+            if (!entityId)
+              throw new Error(`No se encontró ID para "${r.nombre}"`);
+
+            const placeholders: string[] = [
+              `$${itemParamIdx++}`, // quote_id
+              `$${itemParamIdx++}`, // product_id o service_id
+              `$${itemParamIdx++}`, // cantidad
+              `$${itemParamIdx++}`, // unidad
+              `$${itemParamIdx++}`, // costo_unitario
+            ];
+
+            itemParams.push(
+              savedQuote.id,
+              entityId,
+              r.cantidad,
+              r.unidad,
+              +r.costo.toFixed(2),
+            );
+
+            // ── Calcular valores por empresa ──
+            const margens: (number | null)[] = [];
+            const precios: number[] = [];
+            const subtotales: number[] = [];
+
+            for (const empresaId of empresaIds) {
+              const margen = r.margenesPorEmpresa.get(empresaId) ?? null;
+              const precioFinal =
+                margen !== null
+                  ? +(r.costo * (1 + margen / 100)).toFixed(2)
+                  : +r.costo.toFixed(2);
+              const subtotal = +(precioFinal * r.cantidad).toFixed(2);
+
+              margens.push(margen !== null ? +margen.toFixed(2) : null);
+              precios.push(precioFinal);
+              subtotales.push(subtotal);
+            }
+
+            // ── Pushear en orden: todos márgenes, luego precios, luego subtotales ──
+            for (const m of margens) {
+              placeholders.push(`$${itemParamIdx++}`);
+              itemParams.push(m);
+            }
+            for (const p of precios) {
+              placeholders.push(`$${itemParamIdx++}`);
+              itemParams.push(p);
+            }
+            for (const s of subtotales) {
+              placeholders.push(`$${itemParamIdx++}`);
+              itemParams.push(s);
+            }
+
+            return `(${placeholders.join(', ')})`;
+          })
+          .join(', ');
+
+        const margenCols = empresaIds.map((id) => `margen_pct${id}`).join(', ');
+        const precioCols = empresaIds
+          .map((id) => `precio_final${id}`)
+          .join(', ');
+        const subtotalCols = empresaIds.map((id) => `subtotal${id}`).join(', ');
+        const productOrService = esServicios ? 'service_id' : 'product_id';
+
+        await itemRepoTx.query(
+          `INSERT INTO quote_items (quote_id, ${productOrService}, cantidad, unidad, costo_unitario, ${margenCols}, ${precioCols}, ${subtotalCols})
+     VALUES ${itemValueRows}`,
+          itemParams,
+        );
+      }
+
       const round2 = (n: number) => Math.round(n * 100) / 100;
       const ivaPct = 16;
 
       for (const empresaId of empresaIds) {
-        const subtotalSum = allItems.reduce(
-          (acc, it) => acc + Number((it as any)[`subtotal${empresaId}`] ?? 0),
-          0,
-        );
+        const subtotalSum = rows.reduce((acc, r) => {
+          const margen = r.margenesPorEmpresa.get(empresaId) ?? null;
+          const precioFinal =
+            margen !== null
+              ? +(r.costo * (1 + margen / 100)).toFixed(2)
+              : r.costo;
+          return acc + +(precioFinal * r.cantidad).toFixed(2);
+        }, 0);
+
         const totalIva = round2((subtotalSum * ivaPct) / 100);
         const totalFinal = round2(subtotalSum + totalIva);
 
