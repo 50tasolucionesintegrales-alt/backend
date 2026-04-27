@@ -67,7 +67,6 @@
       padding-top: 32mm;
       padding-left: 15mm;
       padding-right: 15mm;
-      min-height: calc(279.4mm - 32mm);
       display: flex;
       flex-direction: column;
     }
@@ -212,7 +211,7 @@
 <body>
 
 <!-- PÁGINAS CON PAGINACIÓN INTELIGENTE -->
-{{#each (smartChunk items)}}
+{{#each (smartChunk_e5 items)}}
 <div class="page-container">
   <div class="bg-page"><img src="assets/emp5.png" alt="membrete"></div>
   <div class="content-area">
@@ -263,7 +262,7 @@
 
     <!-- SECCIÓN IMPORTANTE SOLO EN ÚLTIMA PÁGINA -->
     {{#if @last}}
-      {{#if (not (needsSeparateImportantPage ../items))}}
+      {{#if (not (needsSeparateImportantPage_e5 ../items))}}
       <div class="important-content">
         <!-- Totales -->
         <div class="totals-wrapper">
@@ -351,7 +350,7 @@
 {{/each}}
 
 <!-- PÁGINA SEPARADA PARA INFORMACIÓN IMPORTANTE SI NO CABE EN LA ÚLTIMA -->
-{{#if (needsSeparateImportantPage items)}}
+{{#if (needsSeparateImportantPage_e5 items)}}
 <div class="page-container">
   <div class="bg-page"><img src="assets/emp5.png" alt="membrete"></div>
   <div class="content-area">

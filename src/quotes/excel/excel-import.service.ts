@@ -295,18 +295,11 @@ export class ExcelImportService {
           mensaje: 'No puede estar vacía o contener solo espacios',
         });
         hasError = true;
-      } else if (descripcion.length < 20) {
+      } else if (descripcion.length > 300) {
         errors.push({
           fila: rowNum,
           campo: 'Descripción',
-          mensaje: 'Obligatoria, mínimo 20 caracteres',
-        });
-        hasError = true;
-      } else if (descripcion.length > 128) {
-        errors.push({
-          fila: rowNum,
-          campo: 'Descripción',
-          mensaje: 'Máximo 128 caracteres',
+          mensaje: 'Máximo 300 caracteres',
         });
         hasError = true;
       }

@@ -14,6 +14,7 @@ type MetaIn = {
   condiciones?: string;
   incluirFirma?: boolean;
   firmanteNombre?: string;
+  firmantePuesto?: string;
 };
 
 const FIRMA_BY_EMPRESA: Record<Emp, string> = {
@@ -39,6 +40,7 @@ export class PdfService1 {
     const condiciones = meta.condiciones ?? '';
     const incluirFirma = meta.incluirFirma ?? false;
     const firmanteNombre = meta.firmanteNombre?.trim() || '';
+    const firmantePuesto = meta.firmantePuesto?.trim() || '';
 
     // Total en letra (MXN)
     const totalEnLetra = this.numeroEnLetrasMXN(subtotales.total);
@@ -60,6 +62,7 @@ export class PdfService1 {
       incluirFirma,
       firmaUrl,
       firmanteNombre,
+      firmantePuesto,
       items,
       ivaPct,
       totales: {

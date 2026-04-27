@@ -53,7 +53,6 @@
     .content-area {
       position: relative;
       padding-top: 10mm;
-      min-height: calc(279.4mm - 10mm);
       display: flex;
       flex-direction: column;
     }
@@ -131,7 +130,7 @@
 <body>
 
 <!-- PÁGINAS CON PAGINACIÓN INTELIGENTE -->
-{{#each (smartChunk items)}}
+{{#each (smartChunk_e6 items)}}
 <div class="page-container">
   <div class="bg-page"><img src="assets/emp6.png" alt="membrete"></div>
   <div class="content-area">
@@ -180,7 +179,7 @@
 
     <!-- SECCIÓN IMPORTANTE SOLO EN ÚLTIMA PÁGINA SI HAY ESPACIO -->
     {{#if @last}}
-      {{#if (not (needsSeparateImportantPage ../items))}}
+      {{#if (not (needsSeparateImportantPage_e6 ../items))}}
       <div style="margin-top: 12px;">
 
         <!-- Totales -->
@@ -270,7 +269,7 @@
 {{/each}}
 
 <!-- PÁGINA SEPARADA PARA INFORMACIÓN IMPORTANTE SI NO CABE EN LA ÚLTIMA -->
-{{#if (needsSeparateImportantPage items)}}
+{{#if (needsSeparateImportantPage_e6 items)}}
 <div class="page-container">
   <div class="bg-page"><img src="assets/emp6.png" alt="mambrete"></div>
   <div class="content-area">

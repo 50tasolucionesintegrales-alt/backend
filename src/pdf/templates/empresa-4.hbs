@@ -80,7 +80,7 @@
 
     /* ===== Tabla ===== */
     .table-wrap{ position:relative; margin:12px 12mm 0; }
-    table{ width:96%; margin:0 auto; border-collapse:collapse; }
+    table{ width:96%; margin:0 auto; border-collapse:collapse; table-layout: fixed; }
     thead{ display:table-header-group; }
     tr, td, th{ page-break-inside:avoid; }
 
@@ -93,7 +93,13 @@
     }
     tbody td{
       border:1px solid var(--line);
-      padding:6px 8px; font-size:12px; background:#fff; vertical-align:top;
+      padding:6px 8px; 
+      font-size:12px; 
+      background:#fff; 
+      vertical-align:top;
+      word-wrap: break-word;
+      word-break: break-all;
+      overflow-wrap: break-word;
     }
     .center{ text-align:center; }
     .right { text-align:right; }
@@ -195,7 +201,7 @@
             <th class="center" style="width:16mm;">ITEM</th>
             <th class="center" style="width:22mm;">UNIDAD</th>
             <th class="center" style="width:22mm;">CANTIDAD</th>
-            <th>DESCRIPCIÓN</th>
+            <th style="max-width:80mm;">DESCRIPCIÓN</th>
             <th class="right" style="width:30mm;">UNITARIO</th>
             <th class="right" style="width:30mm;">SUBTOTAL</th>
           </tr>

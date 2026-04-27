@@ -22,41 +22,47 @@ hbs.registerHelper('multiply', (a: any, b: any) => Number(a) * Number(b));
 hbs.registerHelper('not', (a: any) => !a);
 hbs.registerHelper('and', (a: any, b: any) => !!(a && b));
 
-// Helper para calcular paginación inteligente
-hbs.registerHelper('smartChunk', function(items: any[]) {
+// Helper ÚNICO para empresa-9 (Eduardo) - BASADO EN CÓDIGO ORIGINAL
+hbs.registerHelper('smartChunk_e9', function(items: any[]) {
     if (!items || items.length === 0) return [];
     
     const chunks: any[][] = [];
     let currentChunk: any[] = [];
     
-    // Variables de control
     let currentLines = 0;
-    const MAX_LINES_PER_PAGE = 22; // Líneas máximas por página (estimado)
-    const IMPORTANT_SECTION_LINES = 10; // Líneas que ocupa la sección importante
+    
+    const MAX_FIRST_PAGE_LINES = 13;  // 🔧 REDUCIDO de 16 a 13 (padding-top: 30mm)
+    const MAX_OTHER_PAGES_LINES = 22; // 🔧 REDUCIDO de 24 a 22 (line-height bajo)
+    const IMPORTANT_SECTION_LINES = 12;
     
     for (let i = 0; i < items.length; i++) {
         const item = items[i];
         
-        // Calcular líneas aproximadas que ocupa este item
         const descLength = item.nombre ? item.nombre.length : 0;
-        let itemLines = 1; // mínimo una línea
+        let itemLines = 1;
         
-        if (descLength > 80) itemLines = 3;
+        // 🔧 AJUSTADO: Más líneas para descripciones largas (line-height: 1.35 en template)
+        if (descLength > 200) itemLines = 6;        // era 5
+        else if (descLength > 150) itemLines = 5;   // era 4
+        else if (descLength > 100) itemLines = 3.5; // era 3
         else if (descLength > 50) itemLines = 2;
         else if (descLength > 30) itemLines = 1.5;
         
+        const isFirstPage = chunks.length === 0;
+        const maxLines = isFirstPage ? MAX_FIRST_PAGE_LINES : MAX_OTHER_PAGES_LINES;
         const isLastItem = i === items.length - 1;
+        
         const wouldIncludeImportant = isLastItem && 
-            (currentLines + itemLines + IMPORTANT_SECTION_LINES <= MAX_LINES_PER_PAGE);
+            (currentLines + itemLines + IMPORTANT_SECTION_LINES <= maxLines);
         
         const maxAllowedLines = wouldIncludeImportant ? 
-            MAX_LINES_PER_PAGE - IMPORTANT_SECTION_LINES : 
-            MAX_LINES_PER_PAGE;
+            maxLines - IMPORTANT_SECTION_LINES : 
+            maxLines;
         
         if (currentLines + itemLines <= maxAllowedLines) {
             currentChunk.push({
                 ...item,
-                globalIndex: i + 1 // Guardamos el índice global aquí
+                globalIndex: i + 1
             });
             currentLines += itemLines;
         } else {
@@ -78,11 +84,11 @@ hbs.registerHelper('smartChunk', function(items: any[]) {
     return chunks;
 });
 
-// Helper para saber si necesita página separada para info importante
-hbs.registerHelper('needsSeparateImportantPage', function(items: any[]) {
+// Helper ÚNICO para empresa-9 - SIMPLIFICADO
+hbs.registerHelper('needsSeparateImportantPage_e9', function(items: any[]) {
     if (!items || items.length === 0) return false;
     
-    const chunks = hbs.helpers.smartChunk(items);
+    const chunks = hbs.helpers.smartChunk_e9(items);
     if (chunks.length === 0) return true;
     
     const lastChunk = chunks[chunks.length - 1];
@@ -92,14 +98,17 @@ hbs.registerHelper('needsSeparateImportantPage', function(items: any[]) {
         const descLength = item.nombre ? item.nombre.length : 0;
         let itemLines = 1;
         
-        if (descLength > 80) itemLines = 3;
+        // 🔧 MISMO AJUSTE que smartChunk_e9
+        if (descLength > 200) itemLines = 6;
+        else if (descLength > 150) itemLines = 5;
+        else if (descLength > 100) itemLines = 3.5;
         else if (descLength > 50) itemLines = 2;
         else if (descLength > 30) itemLines = 1.5;
         
         lastPageLines += itemLines;
     }
     
-    return lastPageLines + 10 > 22; // 22 líneas máximas por página
+    return lastPageLines + 12 > 22; // 🔧 Cambiado de 24 a 22
 });
 
 function resolveBaseDir() {

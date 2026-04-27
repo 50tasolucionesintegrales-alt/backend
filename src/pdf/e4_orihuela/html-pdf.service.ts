@@ -26,37 +26,47 @@ hbs.registerHelper('and', (a: any, b: any) => !!(a && b));
 hbs.registerHelper('smartChunk', function(items: any[]) {
     if (!items || items.length === 0) return [];
     
+    console.log('🔥🔥🔥 HELPER E4 ACTUALIZADO - VERSION FINAL 🔥🔥🔥');
+    
     const chunks: any[][] = [];
     let currentChunk: any[] = [];
     
     // Variables de control
     let currentLines = 0;
-    const MAX_LINES_PER_PAGE = 24; // Líneas máximas por página (estimado)
-    const IMPORTANT_SECTION_LINES = 10; // Líneas que ocupa la sección importante
+    const MAX_FIRST_PAGE_LINES = 2;   // 🔥🔥🔥 EXTREMADAMENTE CONSERVADOR
+    const MAX_OTHER_PAGES_LINES = 18; // Páginas subsecuentes
+    const IMPORTANT_SECTION_LINES = 10;
     
     for (let i = 0; i < items.length; i++) {
         const item = items[i];
         
         // Calcular líneas aproximadas que ocupa este item
         const descLength = item.nombre ? item.nombre.length : 0;
-        let itemLines = 1; // mínimo una línea
+        let itemLines = 1;
         
-        if (descLength > 80) itemLines = 3;
-        else if (descLength > 50) itemLines = 2;
-        else if (descLength > 30) itemLines = 1.5;
+        // 🔧 AJUSTADO: word-break: break-all aumenta MUCHO las líneas verticales
+        if (descLength > 250) itemLines = 13;
+        else if (descLength > 200) itemLines = 11;
+        else if (descLength > 150) itemLines = 8;
+        else if (descLength > 100) itemLines = 5.5;
+        else if (descLength > 50) itemLines = 3;
+        else if (descLength > 30) itemLines = 2;
         
+        const isFirstPage = chunks.length === 0;
+        const maxLines = isFirstPage ? MAX_FIRST_PAGE_LINES : MAX_OTHER_PAGES_LINES;
         const isLastItem = i === items.length - 1;
+        
         const wouldIncludeImportant = isLastItem && 
-            (currentLines + itemLines + IMPORTANT_SECTION_LINES <= MAX_LINES_PER_PAGE);
+            (currentLines + itemLines + IMPORTANT_SECTION_LINES <= maxLines);
         
         const maxAllowedLines = wouldIncludeImportant ? 
-            MAX_LINES_PER_PAGE - IMPORTANT_SECTION_LINES : 
-            MAX_LINES_PER_PAGE;
+            maxLines - IMPORTANT_SECTION_LINES : 
+            maxLines;
         
         if (currentLines + itemLines <= maxAllowedLines) {
             currentChunk.push({
                 ...item,
-                globalIndex: i + 1 // Guardamos el índice global aquí
+                globalIndex: i + 1
             });
             currentLines += itemLines;
         } else {
@@ -92,14 +102,18 @@ hbs.registerHelper('needsSeparateImportantPage', function(items: any[]) {
         const descLength = item.nombre ? item.nombre.length : 0;
         let itemLines = 1;
         
-        if (descLength > 80) itemLines = 3;
-        else if (descLength > 50) itemLines = 2;
-        else if (descLength > 30) itemLines = 1.5;
+        // 🔧 MISMO AJUSTE que smartChunk
+        if (descLength > 250) itemLines = 13;
+        else if (descLength > 200) itemLines = 11;
+        else if (descLength > 150) itemLines = 8;
+        else if (descLength > 100) itemLines = 5.5;
+        else if (descLength > 50) itemLines = 3;
+        else if (descLength > 30) itemLines = 2;
         
         lastPageLines += itemLines;
     }
     
-    return lastPageLines + 10 > 24; // 24 líneas máximas por página
+    return lastPageLines + 10 > 20; // 🔧 Usar MAX_OTHER_PAGES_LINES
 });
 
 function resolveBaseDir() {

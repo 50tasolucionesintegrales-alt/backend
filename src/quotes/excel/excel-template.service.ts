@@ -170,7 +170,7 @@ export class ExcelTemplateService {
     const ROW_SUBTOT = DATA_END + 1;
     const ROW_IVA = DATA_END + 2;
     const ROW_TOTAL = DATA_END + 3;
-    
+
     // ── Anchos ──
     ws.getColumn(1).width = 6;
     ws.getColumn(2).width = 25;
@@ -543,11 +543,11 @@ export class ExcelTemplateService {
     dv.add(`C${DATA_START}:C${DATA_END}`, {
       type: 'textLength',
       operator: 'between',
-      formulae: [20, 128],
+      formulae: [1, 300],
       allowBlank: true,
       showErrorMessage: true,
       errorTitle: 'Descripción inválida',
-      error: 'La descripción debe tener entre 20 y 128 caracteres',
+      error: 'La descripción debe tener entre 1 y 300 caracteres',
     });
 
     // ── Categoría solo para productos ──

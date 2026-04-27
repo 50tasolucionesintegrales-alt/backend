@@ -31,8 +31,8 @@ hbs.registerHelper('smartChunk', function(items: any[]) {
     
     // Variables de control
     let currentLines = 0;
-    const MAX_LINES_PER_PAGE = 24; // Líneas máximas por página (estimado)
-    const IMPORTANT_SECTION_LINES = 10; // Líneas que ocupa la sección importante
+    const MAX_LINES_PER_PAGE = 24; 
+    const IMPORTANT_SECTION_LINES = 10;
     
     for (let i = 0; i < items.length; i++) {
         const item = items[i];
@@ -41,7 +41,10 @@ hbs.registerHelper('smartChunk', function(items: any[]) {
         const descLength = item.nombre ? item.nombre.length : 0;
         let itemLines = 1; // mínimo una línea
         
-        if (descLength > 80) itemLines = 3;
+        //Rangos para descripción hasta 300 caracteres
+        if (descLength > 200) itemLines = 5;
+        else if (descLength > 150) itemLines = 4;
+        else if (descLength > 100) itemLines = 3;
         else if (descLength > 50) itemLines = 2;
         else if (descLength > 30) itemLines = 1.5;
         
@@ -92,7 +95,10 @@ hbs.registerHelper('needsSeparateImportantPage', function(items: any[]) {
         const descLength = item.nombre ? item.nombre.length : 0;
         let itemLines = 1;
         
-        if (descLength > 80) itemLines = 3;
+        // ✅ ACTUALIZADO: Rangos para descripción hasta 300 caracteres
+        if (descLength > 200) itemLines = 5;
+        else if (descLength > 150) itemLines = 4;
+        else if (descLength > 100) itemLines = 3;
         else if (descLength > 50) itemLines = 2;
         else if (descLength > 30) itemLines = 1.5;
         

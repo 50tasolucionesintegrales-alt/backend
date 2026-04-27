@@ -22,41 +22,48 @@ hbs.registerHelper('multiply', (a: any, b: any) => Number(a) * Number(b));
 hbs.registerHelper('not', (a: any) => !a);
 hbs.registerHelper('and', (a: any, b: any) => !!(a && b));
 
-// Helper para calcular paginación inteligente
-hbs.registerHelper('smartChunk', function(items: any[]) {
+// Helper ÚNICO para empresa-3 (Giselle)
+hbs.registerHelper('smartChunk_e3', function(items: any[]) {
     if (!items || items.length === 0) return [];
     
     const chunks: any[][] = [];
     let currentChunk: any[] = [];
     
-    // Variables de control
     let currentLines = 0;
-    const MAX_LINES_PER_PAGE = 24; // Líneas máximas por página (estimado)
-    const IMPORTANT_SECTION_LINES = 10; // Líneas que ocupa la sección importante
+    const MAX_FIRST_PAGE_LINES = 18;  // Primera página 
+    const MAX_OTHER_PAGES_LINES = 26; // Páginas subsecuentes 
+    
+    // ULTRA ESTRICTO: Footer necesita MUCHO espacio
+    const IMPORTANT_SECTION_LINES = 22; // MUY ALTO - deja muy poco espacio para productos
     
     for (let i = 0; i < items.length; i++) {
         const item = items[i];
         
-        // Calcular líneas aproximadas que ocupa este item
         const descLength = item.nombre ? item.nombre.length : 0;
-        let itemLines = 1; // mínimo una línea
+        let itemLines = 1;
         
-        if (descLength > 80) itemLines = 3;
+        // ✅ ACTUALIZADO: Rangos para descripción hasta 300 caracteres
+        if (descLength > 200) itemLines = 5;
+        else if (descLength > 150) itemLines = 4;
+        else if (descLength > 100) itemLines = 3;
         else if (descLength > 50) itemLines = 2;
         else if (descLength > 30) itemLines = 1.5;
         
+        const isFirstPage = chunks.length === 0 && currentChunk.length === 0;
+        const maxLines = isFirstPage ? MAX_FIRST_PAGE_LINES : MAX_OTHER_PAGES_LINES;
         const isLastItem = i === items.length - 1;
+        
         const wouldIncludeImportant = isLastItem && 
-            (currentLines + itemLines + IMPORTANT_SECTION_LINES <= MAX_LINES_PER_PAGE);
+            (currentLines + itemLines + IMPORTANT_SECTION_LINES <= maxLines);
         
         const maxAllowedLines = wouldIncludeImportant ? 
-            MAX_LINES_PER_PAGE - IMPORTANT_SECTION_LINES : 
-            MAX_LINES_PER_PAGE;
+            maxLines - IMPORTANT_SECTION_LINES : 
+            maxLines;
         
         if (currentLines + itemLines <= maxAllowedLines) {
             currentChunk.push({
                 ...item,
-                globalIndex: i + 1 // Guardamos el índice global aquí
+                globalIndex: i + 1
             });
             currentLines += itemLines;
         } else {
@@ -78,11 +85,11 @@ hbs.registerHelper('smartChunk', function(items: any[]) {
     return chunks;
 });
 
-// Helper para saber si necesita página separada para info importante
-hbs.registerHelper('needsSeparateImportantPage', function(items: any[]) {
+// Helper ÚNICO para empresa-3 - SIMPLIFICADO como Michelle
+hbs.registerHelper('needsSeparateImportantPage_e3', function(items: any[]) {
     if (!items || items.length === 0) return false;
     
-    const chunks = hbs.helpers.smartChunk(items);
+    const chunks = hbs.helpers.smartChunk_e3(items);
     if (chunks.length === 0) return true;
     
     const lastChunk = chunks[chunks.length - 1];
@@ -92,14 +99,19 @@ hbs.registerHelper('needsSeparateImportantPage', function(items: any[]) {
         const descLength = item.nombre ? item.nombre.length : 0;
         let itemLines = 1;
         
-        if (descLength > 80) itemLines = 3;
+        // ✅ ACTUALIZADO: Rangos para descripción hasta 300 caracteres
+        if (descLength > 200) itemLines = 5;
+        else if (descLength > 150) itemLines = 4;
+        else if (descLength > 100) itemLines = 3;
         else if (descLength > 50) itemLines = 2;
         else if (descLength > 30) itemLines = 1.5;
         
         lastPageLines += itemLines;
     }
     
-    return lastPageLines + 10 > 24; // 24 líneas máximas por página
+    // ULTRA ESTRICTO: Footer salta casi SIEMPRE
+    // Si última página tiene más de 4 líneas (~1-2 productos) → Footer a página separada
+    return lastPageLines > 4; // MUY RESTRICTIVO
 });
 
 function resolveBaseDir() {

@@ -67,8 +67,8 @@ function splitItemByLines(item: any, maxLines: number): any[] {
     return parts;
 }
 
-// Helper para calcular paginación inteligente con división de items largos
-hbs.registerHelper('smartChunk', function(items: any[]) {
+// Helper ÚNICO para empresa-1 (Goltech) - paginación inteligente
+hbs.registerHelper('smartChunk_e1', function(items: any[]) {
     if (!items || items.length === 0) return [];
     
     const chunks: any[][] = [];
@@ -77,9 +77,9 @@ hbs.registerHelper('smartChunk', function(items: any[]) {
     
     const MAX_FIRST_PAGE_LINES = 26;
     const MAX_OTHER_PAGES_LINES = 30;
-    const FOOTER_LINES = 18;
+    const FOOTER_LINES = 18; // DEBE SER IGUAL al de needsSeparateImportantPage_e1
     const ROW_BASE_LINES = 1;
-    const MAX_ITEM_LINES_PER_PAGE = 20; // Máximo de líneas por item en una página
+    const MAX_ITEM_LINES_PER_PAGE = 20;
     
     for (let i = 0; i < items.length; i++) {
         const item = items[i];
@@ -154,11 +154,11 @@ hbs.registerHelper('smartChunk', function(items: any[]) {
     return chunks;
 });
 
-// Helper para saber si necesita página separada para info importante
-hbs.registerHelper('needsSeparateImportantPage', function(items: any[]) {
+// Helper ÚNICO para empresa-1 - verificar si necesita página separada
+hbs.registerHelper('needsSeparateImportantPage_e1', function(items: any[]) {
     if (!items || items.length === 0) return false;
     
-    const chunks = hbs.helpers.smartChunk(items);
+    const chunks = hbs.helpers.smartChunk_e1(items);
     if (chunks.length === 0) return true;
     
     const lastChunk = chunks[chunks.length - 1];
@@ -170,12 +170,15 @@ hbs.registerHelper('needsSeparateImportantPage', function(items: any[]) {
         lastPageLines += ROW_BASE_LINES + descLines;
     }
     
+    // LÓGICA CORREGIDA:
+    // Si es la única página (primera y última), usa MAX_FIRST_PAGE_LINES
+    // Si es página subsecuente, usa MAX_OTHER_PAGES_LINES
     const isFirstPage = chunks.length === 1;
-    const headerLines = isFirstPage ? 16 : 4;
-    const totalLinesOnLastPage = headerLines + lastPageLines;
-    const FOOTER_LINES = 18;
+    const maxLinesAvailable = isFirstPage ? 26 : 30; // MAX_FIRST_PAGE_LINES : MAX_OTHER_PAGES_LINES
+    const FOOTER_LINES = 18; // Espacio que ocupa el footer
     
-    return totalLinesOnLastPage + FOOTER_LINES > 52;
+    // Si productos + footer exceden espacio disponible → necesita página separada
+    return lastPageLines + FOOTER_LINES > maxLinesAvailable;
 });
 
 function resolveBaseDir() {

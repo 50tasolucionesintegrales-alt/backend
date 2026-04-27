@@ -35,7 +35,7 @@ export class Product {
   nombre!: string;
 
   /** IMPORTANTE: nullable para evitar ALTER */
-  @Column('varchar', { length: 128, nullable: true })
+  @Column('varchar', { length: 300, nullable: true })
   descripcion?: string | null;
 
   @Column('decimal', { precision: 10, scale: 2 })

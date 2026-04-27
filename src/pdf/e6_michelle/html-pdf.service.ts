@@ -22,26 +22,32 @@ hbs.registerHelper('multiply', (a: any, b: any) => Number(a) * Number(b));
 hbs.registerHelper('not', (a: any) => !a);
 hbs.registerHelper('and', (a: any, b: any) => !!(a && b));
 
-// Helper para calcular paginación inteligente
-hbs.registerHelper('smartChunk', function(items: any[]) {
+// Helper ÚNICO para empresa-6 (Michelle) - BASADO EN CÓDIGO ORIGINAL
+hbs.registerHelper('smartChunk_e6', function(items: any[]) {
     if (!items || items.length === 0) return [];
     
     const chunks: any[][] = [];
     let currentChunk: any[] = [];
     
-    // Variables de control
+    // Variables de control - ORIGINAL
     let currentLines = 0;
-    const MAX_LINES_PER_PAGE = 24; // Líneas máximas por página (estimado)
-    const IMPORTANT_SECTION_LINES = 10; // Líneas que ocupa la sección importante
+    const MAX_LINES_PER_PAGE = 24; // Líneas máximas por página (funciona bien)
+    
+    // ========== AJUSTA SOLO ESTO PARA LA PARTE FINAL ==========
+    const IMPORTANT_SECTION_LINES = 16; // Footer (ANTES: 10, MUY BAJO)
+    // Opciones: 14 (footer grande), 16 (balanceado), 18 (conservador), 20 (muy conservador)
     
     for (let i = 0; i < items.length; i++) {
         const item = items[i];
         
-        // Calcular líneas aproximadas que ocupa este item
+        // Calcular líneas aproximadas - ORIGINAL (funciona)
         const descLength = item.nombre ? item.nombre.length : 0;
         let itemLines = 1; // mínimo una línea
         
-        if (descLength > 80) itemLines = 3;
+        // ✅ ACTUALIZADO: Rangos para descripción hasta 300 caracteres
+        if (descLength > 200) itemLines = 5;
+        else if (descLength > 150) itemLines = 4;
+        else if (descLength > 100) itemLines = 3;
         else if (descLength > 50) itemLines = 2;
         else if (descLength > 30) itemLines = 1.5;
         
@@ -56,7 +62,7 @@ hbs.registerHelper('smartChunk', function(items: any[]) {
         if (currentLines + itemLines <= maxAllowedLines) {
             currentChunk.push({
                 ...item,
-                globalIndex: i + 1 // Guardamos el índice global aquí
+                globalIndex: i + 1
             });
             currentLines += itemLines;
         } else {
@@ -78,11 +84,11 @@ hbs.registerHelper('smartChunk', function(items: any[]) {
     return chunks;
 });
 
-// Helper para saber si necesita página separada para info importante
-hbs.registerHelper('needsSeparateImportantPage', function(items: any[]) {
+// Helper ÚNICO para empresa-6 - BASADO EN CÓDIGO ORIGINAL
+hbs.registerHelper('needsSeparateImportantPage_e6', function(items: any[]) {
     if (!items || items.length === 0) return false;
     
-    const chunks = hbs.helpers.smartChunk(items);
+    const chunks = hbs.helpers.smartChunk_e6(items);
     if (chunks.length === 0) return true;
     
     const lastChunk = chunks[chunks.length - 1];
@@ -92,14 +98,24 @@ hbs.registerHelper('needsSeparateImportantPage', function(items: any[]) {
         const descLength = item.nombre ? item.nombre.length : 0;
         let itemLines = 1;
         
-        if (descLength > 80) itemLines = 3;
+        // ✅ ACTUALIZADO: Rangos para descripción hasta 300 caracteres
+        if (descLength > 200) itemLines = 5;
+        else if (descLength > 150) itemLines = 4;
+        else if (descLength > 100) itemLines = 3;
         else if (descLength > 50) itemLines = 2;
         else if (descLength > 30) itemLines = 1.5;
         
         lastPageLines += itemLines;
     }
     
-    return lastPageLines + 10 > 24; // 24 líneas máximas por página
+    // ========== OPCIONES PARA PROBAR - CAMBIA SOLO EL NÚMERO ==========
+    // ORIGINAL: lastPageLines + 10 > 24  (footer se encima, muy bajo)
+    // OPCIÓN 1: lastPageLines + 16 > 24  → lastPageLines > 8   (MUY RESTRICTIVO - footer se separa mucho)
+    // OPCIÓN 2: lastPageLines + 14 > 24  → lastPageLines > 10  (BALANCEADO)
+    // OPCIÓN 3: lastPageLines + 12 > 24  → lastPageLines > 12  (PERMISIVO - productos 17-20 caben)
+    // OPCIÓN 4: lastPageLines + 10 > 24  → lastPageLines > 14  (MUY PERMISIVO)
+    
+    return lastPageLines + 14 > 24; // ← ACTUALMENTE OPCIÓN 2 (cambia 14 por: 12, 16, 18, etc)
 });
 
 function resolveBaseDir() {

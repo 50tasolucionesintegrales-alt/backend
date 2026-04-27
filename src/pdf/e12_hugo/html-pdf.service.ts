@@ -45,7 +45,10 @@ hbs.registerHelper('smartChunk', function(items: any[]) {
         const descLength = item.nombre ? item.nombre.length : 0;
         let itemLines = 1;
         
-        if (descLength > 80) itemLines = 3;
+        // ✅ ACTUALIZADO: Rangos para descripción hasta 300 caracteres
+        if (descLength > 200) itemLines = 5;
+        else if (descLength > 150) itemLines = 4;
+        else if (descLength > 100) itemLines = 3;
         else if (descLength > 50) itemLines = 2;
         else if (descLength > 30) itemLines = 1.5;
         
@@ -96,7 +99,10 @@ hbs.registerHelper('needsSeparateImportantPage', function(items: any[]) {
         const descLength = item.nombre ? item.nombre.length : 0;
         let itemLines = 1;
         
-        if (descLength > 80) itemLines = 3;
+        // ✅ ACTUALIZADO: Rangos para descripción hasta 300 caracteres
+        if (descLength > 200) itemLines = 5;
+        else if (descLength > 150) itemLines = 4;
+        else if (descLength > 100) itemLines = 3;
         else if (descLength > 50) itemLines = 2;
         else if (descLength > 30) itemLines = 1.5;
         

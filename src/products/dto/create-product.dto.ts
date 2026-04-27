@@ -15,8 +15,8 @@ export class CreateProductDto {
 
   @IsString({ message: 'La descripción debe ser texto' })
   @IsNotEmpty({ message: 'La descripción es obligatoria' })
-  @MaxLength(128, {
-    message: 'La descripción debe tener máximo 128 caracteres',
+  @MaxLength(300, {
+    message: 'La descripción debe tener máximo 300 caracteres',
   })
   descripcion!: string;
 
