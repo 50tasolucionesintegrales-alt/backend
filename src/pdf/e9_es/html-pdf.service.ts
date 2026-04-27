@@ -4,7 +4,7 @@ import * as path from 'node:path';
 import * as hbs from 'handlebars';
 import { chromium, Browser } from 'playwright';
 
-// Helpers básicos
+// ========== Helpers básicos (sin cambios) ==========
 hbs.registerHelper('inc', (v: any) => Number(v) + 1);
 hbs.registerHelper('money', (n: any) => {
     const num = Number(n ?? 0);
@@ -22,93 +22,83 @@ hbs.registerHelper('multiply', (a: any, b: any) => Number(a) * Number(b));
 hbs.registerHelper('not', (a: any) => !a);
 hbs.registerHelper('and', (a: any, b: any) => !!(a && b));
 
-// Helper ÚNICO para empresa-9 (Eduardo) - BASADO EN CÓDIGO ORIGINAL
+// ==================== HELPERS CORREGIDOS PARA EMPRESA 9 (EDUARDO S.) ====================
 hbs.registerHelper('smartChunk_e9', function(items: any[]) {
     if (!items || items.length === 0) return [];
-    
+
     const chunks: any[][] = [];
     let currentChunk: any[] = [];
-    
     let currentLines = 0;
-    
-    const MAX_FIRST_PAGE_LINES = 13;  // 🔧 REDUCIDO de 16 a 13 (padding-top: 30mm)
-    const MAX_OTHER_PAGES_LINES = 22; // 🔧 REDUCIDO de 24 a 22 (line-height bajo)
-    const IMPORTANT_SECTION_LINES = 12;
-    
+
+    // Configuración (basada en el diseño original)
+    const MAX_LINES_PER_PAGE = 22;                // Máximo líneas totales por página (sin encabezado)
+    const HEADER_LINES_FIRST_PAGE = 8;            // Líneas que ocupa el encabezado en primera página
+    const EXTRA_MARGIN_OTHER_PAGES = 2;           // margin-top:20px en páginas intermedias (~2 líneas)
+    const MAX_ITEMS_FIRST_PAGE = MAX_LINES_PER_PAGE - HEADER_LINES_FIRST_PAGE;  // = 14
+    const MAX_ITEMS_OTHER_PAGES = MAX_LINES_PER_PAGE - EXTRA_MARGIN_OTHER_PAGES; // = 20
+
+    // Cálculo conservador de líneas por ítem (siempre entero, redondeado hacia arriba)
+    const getItemLines = (item: any) => {
+        const len = item.nombre?.length || 0;
+        if (len > 250) return 7;
+        if (len > 200) return 6;
+        if (len > 150) return 5;
+        if (len > 100) return 4;
+        if (len > 60) return 3;
+        if (len > 30) return 2;
+        return 1;
+    };
+
     for (let i = 0; i < items.length; i++) {
         const item = items[i];
-        
-        const descLength = item.nombre ? item.nombre.length : 0;
-        let itemLines = 1;
-        
-        // 🔧 AJUSTADO: Más líneas para descripciones largas (line-height: 1.35 en template)
-        if (descLength > 200) itemLines = 6;        // era 5
-        else if (descLength > 150) itemLines = 5;   // era 4
-        else if (descLength > 100) itemLines = 3.5; // era 3
-        else if (descLength > 50) itemLines = 2;
-        else if (descLength > 30) itemLines = 1.5;
-        
-        const isFirstPage = chunks.length === 0;
-        const maxLines = isFirstPage ? MAX_FIRST_PAGE_LINES : MAX_OTHER_PAGES_LINES;
-        const isLastItem = i === items.length - 1;
-        
-        const wouldIncludeImportant = isLastItem && 
-            (currentLines + itemLines + IMPORTANT_SECTION_LINES <= maxLines);
-        
-        const maxAllowedLines = wouldIncludeImportant ? 
-            maxLines - IMPORTANT_SECTION_LINES : 
-            maxLines;
-        
-        if (currentLines + itemLines <= maxAllowedLines) {
-            currentChunk.push({
-                ...item,
-                globalIndex: i + 1
-            });
+        const itemLines = getItemLines(item);
+        const isFirstPage = (chunks.length === 0 && currentChunk.length === 0);
+        const maxAllowed = isFirstPage ? MAX_ITEMS_FIRST_PAGE : MAX_ITEMS_OTHER_PAGES;
+
+        // Si el item cabe en la página actual, lo agregamos
+        if (currentLines + itemLines <= maxAllowed) {
+            currentChunk.push({ ...item, globalIndex: i + 1 });
             currentLines += itemLines;
         } else {
-            if (currentChunk.length > 0) {
-                chunks.push([...currentChunk]);
-            }
-            currentChunk = [{
-                ...item,
-                globalIndex: i + 1
-            }];
+            // No cabe: guardamos la página actual y empezamos una nueva
+            if (currentChunk.length) chunks.push([...currentChunk]);
+            currentChunk = [{ ...item, globalIndex: i + 1 }];
             currentLines = itemLines;
         }
     }
-    
-    if (currentChunk.length > 0) {
-        chunks.push(currentChunk);
-    }
-    
+
+    if (currentChunk.length) chunks.push(currentChunk);
     return chunks;
 });
 
-// Helper ÚNICO para empresa-9 - SIMPLIFICADO
-hbs.registerHelper('needsSeparateImportantPage_e9', function(items: any[]) {
+hbs.registerHelper('needsSeparateImportantPage_e9', function(items: any[], options?: any) {
     if (!items || items.length === 0) return false;
-    
+
+    const root = options?.data?.root || {};
+    const MAX_LINES_PER_PAGE = 22;
+    const FOOTER_LINES_ESTIMATED = 12;   // Totales + letra + condiciones + firma + contacto + márgenes
+
+    const getItemLines = (item: any) => {
+        const len = item.nombre?.length || 0;
+        if (len > 250) return 7;
+        if (len > 200) return 6;
+        if (len > 150) return 5;
+        if (len > 100) return 4;
+        if (len > 60) return 3;
+        if (len > 30) return 2;
+        return 1;
+    };
+
     const chunks = hbs.helpers.smartChunk_e9(items);
-    if (chunks.length === 0) return true;
-    
+    if (!chunks.length) return true;
     const lastChunk = chunks[chunks.length - 1];
-    let lastPageLines = 0;
-    
-    for (const item of lastChunk) {
-        const descLength = item.nombre ? item.nombre.length : 0;
-        let itemLines = 1;
-        
-        // 🔧 MISMO AJUSTE que smartChunk_e9
-        if (descLength > 200) itemLines = 6;
-        else if (descLength > 150) itemLines = 5;
-        else if (descLength > 100) itemLines = 3.5;
-        else if (descLength > 50) itemLines = 2;
-        else if (descLength > 30) itemLines = 1.5;
-        
-        lastPageLines += itemLines;
-    }
-    
-    return lastPageLines + 12 > 22; // 🔧 Cambiado de 24 a 22
+    let itemsLines = 0;
+    for (const it of lastChunk) itemsLines += getItemLines(it);
+
+    // Si los ítems de la última página más el footer exceden el máximo, necesita página separada
+    // Además, si el espacio restante es menor a 3 líneas, también forzamos separación (para evitar apretujamiento)
+    const spaceLeft = MAX_LINES_PER_PAGE - itemsLines;
+    return (itemsLines + FOOTER_LINES_ESTIMATED > MAX_LINES_PER_PAGE) || (spaceLeft < 3);
 });
 
 function resolveBaseDir() {
@@ -131,7 +121,6 @@ export class HtmlPdfService9 implements OnModuleInit, OnModuleDestroy {
 
     async onModuleInit() {
         const partialsDir = path.join(this.baseDir, 'templates', 'partials');
-
         if (fs.existsSync(partialsDir)) {
             for (const f of fs.readdirSync(partialsDir)) {
                 if (f.endsWith('.hbs')) {
@@ -141,7 +130,6 @@ export class HtmlPdfService9 implements OnModuleInit, OnModuleDestroy {
                 }
             }
         }
-
         this.browser = await chromium.launch({ args: ['--no-sandbox'] });
     }
 
@@ -165,12 +153,10 @@ export class HtmlPdfService9 implements OnModuleInit, OnModuleDestroy {
 
         const tmpDir = this.baseDir;
         const tmpFile = path.join(tmpDir, `__tmp_${templateName}_${Date.now()}.html`);
-
         fs.writeFileSync(tmpFile, html, 'utf8');
 
         const ctx = await this.browser.newContext();
         const page = await ctx.newPage();
-
         const fileUrl = 'file://' + tmpFile.replace(/\\/g, '/');
         await page.goto(fileUrl, { waitUntil: 'load' });
 
@@ -180,9 +166,7 @@ export class HtmlPdfService9 implements OnModuleInit, OnModuleDestroy {
         });
 
         await ctx.close();
-
         try { fs.unlinkSync(tmpFile); } catch {}
-
         return pdf;
     }
 }

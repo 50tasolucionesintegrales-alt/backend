@@ -27,15 +27,19 @@ hbs.registerHelper('smartChunk', function(items: any[]) {
     if (!items || items.length === 0) return [];
     
     console.log('🔥🔥🔥 HELPER E4 ACTUALIZADO - VERSION FINAL 🔥🔥🔥');
+    console.log('Total items:', items.length);
     
     const chunks: any[][] = [];
     let currentChunk: any[] = [];
     
     // Variables de control
     let currentLines = 0;
-    const MAX_FIRST_PAGE_LINES = 2;   // 🔥🔥🔥 EXTREMADAMENTE CONSERVADOR
-    const MAX_OTHER_PAGES_LINES = 18; // Páginas subsecuentes
+    const MAX_FIRST_PAGE_LINES = 1;   // 🔥 SOLO ENCABEZADO
+    const MAX_OTHER_PAGES_LINES = 15; // 🔧 Reducido de 18 a 15
     const IMPORTANT_SECTION_LINES = 10;
+    
+    console.log('MAX_FIRST_PAGE_LINES:', MAX_FIRST_PAGE_LINES);
+    console.log('MAX_OTHER_PAGES_LINES:', MAX_OTHER_PAGES_LINES);
     
     for (let i = 0; i < items.length; i++) {
         const item = items[i];
@@ -44,13 +48,13 @@ hbs.registerHelper('smartChunk', function(items: any[]) {
         const descLength = item.nombre ? item.nombre.length : 0;
         let itemLines = 1;
         
-        // 🔧 AJUSTADO: word-break: break-all aumenta MUCHO las líneas verticales
-        if (descLength > 250) itemLines = 13;
-        else if (descLength > 200) itemLines = 11;
-        else if (descLength > 150) itemLines = 8;
-        else if (descLength > 100) itemLines = 5.5;
-        else if (descLength > 50) itemLines = 3;
-        else if (descLength > 30) itemLines = 2;
+        // 🔧 CON word-break:break-all - valores MUY conservadores
+        if (descLength > 250) itemLines = 15;
+        else if (descLength > 200) itemLines = 13;
+        else if (descLength > 150) itemLines = 10;
+        else if (descLength > 100) itemLines = 7;
+        else if (descLength > 50) itemLines = 4;
+        else if (descLength > 30) itemLines = 2.5;
         
         const isFirstPage = chunks.length === 0;
         const maxLines = isFirstPage ? MAX_FIRST_PAGE_LINES : MAX_OTHER_PAGES_LINES;
@@ -85,6 +89,10 @@ hbs.registerHelper('smartChunk', function(items: any[]) {
         chunks.push(currentChunk);
     }
     
+    console.log('Chunks creados:', chunks.length);
+    console.log('Items en página 1:', chunks[0]?.length);
+    console.log('Items en página 2:', chunks[1]?.length);
+    
     return chunks;
 });
 
@@ -102,18 +110,18 @@ hbs.registerHelper('needsSeparateImportantPage', function(items: any[]) {
         const descLength = item.nombre ? item.nombre.length : 0;
         let itemLines = 1;
         
-        // 🔧 MISMO AJUSTE que smartChunk
-        if (descLength > 250) itemLines = 13;
-        else if (descLength > 200) itemLines = 11;
-        else if (descLength > 150) itemLines = 8;
-        else if (descLength > 100) itemLines = 5.5;
-        else if (descLength > 50) itemLines = 3;
-        else if (descLength > 30) itemLines = 2;
+        // 🔧 MISMO CÁLCULO que smartChunk
+        if (descLength > 250) itemLines = 15;
+        else if (descLength > 200) itemLines = 13;
+        else if (descLength > 150) itemLines = 10;
+        else if (descLength > 100) itemLines = 7;
+        else if (descLength > 50) itemLines = 4;
+        else if (descLength > 30) itemLines = 2.5;
         
         lastPageLines += itemLines;
     }
     
-    return lastPageLines + 10 > 20; // 🔧 Usar MAX_OTHER_PAGES_LINES
+    return lastPageLines + 10 > 15; // Usar MAX_OTHER_PAGES_LINES
 });
 
 function resolveBaseDir() {

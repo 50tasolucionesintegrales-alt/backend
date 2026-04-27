@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>{{titulo}}</title>
   <style>
+    /* ========== ESTILOS ORIGINALES (NO MODIFICADOS) ========== */
     :root {
       --brand: #c51b1b;
       --ink: #111;
@@ -50,7 +51,6 @@
       page-break-after: auto;
     }
 
-    /* Fondo como imagen absoluta (NO background-image) */
     .page-bg {
       position: absolute;
       top: 0;
@@ -155,7 +155,6 @@
       text-align: right;
     }
 
-    /* Anchos de columna */
     th:nth-child(1), td:nth-child(1) { width: 10%; }
     th:nth-child(2), td:nth-child(2) { width: 40%; }
     th:nth-child(3), td:nth-child(3) { width: 12%; }
@@ -244,10 +243,9 @@
 {{#if items}}
   {{#each (smartChunk items)}}
   <div class="page-container">
-    <!-- Fondo absoluto por página -->
     <div class="page-bg"><img src="{{../assets.bg}}" alt="membrete"></div>
-    
     <div class="content-area">
+
       {{#if (eq @index 0)}}
         <!-- Primera página: encabezado completo -->
         <div class="folio">{{../folio}}</div>
@@ -260,7 +258,6 @@
         </div>
         <div class="intro">{{{../descripcion}}}</div>
       {{else}}
-        <!-- Páginas siguientes: solo folio con continuación -->
         <div class="folio">{{../folio}} (continuación)</div>
       {{/if}}
 
@@ -292,53 +289,100 @@
         </table>
       </div>
 
-      <!-- Totales, condiciones y firma SOLO en la última página -->
       {{#if @last}}
-        <div class="footer-section">
-          <div class="totals">
-            <table class="totals-table">
-              <tr><td class="label">Subtotal</td><td class="value">{{money ../totales.subtotal}}</td></tr>
-              <tr><td class="label">IVA ({{../ivaPct}}%)</td><td class="value">{{money ../totales.iva}}</td></tr>
-              <tr><td class="label">Monto Total</td><td class="value">{{money ../totales.total}}</td></tr>
-            </table>
-          </div>
-
-          <div style="margin-top: 10px;">
-            <span class="label">Importe en letra:</span> {{../totalEnLetra}}
-          </div>
-
-          {{#if ../condiciones}}
-          <div class="condiciones-box">
-            <div class="condiciones-title">Condiciones</div>
-            <div>{{{../condiciones}}}</div>
-          </div>
-          {{/if}}
-
-          <div class="signature">
-            <div style="font-weight:600; margin-bottom:8px;">Atentamente</div>
-            {{#if ../incluirFirma}}
-              {{#if ../assets.firma}}<img src="{{../assets.firma}}" alt="firma">{{/if}}
-            {{else}}
-              <div style="height:70px;"></div>
+        {{#if (needsSeparateImportantPage ../items)}}
+          <!-- No mostrar nada aquí, se creará página exclusiva después -->
+        {{else}}
+          <div class="footer-section">
+            <div class="totals">
+              <table class="totals-table">
+                <tr><td class="label">Subtotal</td><td class="value">{{money ../totales.subtotal}}</td></tr>
+                <tr><td class="label">IVA ({{../ivaPct}}%)</td><td class="value">{{money ../totales.iva}}</td></tr>
+                <tr><td class="label">Monto Total</td><td class="value">{{money ../totales.total}}</td></tr>
+              </table>
+            </div>
+            <div style="margin-top: 10px;">
+              <span class="label">Importe en letra:</span> {{../totalEnLetra}}
+            </div>
+            {{#if ../condiciones}}
+            <div class="condiciones-box">
+              <div class="condiciones-title">Condiciones</div>
+              <div>{{{../condiciones}}}</div>
+            </div>
             {{/if}}
-            <div class="signature-name">
-              {{#if ../firmanteNombre}}{{{../firmanteNombre}}}{{else}}Responsable de Ventas{{/if}}
+            <div class="signature">
+              <div style="font-weight:600; margin-bottom:8px;">Atentamente</div>
+              {{#if ../incluirFirma}}
+                {{#if ../assets.firma}}<img src="{{../assets.firma}}" alt="firma">{{/if}}
+              {{else}}
+                <div style="height:70px;"></div>
+              {{/if}}
+              <div class="signature-name">
+                {{#if ../firmanteNombre}}{{{../firmanteNombre}}}{{else}}Responsable de Ventas{{/if}}
+              </div>
+            </div>
+            <div class="contact-info">
+              {{#if ../contactoTelefono}}{{../contactoTelefono}}<br>{{/if}}
+              {{#if ../contactoRFC}}RFC: {{../contactoRFC}}<br>{{/if}}
+              {{#if ../contactoEmail}}{{../contactoEmail}}<br>{{/if}}
+              {{#if ../contactoEmpresa}}{{../contactoEmpresa}}<br>{{/if}}
+              {{#if ../contactoDireccion}}{{../contactoDireccion}}<br>{{/if}}
+              {{#if ../contactoCiudad}}{{../contactoCiudad}}<br>{{/if}}
             </div>
           </div>
-
-          <div class="contact-info">
-            {{#if ../contactoTelefono}}{{../contactoTelefono}}<br>{{/if}}
-            {{#if ../contactoRFC}}RFC: {{../contactoRFC}}<br>{{/if}}
-            {{#if ../contactoEmail}}{{../contactoEmail}}<br>{{/if}}
-            {{#if ../contactoEmpresa}}{{../contactoEmpresa}}<br>{{/if}}
-            {{#if ../contactoDireccion}}{{../contactoDireccion}}<br>{{/if}}
-            {{#if ../contactoCiudad}}{{../contactoCiudad}}{{/if}}
-          </div>
-        </div>
+        {{/if}}
       {{/if}}
     </div>
   </div>
   {{/each}}
+
+  {{#if (needsSeparateImportantPage items)}}
+  <div class="page-container">
+    <div class="page-bg"><img src="{{assets.bg}}" alt="membrete"></div>
+    <!-- content-area con padding-top normal (23mm) y sin márgenes extra -->
+    <div class="content-area">
+      <!-- Se muestra el footer desde arriba, respetando el flujo normal -->
+      <div class="footer-section" style="margin-top: 0; padding-top: 0;">
+        <div class="totals">
+          <table class="totals-table">
+            <tr><td class="label">Subtotal</td><td class="value">{{money totales.subtotal}}</td></tr>
+            <tr><td class="label">IVA ({{ivaPct}}%)</td><td class="value">{{money totales.iva}}</td></tr>
+            <tr><td class="label">Monto Total</td><td class="value">{{money totales.total}}</td></tr>
+          </table>
+        </div>
+        <div style="margin-top: 10px;">
+          <span class="label">Importe en letra:</span> {{totalEnLetra}}
+        </div>
+        {{#if condiciones}}
+        <div class="condiciones-box">
+          <div class="condiciones-title">Condiciones</div>
+          <div>{{{condiciones}}}</div>
+        </div>
+        {{/if}}
+        <div class="signature">
+          <div style="font-weight:600; margin-bottom:8px;">Atentamente</div>
+          {{#if incluirFirma}}
+            {{#if assets.firma}}<img src="{{assets.firma}}" alt="firma">{{/if}}
+          {{else}}
+            <div style="height:70px;"></div>
+          {{/if}}
+          <div class="signature-name">
+            {{#if firmanteNombre}}{{{firmanteNombre}}}{{else}}Responsable de Ventas{{/if}}
+          </div>
+        </div>
+        <div class="contact-info">
+          {{#if contactoTelefono}}{{contactoTelefono}}<br>{{/if}}
+          {{#if contactoRFC}}RFC: {{contactoRFC}}<br>{{/if}}
+          {{#if contactoEmail}}{{contactoEmail}}<br>{{/if}}
+          {{#if contactoEmpresa}}{{contactoEmpresa}}<br>{{/if}}
+          {{#if contactoDireccion}}{{contactoDireccion}}<br>{{/if}}
+          {{#if contactoCiudad}}{{contactoCiudad}}<br>{{/if}}
+        </div>
+      </div>
+    </div>
+  </div>
+  {{/if}}
+
 {{else}}
   <div class="page-container">
     <div class="page-bg"><img src="{{assets.bg}}" alt="membrete"></div>

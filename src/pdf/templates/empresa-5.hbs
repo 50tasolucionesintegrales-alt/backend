@@ -243,7 +243,7 @@
             <th class="center" style="width:20mm;">Medida</th>
             <th class="right" style="width:28mm;">Precio Unitario</th>
             <th class="right" style="width:28mm;">Subtotal</th>
-           </tr>
+          </tr>
         </thead>
         <tbody>
           {{#each this}}
@@ -254,7 +254,7 @@
             <td class="center">{{this.unidad}}</td>
             <td class="right">{{money this.unitario}}</td>
             <td class="right">{{money this.parcial}}</td>
-           </tr>
+          </tr>
           {{/each}}
         </tbody>
       </table>
@@ -288,7 +288,6 @@
 
         <!-- Layout de dos columnas: Condiciones a la izquierda, Firma a la derecha -->
         <div class="footer-row">
-          <!-- Columna izquierda: Condiciones -->
           <div class="footer-col-left">
             {{#if ../condiciones}}
             <div class="condiciones">
@@ -300,7 +299,6 @@
             {{/if}}
           </div>
 
-          <!-- Columna derecha: Firma -->
           <div class="footer-col-right">
             <div class="firma">
               <div style="font-weight:700; margin-bottom:8px;">Atentamente</div>
@@ -328,7 +326,7 @@
         </div>
       </div>
       {{else}}
-      <!-- Página separada para información importante -->
+      <!-- Si no cabe el footer, solo mostramos el contacto básico (esto ya estaba) -->
       <div class="contact-info" style="margin-top: 20px;">
         {{#if ../contactoTelefono}}{{../contactoTelefono}}<br>{{/if}}
         {{#if ../contactoEmail}}{{../contactoEmail}}<br>{{/if}}
@@ -354,8 +352,6 @@
 <div class="page-container">
   <div class="bg-page"><img src="assets/emp5.png" alt="membrete"></div>
   <div class="content-area">
-    <div style="margin-top: 20px;"></div>
-    
     <div class="important-content">
       <!-- Totales -->
       <div class="totals-wrapper">
@@ -379,19 +375,15 @@
         </table>
       </div>
 
-      <!-- Layout de dos columnas: Condiciones a la izquierda, Firma a la derecha -->
       <div class="footer-row">
         <div class="footer-col-left">
           {{#if condiciones}}
           <div class="condiciones">
             <div class="condiciones-title">Condiciones Generales:</div>
-            <div class="condiciones-content">
-              {{{condiciones}}}
-            </div>
+            <div class="condiciones-content">{{{condiciones}}}</div>
           </div>
           {{/if}}
         </div>
-
         <div class="footer-col-right">
           <div class="firma">
             <div style="font-weight:700; margin-bottom:8px;">Atentamente</div>
@@ -410,7 +402,6 @@
         </div>
       </div>
 
-      <!-- Información de contacto -->
       <div class="contact-info">
         {{#if contactoTelefono}}{{contactoTelefono}}<br>{{/if}}
         {{#if contactoEmail}}{{contactoEmail}}<br>{{/if}}
