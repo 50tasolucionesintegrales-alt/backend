@@ -203,11 +203,6 @@ export class ExcelImportService {
       if (val === null || val === undefined || val === '') return null;
       const n = Number(val);
       if (isNaN(n)) return null;
-      if (n < 0) {
-        throw new BadRequestException(
-          `El margen global de la organización ${empresaIds[ei]} no puede ser negativo.`,
-        );
-      }
       if (n === 0) {
         advertencias.push(
           `Advertencia: La organización ${empresaIds[ei]} tiene margen global 0%. El precio final será igual al costo.`,
@@ -368,11 +363,11 @@ export class ExcelImportService {
           margenesPorEmpresa.set(empresaId, globalMargins[ei]);
         } else {
           const n = Number(val);
-          if (isNaN(n) || n < 0 || n > 100) {
+          if (isNaN(n) || n < -100 || n > 100) {
             errors.push({
               fila: rowNum,
               campo: `%Ítem empresa ${empresaId}`,
-              mensaje: 'Debe ser un número entre 0 y 100',
+              mensaje: 'Debe ser un número entre -100 y 100',
             });
           } else {
             if (n === 0) {

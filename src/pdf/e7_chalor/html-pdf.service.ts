@@ -4,7 +4,7 @@ import * as path from 'node:path';
 import * as hbs from 'handlebars';
 import { chromium, Browser } from 'playwright';
 
-// Helpers básicos
+// Helpers básicos (sin cambios)
 hbs.registerHelper('inc', (v: any) => Number(v) + 1);
 hbs.registerHelper('money', (n: any) => {
     const num = Number(n ?? 0);
@@ -22,101 +22,93 @@ hbs.registerHelper('multiply', (a: any, b: any) => Number(a) * Number(b));
 hbs.registerHelper('not', (a: any) => !a);
 hbs.registerHelper('and', (a: any, b: any) => !!(a && b));
 
-// Helper para calcular paginación inteligente
-hbs.registerHelper('smartChunk', function(items: any[]) {
+// Helper smartChunk_e7 
+hbs.registerHelper('smartChunk_e7', function(items: any[]) {
     if (!items || items.length === 0) return [];
-    
+
     const chunks: any[][] = [];
     let currentChunk: any[] = [];
-    
-    // Variables de control
     let currentLines = 0;
-    const MAX_LINES_PER_PAGE = 24; // Líneas máximas por página (estimado)
-    const IMPORTANT_SECTION_LINES = 10; // Líneas que ocupa la sección importante
-    
+
+    // CONSTANTES 
+    const MAX_LINES_PER_PAGE = 24;          
+    const HEADER_LINES_FIRST_PAGE = 12;          
+    const MAX_ITEMS_LINES_FIRST_PAGE = 12;       
+    const MAX_ITEMS_LINES_OTHER = 24;             
+
+    // Cálculo de líneas por ítem 
+    const getItemLines = (item: any) => {
+        const len = item.nombre?.length || 0;
+        if (len > 250) return 7;
+        if (len > 200) return 6;
+        if (len > 150) return 5;
+        if (len > 100) return 4;
+        if (len > 70) return 3;
+        if (len > 40) return 2;
+        if (len > 20) return 2;
+        return 1;
+    };
+
     for (let i = 0; i < items.length; i++) {
         const item = items[i];
-        
-        // Calcular líneas aproximadas que ocupa este item
-        const descLength = item.nombre ? item.nombre.length : 0;
-        let itemLines = 1; // mínimo una línea
-        
-        // ✅ ACTUALIZADO: Rangos para descripción hasta 300 caracteres
-        if (descLength > 200) itemLines = 5;
-        else if (descLength > 150) itemLines = 4;
-        else if (descLength > 100) itemLines = 3;
-        else if (descLength > 50) itemLines = 2;
-        else if (descLength > 30) itemLines = 1.5;
-        
-        const isLastItem = i === items.length - 1;
-        const wouldIncludeImportant = isLastItem && 
-            (currentLines + itemLines + IMPORTANT_SECTION_LINES <= MAX_LINES_PER_PAGE);
-        
-        const maxAllowedLines = wouldIncludeImportant ? 
-            MAX_LINES_PER_PAGE - IMPORTANT_SECTION_LINES : 
-            MAX_LINES_PER_PAGE;
-        
-        if (currentLines + itemLines <= maxAllowedLines) {
-            currentChunk.push({
-                ...item,
-                globalIndex: i + 1 // Guardamos el índice global aquí
-            });
+        const itemLines = getItemLines(item);
+        const isFirstPage = (chunks.length === 0 && currentChunk.length === 0);
+        const maxAllowed = isFirstPage ? MAX_ITEMS_LINES_FIRST_PAGE : MAX_ITEMS_LINES_OTHER;
+
+        if (itemLines > maxAllowed) {
+            if (currentChunk.length) chunks.push([...currentChunk]);
+            currentChunk = [{ ...item, globalIndex: i + 1 }];
+            currentLines = itemLines;
+        } 
+        else if (currentLines + itemLines <= maxAllowed) {
+            currentChunk.push({ ...item, globalIndex: i + 1 });
             currentLines += itemLines;
         } else {
-            if (currentChunk.length > 0) {
-                chunks.push([...currentChunk]);
-            }
-            currentChunk = [{
-                ...item,
-                globalIndex: i + 1
-            }];
+            if (currentChunk.length) chunks.push([...currentChunk]);
+            currentChunk = [{ ...item, globalIndex: i + 1 }];
             currentLines = itemLines;
         }
     }
-    
-    if (currentChunk.length > 0) {
-        chunks.push(currentChunk);
-    }
-    
+    if (currentChunk.length) chunks.push(currentChunk);
     return chunks;
 });
 
-// Helper para saber si necesita página separada para info importante
-hbs.registerHelper('needsSeparateImportantPage', function(items: any[]) {
+// Helper needsSeparateImportantPage_e7 
+hbs.registerHelper('needsSeparateImportantPage_e7', function(items: any[], options?: any) {
     if (!items || items.length === 0) return false;
-    
-    const chunks = hbs.helpers.smartChunk(items);
-    if (chunks.length === 0) return true;
-    
+
+    const MAX_LINES_PER_PAGE = 24;
+    const FOOTER_LINES_ESTIMATED = 16;   
+
+    const getItemLines = (item: any) => {
+        const len = item.nombre?.length || 0;
+        if (len > 250) return 7;
+        if (len > 200) return 6;
+        if (len > 150) return 5;
+        if (len > 100) return 4;
+        if (len > 70) return 3;
+        if (len > 40) return 2;
+        if (len > 20) return 2;
+        return 1;
+    };
+
+    const chunks = hbs.helpers.smartChunk_e7(items);
+    if (!chunks.length) return true;
     const lastChunk = chunks[chunks.length - 1];
-    let lastPageLines = 0;
-    
-    for (const item of lastChunk) {
-        const descLength = item.nombre ? item.nombre.length : 0;
-        let itemLines = 1;
-        
-        // ✅ ACTUALIZADO: Rangos para descripción hasta 300 caracteres
-        if (descLength > 200) itemLines = 5;
-        else if (descLength > 150) itemLines = 4;
-        else if (descLength > 100) itemLines = 3;
-        else if (descLength > 50) itemLines = 2;
-        else if (descLength > 30) itemLines = 1.5;
-        
-        lastPageLines += itemLines;
-    }
-    
-    return lastPageLines + 10 > 24; // 24 líneas máximas por página
+    let itemsLines = 0;
+    for (const it of lastChunk) itemsLines += getItemLines(it);
+
+    return (itemsLines + FOOTER_LINES_ESTIMATED > MAX_LINES_PER_PAGE);
 });
 
+// ========== Resolución de rutas y servicio  ==========
 function resolveBaseDir() {
     const distDir = path.join(__dirname);
     const distTpl = path.join(distDir, 'templates');
     if (fs.existsSync(distTpl)) return distDir;
-
     const srcDir = path.join(process.cwd(), 'src', 'pdf');
     const srcTpl = path.join(srcDir, 'templates');
     if (fs.existsSync(srcTpl)) return srcDir;
-
     return distDir;
 }
 
@@ -128,7 +120,6 @@ export class HtmlPdfService7 implements OnModuleInit, OnModuleDestroy {
 
     async onModuleInit() {
         const partialsDir = path.join(this.baseDir, 'templates', 'partials');
-
         if (fs.existsSync(partialsDir)) {
             for (const f of fs.readdirSync(partialsDir)) {
                 if (f.endsWith('.hbs')) {
@@ -138,7 +129,6 @@ export class HtmlPdfService7 implements OnModuleInit, OnModuleDestroy {
                 }
             }
         }
-
         this.browser = await chromium.launch({ args: ['--no-sandbox'] });
     }
 
@@ -159,27 +149,19 @@ export class HtmlPdfService7 implements OnModuleInit, OnModuleDestroy {
     async renderToPdf(templateName: string, data: any): Promise<Buffer> {
         const tpl = this.getTemplate(templateName);
         const html = tpl(data);
-
         const tmpDir = this.baseDir;
         const tmpFile = path.join(tmpDir, `__tmp_${templateName}_${Date.now()}.html`);
-
         fs.writeFileSync(tmpFile, html, 'utf8');
-
         const ctx = await this.browser.newContext();
         const page = await ctx.newPage();
-
         const fileUrl = 'file://' + tmpFile.replace(/\\/g, '/');
         await page.goto(fileUrl, { waitUntil: 'load' });
-
         const pdf = await page.pdf({
             format: 'Letter',
             printBackground: true,
         });
-
         await ctx.close();
-
         try { fs.unlinkSync(tmpFile); } catch {}
-
         return pdf;
     }
 }

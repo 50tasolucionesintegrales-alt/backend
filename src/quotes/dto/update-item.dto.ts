@@ -13,51 +13,39 @@ const toNum = () =>
 
 export class UpdateItemDto {
   @IsOptional() @toNum() @IsNumber({}, { message: 'margenPct1 debe ser un número' })
-  @Min(0, { message: 'margenPct1 no puede ser negativo' })
   margenPct1?: number;
 
   @IsOptional() @toNum() @IsNumber({}, { message: 'margenPct2 debe ser un número' })
-  @Min(0, { message: 'margenPct2 no puede ser negativo' })
   margenPct2?: number;
 
   @IsOptional() @toNum() @IsNumber({}, { message: 'margenPct3 debe ser un número' })
-  @Min(0, { message: 'margenPct3 no puede ser negativo' })
   margenPct3?: number;
 
   @IsOptional() @toNum() @IsNumber({}, { message: 'margenPct4 debe ser un número' })
-  @Min(0, { message: 'margenPct4 no puede ser negativo' })
   margenPct4?: number;
 
   @IsOptional() @toNum() @IsNumber({}, { message: 'margenPct5 debe ser un número' })
-  @Min(0, { message: 'margenPct5 no puede ser negativo' })
   margenPct5?: number;
 
   @IsOptional() @toNum() @IsNumber({}, { message: 'margenPct6 debe ser un número' })
-  @Min(0, { message: 'margenPct6 no puede ser negativo' })
   margenPct6?: number;
 
   @IsOptional() @toNum() @IsNumber({}, { message: 'margenPct7 debe ser un número' })
-  @Min(0, { message: 'margenPct7 no puede ser negativo' })
   margenPct7?: number;
 
   @IsOptional() @toNum() @IsNumber({}, { message: 'margenPct8 debe ser un número' })
-  @Min(0, { message: 'margenPct8 no puede ser negativo' })
   margenPct8?: number;
 
   @IsOptional() @toNum() @IsNumber({}, { message: 'margenPct9 debe ser un número' })
-  @Min(0, { message: 'margenPct9 no puede ser negativo' })
   margenPct9?: number;
 
   @IsOptional() @toNum() @IsNumber({}, { message: 'margenPct10 debe ser un número' })
-  @Min(0, { message: 'margenPct10 no puede ser negativo' })
   margenPct10?: number;
 
   @IsOptional() @toNum() @IsNumber({}, { message: 'margenPct11 debe ser un número' })
-  @Min(0, { message: 'margenPct11 no puede ser negativo' })
   margenPct11?: number;  
 
   @IsOptional() @toNum() @IsNumber({}, { message: 'margenPct12 debe ser un número' })
-  @Min(0, { message: 'margenPct12 no puede ser negativo' })
   margenPct12?: number;
 
   @IsOptional()

@@ -304,7 +304,7 @@
 
 <!-- PÁGINAS CON PAGINACIÓN INTELIGENTE -->
 {{#if items}}
-  {{#each (smartChunk items)}}
+  {{#each (smartChunk_e12 items)}}
   <div class="page-container">
     <div class="bg-page"><img src="assets/emp12.png" alt="membrete"></div>
     <div class="content-area">
@@ -358,7 +358,7 @@
 
       <!-- SECCIÓN IMPORTANTE SOLO EN ÚLTIMA PÁGINA SI HAY ESPACIO -->
       {{#if @last}}
-        {{#if (not (needsSeparateImportantPage ../items))}}
+        {{#if (not (needsSeparateImportantPage_e12 ../items))}}
         <div class="important-content">
           <!-- Totales -->
           <div class="totals-container">
@@ -408,7 +408,7 @@
   {{/each}}
 
   <!-- PÁGINA SEPARADA PARA INFORMACIÓN IMPORTANTE SI NO CABE EN LA ÚLTIMA -->
-  {{#if (needsSeparateImportantPage items)}}
+  {{#if (needsSeparateImportantPage_e12 items)}}
   <div class="page-container">
     <div class="bg-page"><img src="assets/emp12.png" alt="membrete"></div>
     <div class="content-area">

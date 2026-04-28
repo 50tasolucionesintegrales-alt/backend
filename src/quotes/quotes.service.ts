@@ -306,7 +306,6 @@ export class QuotesService {
       
       const validateMargin = (margin: number | null | undefined): number | null => {
         if (margin === null || margin === undefined) return null;
-        if (margin < 0) throw new ForbiddenException('Los márgenes no pueden ser negativos');
         return margin;
       };
 

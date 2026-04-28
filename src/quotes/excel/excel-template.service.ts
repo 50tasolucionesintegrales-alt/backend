@@ -585,11 +585,11 @@ export class ExcelTemplateService {
       dv.add(`${pctL}${DATA_START}:${pctL}${DATA_END}`, {
         type: 'decimal',
         operator: 'between',
-        formulae: [0, 100],
+        formulae: [-100, 100],
         allowBlank: true,
         showErrorMessage: true,
         errorTitle: '% inválido',
-        error: 'Ingresa un porcentaje entre 0 y 100',
+        error: 'Ingresa un porcentaje entre -100 y 100',
       });
     }
 
@@ -598,11 +598,11 @@ export class ExcelTemplateService {
       dv.add(`${pctL}11`, {
         type: 'decimal',
         operator: 'between',
-        formulae: [0, 100],
+        formulae: [-100, 100],
         allowBlank: true,
         showErrorMessage: true,
         errorTitle: '% global inválido',
-        error: 'El margen global debe ser entre 0 y 100',
+        error: 'El margen global debe ser entre -100 y 100',
       });
     }
 
