@@ -29,7 +29,7 @@ hbs.registerHelper('smartChunk', function(items: any[]) {
     const chunks: any[][] = [];
     let currentChunk: any[] = [];
     let currentLines = 0;
-    const MAX_LINES_PER_PAGE = 20; // Ajustado: deja espacio suficiente
+    const MAX_LINES_PER_PAGE = 20; 
 
     for (let i = 0; i < items.length; i++) {
         const item = items[i];

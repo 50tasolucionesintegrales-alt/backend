@@ -543,11 +543,13 @@ export class ExcelTemplateService {
     dv.add(`C${DATA_START}:C${DATA_END}`, {
       type: 'textLength',
       operator: 'between',
-      formulae: [1, 300],
+      formulae: esServicios ? [1, 2500] : [1, 300],
       allowBlank: true,
       showErrorMessage: true,
       errorTitle: 'Descripción inválida',
-      error: 'La descripción debe tener entre 1 y 300 caracteres',
+      error: esServicios 
+        ? 'La descripción debe tener entre 1 y 2500 caracteres'
+        : 'La descripción debe tener entre 1 y 300 caracteres',
     });
 
     // ── Categoría solo para productos ──

@@ -1,0 +1,411 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{{titulo}}</title>
+  <style>
+    :root{
+      --brand:#e0553c;
+      --ink:#111;
+      --line:#dc5c3c;        /* color de borde */
+      --thead:#0000;         /* sin fondo */
+      --theadBorder:#dc5c3c; /* borde encabezado */
+    }
+
+    @page { size: Letter; margin: 0 3mm 0; }
+
+    /* Poppins variable */
+    @font-face{
+      font-family: "PoppinsVar";
+      src: url("assets/fonts/Poppins-VariableFont_wght.otf") format("opentype");
+      font-weight: 100 900;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    body{
+      font-family: "PoppinsVar", Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      color: var(--ink);
+      margin: 0;
+      padding: 0;
+    }
+
+    .page-container {
+      position: relative;
+      min-height: 279.4mm;
+      width: 215.9mm;
+      page-break-after: always;
+    }
+
+    .page-container:last-child {
+      page-break-after: auto;
+    }
+
+    /* ===== Fondo / membrete ===== */
+    .bg-page{ 
+      position:absolute; 
+      inset:0; 
+      z-index:-1; 
+      pointer-events:none; 
+    }
+    .bg-page img{ 
+      width:100%; 
+      height:100%; 
+      object-fit:cover; 
+      display:block; 
+    }
+
+    .content-area {
+      position: relative;
+      padding-top: 26mm;
+      padding-left: 15mm;
+      padding-right: 15mm;
+      min-height: calc(279.4mm - 26mm);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Estilos de encabezado */
+    .folio {
+      font-weight: 700;
+      margin: 10px 0 15px 0;
+      text-align: left;
+      font-size: 12px;
+    }
+
+    .fecha {
+      text-align: left;
+      color: #333;
+      margin: 5px 0 20px 0;
+      font-weight: 500;
+    }
+
+    .destinatario {
+      font-weight: 700;
+      margin: 0 0 5px 0;
+    }
+
+    .presente {
+      font-weight: 800;
+      margin: 0 0 15px 0;
+    }
+
+    .intro {
+      margin: 10px 0 0;
+      line-height: 1.55;
+      color: #222;
+    }
+
+    .label { 
+      font-weight: 700; 
+    }
+
+    /* ===== Tabla principal ===== */
+    .table-wrap{ 
+      position: relative; 
+      margin: 12px 0 0; 
+    }
+    table{
+      width: 100%;
+      border-collapse: collapse;
+    }
+    thead{ display: table-header-group; }
+    tr, td, th{ page-break-inside: avoid; }
+
+    thead th{
+      background: transparent;
+      color: #333;
+      font-weight: 700;
+      border: 1px solid var(--theadBorder);
+      padding: 8px;
+      font-size: 12px;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    tbody td{
+      border: 1px solid var(--line);
+      padding: 6px 8px;
+      font-size: 12px;
+      background: transparent;
+      vertical-align: top;
+    }
+
+    .center{ text-align: center; }
+    .right { text-align: right; }
+
+    .summaryRow{
+      width: 100%;
+      margin: 16px 0 0;
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      align-items: start;
+      gap: 20px;
+    }
+
+    .rightCol{
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .totals table{ 
+      width: 100%; 
+      border-collapse: collapse; 
+    }
+    .totals td{
+      padding: 8px 10px;
+      border-left: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      background: transparent;
+    }
+    .totals tr:first-child td{ border-top: 1px solid var(--line); }
+    .totals tr:last-child  td{ border-bottom: 1px solid var(--line); }
+    .totals .label{ font-weight: 700; }
+    .totals .value{ text-align: right; }
+
+    .enletra{
+      border: 1px solid var(--line);
+      background: transparent;
+      padding: 12px 16px;
+      line-height: 1.6;
+    }
+    .enletra .title{ font-weight: 800; color: #000; margin-bottom: 8px; }
+
+    .cond-box{
+      border: 1px solid var(--line);
+      background: transparent;
+      padding: 12px 16px;
+      line-height: 1.6;
+    }
+    .cond-box .title{ font-weight: 800; color: #000; margin-bottom: 8px; }
+    .cond-box .content{ color: #111; }
+
+    /* ===== Firma ===== */
+    .firma{
+      margin: 12mm 0 0;
+      text-align: left;
+    }
+    .firma img{
+      height: 100px;
+      display: block;
+    }
+
+    .important-content {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    /* Información de contacto */
+    .contact-info {
+      margin: 8mm 0 0;
+      font-size: 11px;
+      color: #333;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+
+<!-- PÁGINAS CON PAGINACIÓN INTELIGENTE -->
+{{#each (smartChunkServicios3 items)}}
+<div class="page-container">
+  <div class="bg-page"><img src="assets/emp3.png" alt="membrete"></div>
+  <div class="content-area">
+
+    <!-- ENCABEZADO SOLO EN PRIMERA PÁGINA -->
+    {{#if (eq @index 0)}}
+    <!-- Folio - solo una vez -->
+    <div class="folio">{{../folio}}</div>
+
+    <!-- Lugar y fecha juntos -->
+    <div class="fecha">{{../lugar}}, a {{../fecha}}</div>
+
+    <!-- Destinatario - debe aparecer aquí -->
+    <div class="destinatario">{{../destinatario}}</div>
+    
+    <!-- Presente -->
+    <div class="presente">{{../presente}}</div>
+
+    <!-- Descripción -->
+    <div class="intro">
+      {{{../descripcion}}}
+    </div>
+    {{/if}}
+
+    <!-- EN PÁGINAS SUBSECUENTES, LA TABLA COMIENZA MÁS ARRIBA -->
+    {{#if (gt @index 0)}}
+    <div style="margin-top: 20px;"></div>
+    {{/if}}
+
+    <!-- TABLA DE ITEMS -->
+    <div class="table-wrap">
+        <table>
+        <thead>
+          <tr>
+            <th class="center" style="width:10mm;">NO.</th>
+            <th class="center" style="width:20mm;">UNIDAD<br>DE MEDIDA</th>
+            <th>DESCRIPCIÓN</th>
+            <th class="center" style="width:18mm;">CANTIDAD</th>
+            <th class="right" style="width:28mm;">PRECIO UNITARIO</th>
+            <th class="right" style="width:28mm;">SUBTOTAL</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each this}}
+          <tr>
+            <td class="center">{{this.globalIndex}}</td>
+            <td class="center">{{this.unidad}}</td>
+            <td>{{this.nombre}}</td>
+            <td class="center">{{this.cantidad}}</td>
+            <td class="right">{{money this.unitario}}</td>
+            <td class="right">{{money this.parcial}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+        </table>
+    </div>
+
+    <!-- SECCIÓN IMPORTANTE SOLO EN ÚLTIMA PÁGINA SI HAY ESPACIO -->
+    {{#if @last}}
+      {{#if (not (needsSeparatePageServicios3 ../items))}}
+      <div class="important-content" style="margin-top: 12px;">
+        <!-- Resumen con totales y condiciones -->
+        <div class="summaryRow">
+          <div class="totals">
+            <table>
+              <tr><td class="label">SUBTOTAL:</td><td class="value">{{money ../totales.subtotal}}</td></tr>
+              <tr><td class="label">IVA ({{../ivaPct}}%):</td><td class="value">{{money ../totales.iva}}</td></tr>
+              <tr><td class="label">MONTO TOTAL:</td><td class="value">{{money ../totales.total}}</td></tr>
+            </table>
+          </div>
+
+          <div class="rightCol">
+            <div class="enletra">
+              <div class="title">MONTO TOTAL EN LETRA:</div>
+              <div>{{../totalEnLetra}}</div>
+            </div>
+
+            {{#if ../condiciones}}
+            <div class="cond-box">
+              <div class="title">CONDICIONES GENERALES:</div>
+              <div class="content">
+                {{{../condiciones}}}
+              </div>
+            </div>
+            {{/if}}
+          </div>
+        </div>
+
+        <!-- Firma -->
+        <div class="firma">
+          <span style="font-weight:800; display:block; margin-bottom:8px;">ATENTAMENTE</span>
+          {{#if ../incluirFirma}}
+            {{#if ../firmaUrl}}<img src="{{../firmaUrl}}" alt="firma" style="height:100px; display:block; margin-bottom:8px;">{{/if}}
+          {{else}}
+            <div style="height:100px; margin-bottom:8px;"></div>
+          {{/if}}
+          <div style="font-weight:800; margin-top:10px;">
+            {{#if ../firmanteNombre}}{{{../firmanteNombre}}}{{else}}Responsable de Ventas{{/if}}
+          </div>
+          {{#if ../firmantePuesto}}
+            <div style="margin-top: 4px;">{{../firmantePuesto}}</div>
+          {{/if}}
+        </div>
+
+        <!-- Información de contacto -->
+        <div class="contact-info">
+          {{#if ../contactoRFC}}RFC: {{../contactoRFC}}<br>{{/if}}
+          {{#if ../contactoEmail}}{{../contactoEmail}}<br>{{/if}}
+          {{#if ../contactoDireccion}}{{../contactoDireccion}}<br>{{/if}}
+          {{#if ../contactoCiudad}}{{../contactoCiudad}}{{/if}}
+        </div>
+      </div>
+      {{else}}
+      <!-- Info de contacto si no cabe la sección importante -->
+      <div class="contact-info" style="margin-top: 20px;">
+        {{#if ../contactoRFC}}RFC: {{../contactoRFC}}<br>{{/if}}
+        {{#if ../contactoEmail}}{{../contactoEmail}}<br>{{/if}}
+        {{#if ../contactoDireccion}}{{../contactoDireccion}}<br>{{/if}}
+        {{#if ../contactoCiudad}}{{../contactoCiudad}}{{/if}}
+      </div>
+      {{/if}}
+    {{else}}
+      <!-- Info de contacto en páginas intermedias -->
+      <div class="contact-info" style="margin-top: 20px;">
+        {{#if ../contactoRFC}}RFC: {{../contactoRFC}}<br>{{/if}}
+        {{#if ../contactoEmail}}{{../contactoEmail}}<br>{{/if}}
+        {{#if ../contactoDireccion}}{{../contactoDireccion}}<br>{{/if}}
+        {{#if ../contactoCiudad}}{{../contactoCiudad}}{{/if}}
+      </div>
+    {{/if}}
+  </div>
+</div>
+{{/each}}
+
+<!-- PÁGINA SEPARADA PARA INFORMACIÓN IMPORTANTE SI NO CABE EN LA ÚLTIMA -->
+{{#if (needsSeparatePageServicios3 items)}}
+<div class="page-container">
+  <div class="bg-page"><img src="assets/emp3.png" alt="membrete"></div>
+  <div class="content-area">
+    
+    <div style="margin-top: 20px;"></div>
+    
+    <div class="important-content">
+      <!-- Resumen con totales y condiciones -->
+      <div class="summaryRow">
+        <div class="totals">
+          <table>
+            <tr><td class="label">SUBTOTAL:</td><td class="value">{{money totales.subtotal}}</td></tr>
+            <tr><td class="label">IVA ({{ivaPct}}%):</td><td class="value">{{money totales.iva}}</td></tr>
+            <tr><td class="label">MONTO TOTAL:</td><td class="value">{{money totales.total}}</td></tr>
+          </table>
+        </div>
+
+        <div class="rightCol">
+          <div class="enletra">
+            <div class="title">MONTO TOTAL EN LETRA:</div>
+            <div>{{totalEnLetra}}</div>
+          </div>
+
+          {{#if condiciones}}
+          <div class="cond-box">
+            <div class="title">CONDICIONES GENERALES:</div>
+            <div class="content">
+              {{{condiciones}}}
+            </div>
+          </div>
+          {{/if}}
+        </div>
+      </div>
+
+      <!-- Firma -->
+      <div class="firma">
+        <span style="font-weight:800; display:block; margin-bottom:8px;">ATENTAMENTE</span>
+        {{#if incluirFirma}}
+          {{#if firmaUrl}}<img src="{{firmaUrl}}" alt="firma" style="height:100px; display:block; margin-bottom:8px;">{{/if}}
+        {{else}}
+          <div style="height:100px; margin-bottom:8px;"></div>
+        {{/if}}
+        <div style="font-weight:800; margin-top:10px;">
+          {{#if firmanteNombre}}{{{firmanteNombre}}}{{else}}Responsable de Ventas{{/if}}
+        </div>
+        {{#if firmantePuesto}}
+          <div style="margin-top: 4px;">{{firmantePuesto}}</div>
+        {{/if}}
+      </div>
+
+      <!-- Información de contacto -->
+      <div class="contact-info">
+        {{#if contactoRFC}}RFC: {{contactoRFC}}<br>{{/if}}
+        {{#if contactoEmail}}{{contactoEmail}}<br>{{/if}}
+        {{#if contactoDireccion}}{{contactoDireccion}}<br>{{/if}}
+        {{#if contactoCiudad}}{{contactoCiudad}}{{/if}}
+      </div>
+    </div>
+  </div>
+</div>
+{{/if}}
+</body>
+</html>

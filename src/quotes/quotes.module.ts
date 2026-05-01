@@ -8,6 +8,18 @@ import { QuoteItem } from './entities/quote-item.entity';
 import { Product } from 'src/products/entities/product.entity';
 import { Template } from './entities/template.entity';
 import { PdfService1 } from 'src/pdf/e1_goltech/pdf.service';
+import { PdfServiciosService1 } from 'src/pdf/e1_goltech/pdf-servicios.service';
+import { PdfServiciosService2 } from 'src/pdf/e2_juan_angel/pdf-servicios.service';
+import { PdfServiciosService3 } from 'src/pdf/e3_giselle/pdf-servicios.service';
+import { PdfServiciosService4 } from 'src/pdf/e4_orihuela/pdf-servicios.service';
+import { PdfServiciosService5 } from 'src/pdf/e5_mariana/pdf-servicios.service';
+import { PdfServiciosService6 } from 'src/pdf/e6_michelle/pdf-servicios.service'; 
+import { PdfServiciosService7 } from 'src/pdf/e7_chalor/pdf-servicios.service';
+import { PdfServiciosService8 } from 'src/pdf/e8_leyses/pdf-servicios.service';
+import { PdfServiciosService9 } from 'src/pdf/e9_es/pdf-servicios.service';
+import { PdfServiciosService10 } from 'src/pdf/e10_jessica/pdf-servicios.service';
+import { PdfServiciosService11 } from 'src/pdf/e11_alamo/pdf-servicios.service';
+import { PdfServiciosService12 } from 'src/pdf/e12_hugo/pdf-servicios.service';
 import { PdfService2 } from 'src/pdf/e2_juan_angel/pdf.service';
 import { PdfService3 } from 'src/pdf/e3_giselle/pdf.service';
 import { PdfService4 } from 'src/pdf/e4_orihuela/pdf.service';
@@ -21,6 +33,18 @@ import { PdfService11 } from 'src/pdf/e11_alamo/pdf.service';
 import { PdfService12 } from 'src/pdf/e12_hugo/pdf.service';
 import { Service } from 'src/services/entities/service.entity';
 import { HtmlPdfService1 } from 'src/pdf/e1_goltech/html-pdf.service';
+import { HtmlPdfServiciosService1 } from 'src/pdf/e1_goltech/html-pdf-servicios.service';
+import { HtmlPdfServiciosService2 } from 'src/pdf/e2_juan_angel/html-pdf-servicios.service';
+import { HtmlPdfServiciosService3 } from 'src/pdf/e3_giselle/html-pdf-servicios.service';
+import { HtmlPdfServiciosService4 } from 'src/pdf/e4_orihuela/html-pdf-servicios.service';
+import { HtmlPdfServiciosService5 } from 'src/pdf/e5_mariana/html-pdf-servicios.service';
+import { HtmlPdfServiciosService6 } from 'src/pdf/e6_michelle/html-pdf-servicios.service';
+import { HtmlPdfServiciosService7 } from 'src/pdf/e7_chalor/html-pdf-servicios.service';
+import { HtmlPdfServiciosService8 } from 'src/pdf/e8_leyses/html-pdf-servicios.service';
+import { HtmlPdfServiciosService9 } from 'src/pdf/e9_es/html-pdf-servicios.service';
+import { HtmlPdfServiciosService10 } from 'src/pdf/e10_jessica/html-pdf-servicios.service';
+import { HtmlPdfServiciosService11 } from 'src/pdf/e11_alamo/html-pdf-servicios.service';
+import { HtmlPdfServiciosService12 } from 'src/pdf/e12_hugo/html-pdf-servicios.service';
 import { HtmlPdfService2 } from 'src/pdf/e2_juan_angel/html-pdf.service';
 import { HtmlPdfService3 } from 'src/pdf/e3_giselle/html-pdf.service';
 import { HtmlPdfService4 } from 'src/pdf/e4_orihuela/html-pdf.service';
@@ -52,6 +76,18 @@ import { Category } from 'src/categories/entities/category.entity';
   providers: [
     QuotesService,
     PdfService1,
+    PdfServiciosService1,
+    PdfServiciosService2,
+    PdfServiciosService3,
+    PdfServiciosService4,
+    PdfServiciosService5,
+    PdfServiciosService6,
+    PdfServiciosService7,
+    PdfServiciosService8,
+    PdfServiciosService9,
+    PdfServiciosService10,
+    PdfServiciosService11,
+    PdfServiciosService12,
     PdfService2,
     PdfService3,
     PdfService4,
@@ -64,6 +100,18 @@ import { Category } from 'src/categories/entities/category.entity';
     PdfService11,
     PdfService12,
     HtmlPdfService1,
+    HtmlPdfServiciosService1,
+    HtmlPdfServiciosService2,
+    HtmlPdfServiciosService3,
+    HtmlPdfServiciosService4,
+    HtmlPdfServiciosService5,
+    HtmlPdfServiciosService6,
+    HtmlPdfServiciosService7,
+    HtmlPdfServiciosService8,
+    HtmlPdfServiciosService9,
+    HtmlPdfServiciosService10,
+    HtmlPdfServiciosService11,
+    HtmlPdfServiciosService12,
     HtmlPdfService2,
     HtmlPdfService3,
     HtmlPdfService4,

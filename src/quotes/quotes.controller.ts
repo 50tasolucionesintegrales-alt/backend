@@ -26,6 +26,18 @@ import { IdValidationPipe } from 'src/common/pipes/id-validation/id-validation.p
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { Response } from 'express';
 import { PdfService1 } from 'src/pdf/e1_goltech/pdf.service';
+import { PdfServiciosService1 } from 'src/pdf/e1_goltech/pdf-servicios.service';
+import { PdfServiciosService2 } from 'src/pdf/e2_juan_angel/pdf-servicios.service';
+import { PdfServiciosService3 } from 'src/pdf/e3_giselle/pdf-servicios.service';
+import { PdfServiciosService4 } from 'src/pdf/e4_orihuela/pdf-servicios.service'; 
+import { PdfServiciosService5 } from 'src/pdf/e5_mariana/pdf-servicios.service';
+import { PdfServiciosService6 } from 'src/pdf/e6_michelle/pdf-servicios.service';
+import { PdfServiciosService7 } from 'src/pdf/e7_chalor/pdf-servicios.service';
+import { PdfServiciosService8 } from 'src/pdf/e8_leyses/pdf-servicios.service';
+import { PdfServiciosService9 } from 'src/pdf/e9_es/pdf-servicios.service';
+import { PdfServiciosService10 } from 'src/pdf/e10_jessica/pdf-servicios.service';
+import { PdfServiciosService11 } from 'src/pdf/e11_alamo/pdf-servicios.service';
+import { PdfServiciosService12 } from 'src/pdf/e12_hugo/pdf-servicios.service';
 import { PdfService2 } from 'src/pdf/e2_juan_angel/pdf.service';
 import { PdfService3 } from 'src/pdf/e3_giselle/pdf.service';
 import { PdfService4 } from 'src/pdf/e4_orihuela/pdf.service';
@@ -57,6 +69,18 @@ export class QuotesController {
     @InjectRepository(Template)
     private readonly templateRepo: Repository<Template>,
     private readonly pdf1: PdfService1,
+    private readonly pdfServicios1: PdfServiciosService1, 
+    private readonly pdfServicios2: PdfServiciosService2,
+    private readonly pdfServicios3: PdfServiciosService3,
+    private readonly pdfServicios4: PdfServiciosService4,
+    private readonly pdfServicios5: PdfServiciosService5,
+    private readonly pdfServicios6: PdfServiciosService6,
+    private readonly pdfServicios7: PdfServiciosService7,
+    private readonly pdfServicios8: PdfServiciosService8,
+    private readonly pdfServicios9: PdfServiciosService9,
+    private readonly pdfServicios10: PdfServiciosService10,
+    private readonly pdfServicios11: PdfServiciosService11,
+    private readonly pdfServicios12: PdfServiciosService12,
     private readonly pdf2: PdfService2,
     private readonly pdf3: PdfService3,
     private readonly pdf4: PdfService4,
@@ -312,20 +336,74 @@ export class QuotesController {
     };
 
     let pdfBuffer: Buffer;
+    
+    const esServicios = quote.tipo === 'servicios';
 
     switch (dto.empresa) {
-      case 1:  pdfBuffer = await this.pdf1.generateOneBuffer(quote, dto.empresa, metaData);  break;
-      case 2:  pdfBuffer = await this.pdf2.generateOneBuffer(quote, dto.empresa, metaData);  break;
-      case 3:  pdfBuffer = await this.pdf3.generateOneBuffer(quote, dto.empresa, metaData);  break;
-      case 4:  pdfBuffer = await this.pdf4.generateOneBuffer(quote, dto.empresa, metaData);  break;
-      case 5:  pdfBuffer = await this.pdf5.generateOneBuffer(quote, dto.empresa, metaData);  break;
-      case 6:  pdfBuffer = await this.pdf6.generateOneBuffer(quote, dto.empresa, metaData);  break;
-      case 7:  pdfBuffer = await this.pdf7.generateOneBuffer(quote, dto.empresa, metaData);  break;
-      case 8:  pdfBuffer = await this.pdf8.generateOneBuffer(quote, dto.empresa, metaData);  break;
-      case 9:  pdfBuffer = await this.pdf9.generateOneBuffer(quote, dto.empresa, metaData);  break;
-      case 10: pdfBuffer = await this.pdf10.generateOneBuffer(quote, dto.empresa, metaData); break;
-      case 11: pdfBuffer = await this.pdf11.generateOneBuffer(quote, dto.empresa, metaData); break;
-      case 12: pdfBuffer = await this.pdf12.generateOneBuffer(quote, dto.empresa, metaData); break;
+      case 1:
+        pdfBuffer = esServicios
+          ? await this.pdfServicios1.generateOneBuffer(
+              quote,
+              dto.empresa,
+              metaData,
+            )
+          : await this.pdf1.generateOneBuffer(quote, dto.empresa, metaData);
+        break;
+      case 2:
+        pdfBuffer = esServicios
+          ? await this.pdfServicios2.generateOneBuffer(quote, dto.empresa, metaData)
+          : await this.pdf2.generateOneBuffer(quote, dto.empresa, metaData);
+        break;
+      case 3:
+        pdfBuffer = esServicios
+          ? await this.pdfServicios3.generateOneBuffer(quote, dto.empresa, metaData)
+          : await this.pdf3.generateOneBuffer(quote, dto.empresa, metaData);
+        break;
+      case 4:
+        pdfBuffer = esServicios
+          ? await this.pdfServicios4.generateOneBuffer(quote, dto.empresa, metaData)
+          : await this.pdf4.generateOneBuffer(quote, dto.empresa, metaData);
+        break;
+      case 5:
+        pdfBuffer = esServicios
+          ? await this.pdfServicios5.generateOneBuffer(quote, dto.empresa, metaData)
+          : await this.pdf5.generateOneBuffer(quote, dto.empresa, metaData);
+        break;
+      case 6:
+        pdfBuffer = esServicios
+          ? await this.pdfServicios6.generateOneBuffer(quote, dto.empresa, metaData)
+          : await this.pdf6.generateOneBuffer(quote, dto.empresa, metaData);
+        break;
+      case 7:
+        pdfBuffer = esServicios
+          ? await this.pdfServicios7.generateOneBuffer(quote, dto.empresa, metaData)
+          : await this.pdf7.generateOneBuffer(quote, dto.empresa, metaData);
+        break;
+      case 8:
+        pdfBuffer = esServicios
+          ? await this.pdfServicios8.generateOneBuffer(quote, dto.empresa, metaData)
+          : await this.pdf8.generateOneBuffer(quote, dto.empresa, metaData);
+        break;
+      case 9:
+        pdfBuffer = esServicios
+          ? await this.pdfServicios9.generateOneBuffer(quote, dto.empresa, metaData)
+          : await this.pdf9.generateOneBuffer(quote, dto.empresa, metaData);
+        break;
+      case 10:
+        pdfBuffer = esServicios
+          ? await this.pdfServicios10.generateOneBuffer(quote, dto.empresa, metaData)
+          : await this.pdf10.generateOneBuffer(quote, dto.empresa, metaData);
+        break;
+      case 11:
+        pdfBuffer = esServicios
+          ? await this.pdfServicios11.generateOneBuffer(quote, dto.empresa, metaData)
+          : await this.pdf11.generateOneBuffer(quote, dto.empresa, metaData);
+        break;
+      case 12:
+        pdfBuffer = esServicios
+          ? await this.pdfServicios12.generateOneBuffer(quote, dto.empresa, metaData)
+          : await this.pdf12.generateOneBuffer(quote, dto.empresa, metaData);
+        break;
       default: throw new Error(`Empresa ${dto.empresa} no válida`);
     }
 

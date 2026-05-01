@@ -283,6 +283,8 @@ export class ExcelImportService {
         nombresVistos.add(nombreKey);
       }
 
+      const maxDescripcion = esServicios ? 2500 : 300;
+
       if (isBlankString(descripcion)) {
         errors.push({
           fila: rowNum,
@@ -290,14 +292,15 @@ export class ExcelImportService {
           mensaje: 'No puede estar vacía o contener solo espacios',
         });
         hasError = true;
-      } else if (descripcion.length > 300) {
+      } else if (descripcion.length > maxDescripcion) {
         errors.push({
           fila: rowNum,
           campo: 'Descripción',
-          mensaje: 'Máximo 300 caracteres',
+          mensaje: `Máximo ${maxDescripcion} caracteres`,
         });
         hasError = true;
       }
+
 
       let category: Category | null = null;
       if (!esServicios) {

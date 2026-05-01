@@ -1,0 +1,484 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{{titulo}}</title>
+  <style>
+    :root{ --brand:#2c3e50; --ink:#111; --line:#bdc3c7; --primary:#164428; --secondary:#143C23; --bg-light:#E2EFD9; }
+
+    @page { size: Letter; margin: 0 7mm 0; }
+    
+    /* Calibri */
+    @font-face{
+      font-family: "Calibri";
+      src: url("assets/fonts/Calibri.ttf") format("truetype");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face{
+      font-family: "Calibri";
+      src: url("assets/fonts/Calibri-Bold.ttf") format("truetype");
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    body{ 
+      font-family: "Calibri", Arial, Helvetica, sans-serif;
+      margin: 0;
+      padding: 0;
+      font-size: 11pt;
+    }
+
+    /* ===== Contenedor de página ===== */
+    .page-container {
+      position: relative;
+      min-height: 279.4mm;
+      width: 215.9mm;
+      page-break-after: always;
+    }
+
+    .page-container:last-child {
+      page-break-after: auto;
+    }
+
+    /* ===== Fondo / membrete ===== */
+    .bg-page { 
+      position:absolute; 
+      inset:0; 
+      z-index:-1; 
+      pointer-events:none; 
+    }
+    .bg-page img{
+      width:100%; 
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .content-area {
+      position: relative;
+      padding-top: 10mm;
+      padding-left: 25mm;
+      padding-right: 15mm;
+      min-height: calc(279.4mm - 10mm);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== Encabezado empresa ===== */
+    /* Encabezado empresa 12 */
+    .company-header {
+      text-align: center;
+      margin-bottom: 5mm;
+    }
+    
+    .company-name {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--primary);
+      margin-bottom: 3px;
+    }
+
+    /* ===== Estilos de contenido ===== */
+    /* Estilos generales */
+    .folio {
+      font-weight: 800;
+      margin: 40px 0 10px 0;
+      text-align: left;
+      font-size: 10pt;
+    }
+
+    .fecha {
+      text-align: left;
+      color: var(--primary);
+      margin: 5px 0 10px 0;
+      font-weight: bold;
+    }
+
+    .presente {
+      font-weight: 800;
+      color: var(--primary);
+      margin: 5px 0 10px 0;
+    }
+
+    .intro {
+      margin: 15px 0 20px 0;
+      line-height: 1.55;
+      color: #222;
+    }
+
+    .total-letra {
+      margin: 5px 0 10px 0;
+      font-weight: bold;
+      font-size: 11pt;
+      color: var(--primary);
+    }
+
+    /* Contenedor de tabla */
+    .table-wrap { 
+      position: relative; 
+      margin: 15px 0 20px 0;
+    }
+
+    /* ===== Estilos de tabla ===== */
+    /* ===== Tabla ===== */
+    table { 
+      width: 100%; 
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    
+    thead { display: table-header-group; }
+    tr, td, th { page-break-inside: avoid; }
+
+    /* Encabezados de tabla */
+    thead th {
+      background-color: var(--secondary);
+      color: white;
+      font-weight: 700;
+      border: 1px solid #000;
+      padding: 10px 6px;
+      font-size: 10.5pt;
+      text-align: center;
+      vertical-align: middle;
+    }
+    
+    /* Celdas de tabla */
+    tbody td { 
+      border: 1px solid #000;
+      padding: 8px 6px;
+      font-size: 10.5pt;
+      background-color: var(--bg-light);
+      vertical-align: top;
+    }
+    
+    /* Alineación de texto */
+    .center { text-align: center; } 
+    .right { text-align: right; }
+    .left { text-align: left; }
+    
+    /* ===== Anchos de columnas ===== */
+    /* Columnas con ancho fijo */
+    .col-num {
+      width: 8%;
+    }
+    
+    .col-concepto {
+      width: 48%;
+    }
+    
+    .col-cantidad {
+      width: 8%;
+    }
+    
+    .col-unidad {
+      width: 10%;
+    }
+    
+    .col-precio {
+      width: 14%;
+    }
+    
+    .col-subtotal {
+      width: 14%;
+    }
+    
+    /* Texto en dos líneas para el encabezado de precio */
+    .precio-header {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.3;
+    }
+    .precio-header span:first-child {
+      font-size: 10.5pt;
+    }
+    .precio-header span:last-child {
+      font-size: 9pt;
+      font-weight: normal;
+    }
+
+    /* Totales */
+    .totals-container {
+      display: flex;
+      justify-content: flex-end;
+      margin: 35px 0 15px 0; /* 🔧 AUMENTADO de 20px a 35px para evitar encimamiento */
+    }
+    
+    .totals-table {
+      width: 80mm;
+      border-collapse: collapse;
+    }
+    
+    .totals-table td {
+      border: 1px solid #000;
+      padding: 8px 12px;
+      font-size: 11pt;
+    }
+    
+    .totals-table .subtotal-label,
+    .totals-table .total-label {
+      background-color: var(--secondary);
+      color: white;
+      font-weight: bold;
+    }
+    
+    .totals-table .iva-label {
+      background-color: var(--bg-light);
+      font-weight: bold;
+    }
+    
+    .totals-table .subtotal-value,
+    .totals-table .total-value {
+      background-color: var(--secondary);
+      color: white;
+      text-align: right;
+    }
+    
+    .totals-table .iva-value {
+      background-color: var(--bg-light);
+      text-align: right;
+    }
+
+    /* Condiciones */
+    .condiciones {
+      margin: 20px 0 30px 0;
+    }
+    
+    .condiciones-title {
+      font-weight: bold;
+      color: var(--primary);
+      margin-bottom: 10px;
+      font-size: 12pt;
+    }
+    
+    .condiciones-text {
+      line-height: 1.6;
+      color: #222;
+    }
+
+    /* ===== Firma - Alineada a la izquierda ===== */
+    .firma {
+      margin: 35px 0 20px 0;
+      text-align: left;
+    }
+
+    .firma-content {
+      text-align: left;
+      width: fit-content;
+    }
+
+    .firma img {
+      height: 80px;
+      display: block;
+      margin-bottom: 8px;
+      margin-left: 0;
+    }
+
+    .firma-linea {
+      margin: 10px 0;
+      width: 200px;
+      border-bottom: 1px solid #000;
+    }
+
+    .firma-atentamente {
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+
+    .firma-nombre {
+      font-weight: 700;
+      margin-top: 10px;
+      color: var(--primary);
+    }
+
+    .important-content {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    
+    /* Word break para textos largos */
+    .concepto-text {
+      word-wrap: break-word;
+      word-break: break-word;
+      white-space: normal;
+    }
+  </style>
+</head>
+<body>
+
+<!-- PÁGINAS CON PAGINACIÓN INTELIGENTE -->
+{{#if items}}
+  {{#each (smartChunkServicios12 items)}}
+  <div class="page-container">
+    <div class="bg-page"><img src="assets/emp12.png" alt="membrete"></div>
+    <div class="content-area">
+
+      <!-- ENCABEZADO SOLO EN PRIMERA PÁGINA -->
+      {{#if (eq @index 0)}}
+      <div class="folio">{{../folio}}</div>
+      <div class="fecha">{{../lugar}}, a {{../fecha}}</div>
+      <div class="presente">{{../presente}}</div>
+      <div class="intro">{{{../descripcion}}}</div>
+      <div class="total-letra">MONTO TOTAL EN LETRA: {{../totalEnLetra}}</div>
+      {{/if}}
+
+      <!-- EN PÁGINAS SUBSECUENTES, LA TABLA COMIENZA MÁS ARRIBA -->
+      {{#if (gt @index 0)}}
+      <div style="margin-top: 70px;"></div>
+      {{/if}}
+
+      <!-- TABLA DE ITEMS -->
+      <div class="table-wrap">
+         <table>
+          <thead>
+            <tr>
+              <th class="col-num center">No.</th>
+              <th class="col-concepto center">Descripción</th>
+              <th class="col-cantidad center">Cant.</th>
+              <th class="col-unidad center">Unidad</th>
+              <th class="col-precio center">
+                <div class="precio-header">
+                  <span>Precio</span>
+                  <span>Unitario</span>
+                </div>
+              </th>
+              <th class="col-subtotal center">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each this}}
+            <tr>
+              <td class="center">{{this.globalIndex}}</td>
+              <td class="left concepto-text">{{this.nombre}}</td>
+              <td class="center">{{this.cantidad}}</td>
+              <td class="center">{{this.unidad}}</td>
+              <td class="right">{{money this.unitario}}</td>
+              <td class="right">{{money this.parcial}}</td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- SECCIÓN IMPORTANTE SOLO EN ÚLTIMA PÁGINA SI HAY ESPACIO -->
+      {{#if @last}}
+        {{#if (not (needsSeparatePageServicios12 ../items))}}
+        <div class="important-content">
+          <!-- Totales -->
+          <div class="totals-container">
+            <table class="totals-table">
+              <tr>
+                <td class="subtotal-label">Subtotal</td>
+                <td class="subtotal-value">{{money ../totales.subtotal}}</td>
+              </tr>
+              <tr>
+                <td class="iva-label">IVA</td>
+                <td class="iva-value">{{money ../totales.iva}}</td>
+              </tr>
+              <tr>
+                <td class="total-label">Total</td>
+                <td class="total-value">{{money ../totales.total}}</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Condiciones -->
+          {{#if ../condiciones}}
+          <div class="condiciones">
+            <div class="condiciones-title">Condiciones Generales:</div>
+            <div class="condiciones-text">{{{../condiciones}}}</div>
+          </div>
+          {{/if}}
+
+          <!-- Firma - Alineada a la izquierda -->
+          <div class="firma">
+            <div class="firma-content">
+              <div class="firma-atentamente">A T E N T A M E N T E</div>
+              {{#if ../incluirFirma}}
+                {{#if ../firmaUrl}}<img src="{{../firmaUrl}}" alt="firma">{{/if}}
+              {{else}}
+                <div class="firma-linea"></div>
+              {{/if}}
+              <div class="firma-nombre">
+                {{#if ../firmanteNombre}}{{{../firmanteNombre}}}{{else}}C. Hugo Rodríguez Hernández{{/if}}
+              </div>
+            </div>
+          </div>
+        </div>
+        {{/if}}
+      {{/if}}
+    </div>
+  </div>
+  {{/each}}
+
+  <!-- PÁGINA SEPARADA PARA INFORMACIÓN IMPORTANTE SI NO CABE EN LA ÚLTIMA -->
+  {{#if (needsSeparatePageServicios12 items)}}
+  <div class="page-container">
+    <div class="bg-page"><img src="assets/emp12.png" alt="membrete"></div>
+    <div class="content-area">
+      <div style="margin-top: 50px;"></div>
+      <div class="important-content">
+        <!-- Totales -->
+        <div class="totals-container">
+          <table class="totals-table">
+            <tr>
+              <td class="subtotal-label">Subtotal</td>
+              <td class="subtotal-value">{{money totales.subtotal}}</td>
+            </tr>
+            <tr>
+              <td class="iva-label">IVA</td>
+              <td class="iva-value">{{money totales.iva}}</td>
+            </tr>
+            <tr>
+              <td class="total-label">Total</td>
+              <td class="total-value">{{money totales.total}}</td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Condiciones -->
+        {{#if condiciones}}
+        <div class="condiciones">
+          <div class="condiciones-title">Condiciones Generales:</div>
+          <div class="condiciones-text">{{{condiciones}}}</div>
+        </div>
+        {{/if}}
+
+        <!-- Firma - Alineada a la izquierda -->
+        <div class="firma">
+          <div class="firma-content">
+            <div class="firma-atentamente">A T E N T A M E N T E</div>
+            {{#if incluirFirma}}
+              {{#if firmaUrl}}<img src="{{firmaUrl}}" alt="firma">{{/if}}
+            {{else}}
+              <div class="firma-linea"></div>
+            {{/if}}
+            <div class="firma-nombre">
+              {{#if firmanteNombre}}{{{firmanteNombre}}}{{else}}C. Hugo Rodríguez Hernández{{/if}}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {{/if}}
+{{else}}
+  <!-- PÁGINA VACÍA SI NO HAY ITEMS -->
+  <div class="page-container">
+    <div class="bg-page"><img src="assets/emp12.png" alt="membrete"></div>
+    <div class="content-area">
+      <div class="company-header">
+        <div class="company-name">Hugo Rodríguez Hernández</div>
+      </div>
+      <div style="text-align: center; margin-top: 100px;">
+        <h3>No hay items en esta cotización</h3>
+      </div>
+    </div>
+  </div>
+{{/if}}
+</body>
+</html>

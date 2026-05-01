@@ -1,0 +1,416 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{{titulo}}</title>
+  <style>
+    :root{
+      --brand:#b79b66;         /* acento */
+      --border:#a28344;        /* dorado líneas */
+      --ink:#111;
+      --thead:#f3f3f3;         /* encabezado tabla claro */
+    }
+
+    @page { size: Letter; margin: 0; }
+
+    /* Century Gothic local */
+    @font-face{
+      font-family: "Century Gothic";
+      src: url("assets/fonts/centurygothic.ttf") format("truetype");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face{
+      font-family: "Century Gothic";
+      src: url("assets/fonts/centurygothic_bold.ttf") format("truetype");
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    body{
+      font-family: "Century Gothic", Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      color: var(--ink);
+      margin: 0;
+      padding: 0;
+    }
+
+    .page-container {
+      position: relative;
+      min-height: 279.4mm;
+      width: 215.9mm;
+      page-break-after: always;
+    }
+
+    .page-container:last-child {
+      page-break-after: auto;
+    }
+
+    /* ===== Fondo / membrete ===== */
+    .bg-page{ 
+      position:absolute; 
+      inset:0; 
+      z-index:-1; 
+      pointer-events:none; 
+    }
+    .bg-page img{ 
+      width:100%; 
+      height:100%; 
+      object-fit:cover; 
+      display:block; 
+    }
+
+    .content-area {
+      position: relative;
+      padding-top: 32mm;
+      padding-left: 15mm;
+      padding-right: 15mm;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .fecha{ text-align:right; color:#333; margin:10px 0 16px; }
+    .dest{ font-weight:700; line-height:1.45; margin:0 0 6px; }
+    .presente{ font-weight:800; margin:6px 0 0; }
+    .intro{ margin:10px 0 0; line-height:1.55; color:#222; }
+    .label{ font-weight:700; }
+
+    /* ===== Tabla ===== */
+    .table-wrap{ position:relative; margin:12px 0 0; }
+    table{ width:100%; border-collapse:collapse; }
+    thead{ display:table-header-group; }
+    tr, td, th{ page-break-inside:avoid; }
+
+    thead th{
+      background: var(--thead);
+      color:#222;
+      font-weight:700;
+      border:1px solid var(--border);
+      padding:8px;
+      font-size:12px;
+      text-align:left;
+      vertical-align:middle;
+    }
+    tbody td{
+      border:1px solid var(--border);
+      padding:6px 8px;
+      font-size:12px;
+      background:#fff;
+      vertical-align:top;
+    }
+    .center{ text-align:center; }
+    .right { text-align:right; }
+
+    /* ===== Totales ===== */
+    .totals-wrapper {
+      display: flex;
+      justify-content: flex-end;
+      margin: 14px 0 0;
+    }
+    .totals-table {
+      width: 120mm;
+      border-collapse: collapse;
+    }
+    .totals-table td {
+      border: 1px solid var(--border);
+      padding: 6px 8px;
+      font-size: 12px;
+    }
+    .totals-table .lbl { 
+      font-weight: 700; 
+      background: #f6f3ee; 
+    }
+    .totals-table .val { 
+      text-align: right; 
+    }
+    .totals-table .letra {
+      width: 70mm;
+    }
+    .totals-table .letra .title {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    /* ===== Layout de dos columnas (Condiciones + Firma) ===== */
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .footer-col-left {
+      flex: 1;
+    }
+    .footer-col-right {
+      flex: 1;
+      text-align: right;
+    }
+
+    /* Condiciones */
+    .condiciones {
+      line-height: 1.5;
+    }
+    .condiciones-title {
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--brand);
+    }
+    .condiciones-content {
+      font-size: 11px;
+      color: #333;
+    }
+    .condiciones-content ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+    .condiciones-content li {
+      margin-bottom: 4px;
+    }
+
+    /* Firma */
+    .firma {
+      text-align: right;
+    }
+    .firma img {
+      height: 75px;
+      display: inline-block;
+    }
+    .firma-linea {
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+    .firma-nombre {
+      font-weight: 700;
+      margin-top: 10px;
+    }
+    .firma-puesto {
+      font-size: 11px;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    /* Información de contacto */
+    .contact-info {
+      margin-top: 20px;
+      font-size: 11px;
+      color: #333;
+      line-height: 1.4;
+      text-align: center;
+      border-top: 1px solid #ccc;
+      padding-top: 10px;
+    }
+
+    .important-content {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+  </style>
+</head>
+<body>
+
+<!-- PÁGINAS CON PAGINACIÓN INTELIGENTE -->
+{{#each (smartChunkServicios5 items)}}
+<div class="page-container">
+  <div class="bg-page"><img src="assets/emp5.png" alt="membrete"></div>
+  <div class="content-area">
+
+    <!-- ENCABEZADO SOLO EN PRIMERA PÁGINA -->
+    {{#if (eq @index 0)}}
+    <div class="fecha">{{../lugar}}; a {{../fecha}}</div>
+    <div class="dest">{{../destinatario}}</div>
+    <div class="presente">{{../presente}}</div>
+    <div class="intro">
+      <span class="label">Solicitud:</span> {{../titulo}} ({{../folio}}). 
+    </div>
+    <div class="intro">{{{../descripcion}}}</div>
+    {{/if}}
+
+    <!-- EN PÁGINAS SUBSECUENTES, LA TABLA COMIENZA MÁS ARRIBA -->
+    {{#if (gt @index 0)}}
+    <div style="margin-top: 20px;"></div>
+    {{/if}}
+
+    <!-- TABLA DE ITEMS -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="center" style="width:12mm;">No.</th>
+            <th>Descripción</th>
+            <th class="center" style="width:18mm;">Cantidad</th>
+            <th class="center" style="width:20mm;">Medida</th>
+            <th class="right" style="width:28mm;">Precio Unitario</th>
+            <th class="right" style="width:28mm;">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each this}}
+           <tr>
+            <td class="center">{{this.globalIndex}}</td>
+            <td>{{this.nombre}}</td>
+            <td class="center">{{this.cantidad}}</td>
+            <td class="center">{{this.unidad}}</td>
+            <td class="right">{{money this.unitario}}</td>
+            <td class="right">{{money this.parcial}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECCIÓN IMPORTANTE SOLO EN ÚLTIMA PÁGINA -->
+    {{#if @last}}
+      {{#if (not (needsSeparatePageServicios5 ../items))}}
+      <div class="important-content">
+        <!-- Totales -->
+        <div class="totals-wrapper">
+          <table class="totals-table">
+            <tr>
+              <td class="letra" rowspan="3">
+                <div class="title">Monto total en letra:</div>
+                <div>{{../totalEnLetra}}</div>
+              </td>
+              <td class="lbl">Subtotal</td>
+              <td class="val">{{money ../totales.subtotal}}</td>
+            </tr>
+            <tr>
+              <td class="lbl">IVA ({{../ivaPct}}%)</td>
+              <td class="val">{{money ../totales.iva}}</td>
+            </tr>
+            <tr>
+              <td class="lbl">Total</td>
+              <td class="val">{{money ../totales.total}}</td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Layout de dos columnas: Condiciones a la izquierda, Firma a la derecha -->
+        <div class="footer-row">
+          <div class="footer-col-left">
+            {{#if ../condiciones}}
+            <div class="condiciones">
+              <div class="condiciones-title">Condiciones Generales:</div>
+              <div class="condiciones-content">
+                {{{../condiciones}}}
+              </div>
+            </div>
+            {{/if}}
+          </div>
+
+          <div class="footer-col-right">
+            <div class="firma">
+              <div style="font-weight:700; margin-bottom:8px;">Atentamente</div>
+              {{#if ../incluirFirma}}
+                {{#if ../firmaUrl}}<img src="{{../firmaUrl}}" alt="firma">{{/if}}
+              {{else}}
+                <div class="firma-linea">_________________________</div>
+              {{/if}}
+              <div class="firma-nombre">
+                {{#if ../firmanteNombre}}{{{../firmanteNombre}}}{{else}}Responsable de Ventas{{/if}}
+              </div>
+              {{#if ../firmantePuesto}}
+                <div class="firma-puesto">{{../firmantePuesto}}</div>
+              {{/if}}
+            </div>
+          </div>
+        </div>
+
+        <!-- Información de contacto -->
+        <div class="contact-info">
+          {{#if ../contactoTelefono}}{{../contactoTelefono}}<br>{{/if}}
+          {{#if ../contactoEmail}}{{../contactoEmail}}<br>{{/if}}
+          {{#if ../contactoDireccion}}{{../contactoDireccion}}<br>{{/if}}
+          {{#if ../contactoCiudad}}{{../contactoCiudad}}{{/if}}
+        </div>
+      </div>
+      {{else}}
+      <!-- Si no cabe el footer, solo mostramos el contacto básico -->
+      <div class="contact-info" style="margin-top: 20px;">
+        {{#if ../contactoTelefono}}{{../contactoTelefono}}<br>{{/if}}
+        {{#if ../contactoEmail}}{{../contactoEmail}}<br>{{/if}}
+        {{#if ../contactoDireccion}}{{../contactoDireccion}}<br>{{/if}}
+        {{#if ../contactoCiudad}}{{../contactoCiudad}}{{/if}}
+      </div>
+      {{/if}}
+    {{else}}
+      <!-- Información de contacto en páginas intermedias -->
+      <div class="contact-info" style="margin-top: 20px;">
+        {{#if ../contactoTelefono}}{{../contactoTelefono}}<br>{{/if}}
+        {{#if ../contactoEmail}}{{../contactoEmail}}<br>{{/if}}
+        {{#if ../contactoDireccion}}{{../contactoDireccion}}<br>{{/if}}
+        {{#if ../contactoCiudad}}{{../contactoCiudad}}{{/if}}
+      </div>
+    {{/if}}
+  </div>
+</div>
+{{/each}}
+
+<!-- PÁGINA SEPARADA PARA INFORMACIÓN IMPORTANTE SI NO CABE EN LA ÚLTIMA -->
+{{#if (needsSeparatePageServicios5 items)}}
+<div class="page-container">
+  <div class="bg-page"><img src="assets/emp5.png" alt="membrete"></div>
+  <div class="content-area">
+    <div class="important-content">
+      <!-- Totales -->
+      <div class="totals-wrapper">
+        <table class="totals-table">
+          <tr>
+            <td class="letra" rowspan="3">
+              <div class="title">Monto total en letra:</div>
+              <div>{{totalEnLetra}}</div>
+            </td>
+            <td class="lbl">Subtotal</td>
+            <td class="val">{{money totales.subtotal}}</td>
+          </tr>
+          <tr>
+            <td class="lbl">IVA ({{ivaPct}}%)</td>
+            <td class="val">{{money totales.iva}}</td>
+          </tr>
+          <tr>
+            <td class="lbl">Total</td>
+            <td class="val">{{money totales.total}}</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="footer-row">
+        <div class="footer-col-left">
+          {{#if condiciones}}
+          <div class="condiciones">
+            <div class="condiciones-title">Condiciones Generales:</div>
+            <div class="condiciones-content">{{{condiciones}}}</div>
+          </div>
+          {{/if}}
+        </div>
+        <div class="footer-col-right">
+          <div class="firma">
+            <div style="font-weight:700; margin-bottom:8px;">Atentamente</div>
+            {{#if incluirFirma}}
+              {{#if firmaUrl}}<img src="{{firmaUrl}}" alt="firma">{{/if}}
+            {{else}}
+              <div class="firma-linea">_________________________</div>
+            {{/if}}
+            <div class="firma-nombre">
+              {{#if firmanteNombre}}{{{firmanteNombre}}}{{else}}Responsable de Ventas{{/if}}
+            </div>
+            {{#if firmantePuesto}}
+              <div class="firma-puesto">{{firmantePuesto}}</div>
+            {{/if}}
+          </div>
+        </div>
+      </div>
+
+      <div class="contact-info">
+        {{#if contactoTelefono}}{{contactoTelefono}}<br>{{/if}}
+        {{#if contactoEmail}}{{contactoEmail}}<br>{{/if}}
+        {{#if contactoDireccion}}{{contactoDireccion}}<br>{{/if}}
+        {{#if contactoCiudad}}{{contactoCiudad}}{{/if}}
+      </div>
+    </div>
+  </div>
+</div>
+{{/if}}
+</body>
+</html>

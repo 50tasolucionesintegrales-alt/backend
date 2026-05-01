@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsInt, Min, IsNotEmpty } from 'class-validator';
+import { IsOptional, IsString, IsInt, Min, IsNotEmpty, MaxLength  } from 'class-validator';
 
 export class CreateServiceDto {
   @IsNotEmpty({ message: 'El nombre no puede ir vacio' })
@@ -7,6 +7,7 @@ export class CreateServiceDto {
 
   @IsOptional()
   @IsString({ message: 'La descripción debe ser texto' })
+  @MaxLength(2500, { message: 'La descripción no puede exceder 2500 caracteres' })
   descripcion?: string;
 
   @IsOptional()
