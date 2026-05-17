@@ -41,7 +41,7 @@
       page-break-after: auto;
     }
 
-    /* ===== Fondo / membrete ===== */
+    /*  Fondo / membrete */
     .bg-page{ 
       position:absolute; 
       inset:0; 
@@ -78,7 +78,7 @@
     .intro{ margin:10px 12mm 0; line-height:1.6; color:#222; }
     .label{ font-weight:700; }
 
-    /* ===== Tabla ===== */
+    /* Tabla */
     .table-wrap{ position:relative; margin:12px 12mm 0; }
     table{ width:96%; margin:0 auto; border-collapse:collapse; table-layout: fixed; }
     thead{ display:table-header-group; }
@@ -98,7 +98,8 @@
       background:#fff; 
       vertical-align:top;
       word-wrap: break-word;
-      word-break: break-all;
+      white-space: pre-line;
+      word-break: break-word;
       overflow-wrap: break-word;
     }
     .center{ text-align:center; }
@@ -122,7 +123,7 @@
     .totals .label{ font-weight:700; background:#f2f5fa; }
     .totals .value{ text-align:right; }
 
-    /* ===== Condiciones ===== */
+    /* Condiciones */
     .cond-box{
       margin: 14mm 12mm 0;
       max-width: 125mm;
@@ -138,7 +139,7 @@
       line-height:1.6;
     }
 
-    /* ===== Firma ===== */
+    /* Firma */
     .firma{
       margin: 12mm 0 0;
       text-align: center;
@@ -182,7 +183,7 @@
     <!-- Fecha -->
     <div class="fecha"><span class="label">Fecha:</span> {{../fecha}}</div>
 
-    <!-- Cuerpo / descripción -->
+    <!-- Descripción -->
     <div class="intro">
       {{{../descripcion}}}
     </div>
@@ -255,7 +256,6 @@
           {{#if ../incluirFirma}}
             {{#if ../firmaUrl}}<img src="{{../firmaUrl}}" alt="firma" style="height:50px; display:block; margin:0 auto 8px auto;">{{/if}}
           {{else}}
-            <!-- Espacio reservado para la firma cuando no hay imagen -->
             <div style="height:100px; margin-bottom:8px;"></div>
           {{/if}}
           <div style="font-weight:800; margin-top:10px;">

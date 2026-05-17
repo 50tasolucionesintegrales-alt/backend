@@ -8,7 +8,6 @@
 
     @page { size: Letter; margin: 0 7mm 0; }
     
-    /* Century Gothic */
     @font-face{
       font-family: "Century Gothic";
       src: url("assets/fonts/centurygothic.ttf") format("truetype");
@@ -43,7 +42,7 @@
       page-break-after: auto;
     }
 
-    /* ===== Fondo / membrete ===== */
+    /* Fondo / membrete */
     .bg-page { 
       position:absolute; 
       inset:0; 
@@ -76,7 +75,7 @@
     /* Contenedor de tabla */
     .table-wrap{ position:relative; margin:12px 5px 0; }
 
-    /* ===== Tabla ===== */
+    /* Tabla */
     table { width:100%; border-collapse:collapse; }
     thead { display: table-header-group; }
     tr, td, th { page-break-inside: avoid; }
@@ -85,7 +84,15 @@
       background:var(--thead); color:#fff; font-weight:700;
       border:1px solid var(--thead); padding:8px; font-size:12px; text-align:left;
     }
-    tbody td{ border:1px solid var(--line); padding:6px 8px; font-size:12px; background:#fff; }
+    tbody td{ 
+      border:1px solid var(--line); 
+      padding:6px 8px; 
+      font-size:12px; 
+      background:#fff; 
+      white-space: pre-line;   /* ← RESPETA SALTOS DE LÍNEA */
+      word-wrap: break-word; 
+      word-break: break-word;
+    }
     .center{ text-align:center; } .right{ text-align:right; }
 
     /* Totales a la derecha */
@@ -97,7 +104,7 @@
     .totals .label{ font-weight:700; background:#f6f6f6; }
     .totals .value{ text-align:right; }
 
-    /* ===== Firma ===== */
+    /* Firma */
     .firma{
       margin: 12mm 0 0;
       text-align: center;
@@ -147,9 +154,9 @@
     </div>
     {{/if}}
 
-    <!-- EN PÁGINAS SUBSECUENTES, LA TABLA COMIENZA MÁS ARRIBA -->
+    <!-- EN PÁGINAS SUBSECUENTES -->
     {{#if (gt @index 0)}}
-    <div style="margin-top: 100px;"></div> <!-- Espacio similar a donde va la fecha en primera página -->
+    <div style="margin-top: 100px;"></div>
     {{/if}}
 
     <!-- TABLA DE ITEMS -->
@@ -169,7 +176,7 @@
           {{#each this}}
           <tr>
             <td class="center">{{this.globalIndex}}</td>
-            <td>{{this.nombre}}</td>
+            <td class="desc-cell">{{{this.nombre}}}</td>
             <td class="center">{{this.cantidad}}</td>
             <td class="center">{{this.unidad}}</td>
             <td class="right">{{money this.unitario}}</td>
@@ -214,7 +221,6 @@
           {{#if ../incluirFirma}}
             {{#if ../firmaUrl}}<img src="{{../firmaUrl}}" alt="firma">{{/if}}
           {{else}}
-            <!-- Espacio reservado para la firma cuando no hay imagen -->
             <div style="height:95px; margin-bottom:8px;"></div>
           {{/if}}
           <div style="font-weight:600; margin-top:10px;">
@@ -295,7 +301,6 @@
         {{#if incluirFirma}}
           {{#if firmaUrl}}<img src="{{firmaUrl}}" alt="firma">{{/if}}
         {{else}}
-          <!-- Espacio reservado para la firma cuando no hay imagen -->
           <div style="height:95px; margin-bottom:8px;"></div>
         {{/if}}
         <div style="font-weight:600; margin-top:10px;">

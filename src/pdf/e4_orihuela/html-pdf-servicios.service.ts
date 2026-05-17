@@ -4,7 +4,7 @@ import * as path from 'node:path';
 import * as hbs from 'handlebars';
 import { chromium, Browser } from 'playwright';
 
-// Helpers básicos (compartidos globalmente)
+// Helpers básicos
 hbs.registerHelper('inc', (v: any) => Number(v) + 1);
 hbs.registerHelper('money', (n: any) => {
     const num = Number(n ?? 0);
@@ -22,17 +22,31 @@ hbs.registerHelper('multiply', (a: any, b: any) => Number(a) * Number(b));
 hbs.registerHelper('not', (a: any) => !a);
 hbs.registerHelper('and', (a: any, b: any) => !!(a && b));
 
-// Helper para calcular líneas reales de texto
-function calculateTextLines(text: string, maxCharsPerLine: number = 55): number {
+// Detectar mayúsculas y ajusta cálculo
+function calculateTextLines(text: string, maxCharsPerLine: number = 50): number {
     if (!text) return 0;
     const plainText = text.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '');
+    
+    // Detectar porcentaje de mayúsculas
+    const upperCaseCount = (plainText.match(/[A-Z]/g) || []).length;
+    const totalLetters = (plainText.match(/[a-zA-Z]/g) || []).length;
+    const upperCaseRatio = totalLetters > 0 ? upperCaseCount / totalLetters : 0;
+    
+    // Ajustar chars por línea si hay muchas mayúsculas
+    let adjustedCharsPerLine = maxCharsPerLine;
+    if (upperCaseRatio > 0.5) {
+        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.76); 
+    } else if (upperCaseRatio > 0.3) {
+        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.84); 
+    }
+    
     const lines = plainText.split(/\r?\n/);
     let totalLines = 0;
     for (const line of lines) {
         if (line.length === 0) {
             totalLines += 1;
-        } else if (line.length > maxCharsPerLine) {
-            totalLines += Math.ceil(line.length / maxCharsPerLine);
+        } else if (line.length > adjustedCharsPerLine) {
+            totalLines += Math.ceil(line.length / adjustedCharsPerLine);
         } else {
             totalLines += 1;
         }
@@ -40,210 +54,216 @@ function calculateTextLines(text: string, maxCharsPerLine: number = 55): number 
     return Math.max(totalLines, 1);
 }
 
-// Función para dividir un item largo en múltiples partes
-function splitItemByLines(item: any, maxLines: number): any[] {
-    const text = item.nombre;
-    const words = text.split(' ');
-    
-    const parts: any[] = [];
-    let current = '';
-    
-    for (const w of words) {
-        const test = current + (current ? ' ' : '') + w;
-        const lines = calculateTextLines(test, 55);
-        
-        if (lines > maxLines && current.length > 0) {
-            parts.push(current.trim());
-            current = w;
-        } else {
-            current = test;
-        }
-    }
-    
-    if (current) {
-        parts.push(current.trim());
-    }
-    
-    return parts;
+// CONSTANTES
+const MAX_FIRST_PAGE_LINES = 22;
+const MAX_OTHER_PAGES_LINES = 26;
+const ROW_BASE_LINES = 1;
+const FOOTER_LINES = 16;
+const MAX_PAGE_CAPACITY = 50;
+const MIN_LINES_TO_DIVIDE = 2;
+const SAFETY_MARGIN = 10;
+
+// Verificar espacio con footer
+function canFitWithFooter(pageIdx: number, currentLines: number, additionalLines: number): boolean {
+    const headerLines = pageIdx === 0 ? 14 : 3;
+    const totalNeeded = headerLines + currentLines + additionalLines + FOOTER_LINES;
+    return totalNeeded <= MAX_PAGE_CAPACITY;
 }
 
-// Helper para calcular paginación inteligente con división de items largos - SERVICIOS E4
+// Verificar límites de página
+function isWithinPageLimits(pageIdx: number, lines: number): boolean {
+    const maxAllowed = pageIdx === 0 ? MAX_FIRST_PAGE_LINES : MAX_OTHER_PAGES_LINES;
+    return lines <= maxAllowed;
+}
+
 hbs.registerHelper('smartChunkServicios4', function(items: any[]) {
     if (!items || items.length === 0) return [];
-    
+
+    const pending = [...items];
     const chunks: any[][] = [];
-    let currentChunk: any[] = [];
-    let currentLines = 0;
-    
-    const MAX_FIRST_PAGE_LINES = 18;
-    const MAX_OTHER_PAGES_LINES = 30;
-    const FOOTER_LINES = 22;
-    const ROW_BASE_LINES = 1;
-    
-    for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        
-        let descLines = calculateTextLines(item.nombre, 55);
-        let itemLines = ROW_BASE_LINES + descLines;
-        
-        const isFirstPage = chunks.length === 0;
-        const maxLines = isFirstPage ? MAX_FIRST_PAGE_LINES : MAX_OTHER_PAGES_LINES;
-        const isLastItem = i === items.length - 1;
-        
-        let availableLines = maxLines - currentLines;
-        
-        if (isLastItem) {
-            const spaceNeeded = currentLines + itemLines + FOOTER_LINES;
-            if (spaceNeeded > maxLines && currentChunk.length > 0) {
-                availableLines = 0;
+    let curChunk: any[] = [];
+    let curLines = 0;
+    let globalCounter = 1;
+
+    const maxForPage = (pageIdx: number) => 
+        pageIdx === 0 ? MAX_FIRST_PAGE_LINES : MAX_OTHER_PAGES_LINES;
+
+    const tryPlace = (item: any, isContinuation: boolean): { 
+        result: 'complete' | 'partial' | 'none'; 
+        leftover?: any 
+    } => {
+        const text = item.nombre;
+        const itemLines = ROW_BASE_LINES + calculateTextLines(text, 50);  
+        const pageIdx = chunks.length;
+        const maxLines = maxForPage(pageIdx);
+        const avail = maxLines - curLines;
+        const isLastItem = pending.length === 1 && !item.isContinuation;
+
+        // Verificar límites absolutos
+        if (!isWithinPageLimits(pageIdx, curLines + itemLines)) {
+            if (avail < MIN_LINES_TO_DIVIDE) {
+                return { result: 'none' };
             }
         }
-        
-        // PRIMERA PÁGINA: dividir si NO CABE
-        if (isFirstPage && currentChunk.length === 0 && itemLines > MAX_FIRST_PAGE_LINES) {
-            const parts: string[] = [];
-            const text = item.nombre;
-            const words = text.split(' ');
-            
-            let firstPart = '';
-            let rest = '';
-            let inFirstPart = true;
-            
-            for (const word of words) {
-                if (inFirstPart) {
-                    const test = firstPart + (firstPart ? ' ' : '') + word;
-                    const lines = calculateTextLines(test, 55);
-                    if (lines > MAX_FIRST_PAGE_LINES) {
-                        rest = word;
-                        inFirstPart = false;
-                    } else {
-                        firstPart = test;
-                    }
-                } else {
-                    rest += (rest ? ' ' : '') + word;
+
+        // Colocar completo si cabe
+        if (itemLines <= avail) {
+            // Si es el último item, verificar espacio con footer
+            if (isLastItem) {
+                if (!canFitWithFooter(pageIdx, curLines, itemLines)) {
+                    return { result: 'none' };
                 }
             }
-            
-            if (firstPart) parts.push(firstPart);
-            if (rest) parts.push(rest);
-            
-            for (let p = 0; p < parts.length; p++) {
-                const partDescLines = calculateTextLines(parts[p], 55);
-                const partItemLines = ROW_BASE_LINES + partDescLines;
-                
-                const partIsFirstPage = chunks.length === 0;
-                const partMaxLines = partIsFirstPage ? MAX_FIRST_PAGE_LINES : MAX_OTHER_PAGES_LINES;
-                const partAvailable = partMaxLines - currentLines;
-                
-                if (isLastItem && p === parts.length - 1) {
-                    const spaceNeeded = currentLines + partItemLines + FOOTER_LINES;
-                    if (spaceNeeded > partMaxLines && currentChunk.length > 0) {
-                        chunks.push([...currentChunk]);
-                        currentChunk = [];
-                        currentLines = 0;
-                    }
-                }
-                else if (partItemLines > partAvailable && currentChunk.length > 0) {
-                    chunks.push([...currentChunk]);
-                    currentChunk = [];
-                    currentLines = 0;
-                }
-                
-                currentChunk.push({
-                    ...item,
-                    nombre: parts[p] + (p === 0 && parts.length > 1 ? '...' : ''),
-                    globalIndex: p === 0 ? i + 1 : '',
-                    isContinuation: p > 0
-                });
-                currentLines += partItemLines;
+
+            // Verificar capacidad total
+            const headerLines = pageIdx === 0 ? 14 : 3;
+            if (headerLines + curLines + itemLines > MAX_PAGE_CAPACITY) {
+                return { result: 'none' };
             }
-        }
-        // OTRAS PÁGINAS: dividir si NO CABE
-        else if (!isFirstPage && itemLines > MAX_OTHER_PAGES_LINES) {
-            const parts = splitItemByLines(item, MAX_OTHER_PAGES_LINES);
-            
-            for (let p = 0; p < parts.length; p++) {
-                const partDescLines = calculateTextLines(parts[p], 55);
-                const partItemLines = ROW_BASE_LINES + partDescLines;
-                
-                const partAvailable = MAX_OTHER_PAGES_LINES - currentLines;
-                
-                if (isLastItem && p === parts.length - 1) {
-                    const spaceNeeded = currentLines + partItemLines + FOOTER_LINES;
-                    if (spaceNeeded > MAX_OTHER_PAGES_LINES && currentChunk.length > 0) {
-                        chunks.push([...currentChunk]);
-                        currentChunk = [];
-                        currentLines = 0;
-                    }
-                }
-                else if (partItemLines > partAvailable && currentChunk.length > 0) {
-                    chunks.push([...currentChunk]);
-                    currentChunk = [];
-                    currentLines = 0;
-                }
-                
-                currentChunk.push({
-                    ...item,
-                    nombre: parts[p] + (p < parts.length - 1 ? '...' : ''),
-                    globalIndex: p === 0 ? i + 1 : '',
-                    isContinuation: p > 0
-                });
-                currentLines += partItemLines;
-            }
-        }
-        // ITEM NORMAL: cabe completo
-        else {
-            const currentMaxLines = chunks.length === 0 ? MAX_FIRST_PAGE_LINES : MAX_OTHER_PAGES_LINES;
-            const currentAvail = currentMaxLines - currentLines;
-            
-            if (itemLines > currentAvail && currentChunk.length > 0) {
-                chunks.push([...currentChunk]);
-                currentChunk = [];
-                currentLines = 0;
-            }
-            
-            currentChunk.push({
+
+            curChunk.push({
                 ...item,
-                globalIndex: i + 1
+                nombre: text,
+                isContinuation,
+                globalIndex: isContinuation ? '' : globalCounter++
             });
-            currentLines += itemLines;
+            curLines += itemLines;
+            return { result: 'complete' };
+        }
+
+        // Dividir el item
+        if (avail >= MIN_LINES_TO_DIVIDE) {
+            const maxDesc = avail - ROW_BASE_LINES;
+            
+            // maxDesc razonable
+            if (maxDesc < 1) {
+                return { result: 'none' };
+            }
+
+            const words = text.split(' ');
+            let partA = '';
+            let cut = 0;
+
+            for (let i = 0; i < words.length; i++) {
+                const test = partA ? `${partA} ${words[i]}` : words[i];
+                const testLines = calculateTextLines(test, 50); 
+                
+                if (testLines > maxDesc && partA.length > 0) {
+                    cut = i;
+                    break;
+                }
+                partA = test;
+                cut = i + 1;
+            }
+
+            const partB = words.slice(cut).join(' ');
+
+            if (partA) {
+                const partALines = ROW_BASE_LINES + calculateTextLines(partA, 50); 
+                const isLastFragment = pending.length === 1 && !partB;
+
+                // Si parte A es el último fragmento, verificar con footer
+                if (isLastFragment) {
+                    if (!canFitWithFooter(pageIdx, curLines, partALines)) {
+                        return { result: 'none' };
+                    }
+                }
+
+                // partA no excede límites
+                if (curLines + partALines > maxLines) {
+                    return { result: 'none' };
+                }
+
+                curChunk.push({
+                    ...item,
+                    nombre: partA,
+                    isContinuation,
+                    globalIndex: isContinuation ? '' : globalCounter++
+                });
+                curLines += partALines;
+
+                if (partB) {
+                    return { 
+                        result: 'partial', 
+                        leftover: { ...item, nombre: partB, isContinuation: true } 
+                    };
+                }
+                return { result: 'complete' };
+            }
+        }
+
+        return { result: 'none' };
+    };
+
+    // Bucle principal con validaciones
+    while (pending.length > 0) {
+        const item = pending.shift()!;
+        const isCont = item.isContinuation || false;
+
+        let result = tryPlace(item, isCont);
+
+        if (result.result === 'none') {
+            // Nueva página
+            if (curChunk.length > 0) {
+                // Chunk no vacío
+                chunks.push([...curChunk]);
+                curChunk = [];
+                curLines = 0;
+            }
+
+            // Reintentar en página limpia
+            result = tryPlace(item, isCont);
+
+            if (result.result === 'none') {
+                
+                const maxLinesAvailable = MAX_OTHER_PAGES_LINES - ROW_BASE_LINES;
+                const maxChars = maxLinesAvailable * 50;  
+                const forced = (item.nombre || '').substring(0, maxChars) + '…';
+                
+                curChunk.push({
+                    ...item,
+                    nombre: forced,
+                    isContinuation: isCont,
+                    globalIndex: isCont ? '' : globalCounter++
+                });
+                curLines = ROW_BASE_LINES + calculateTextLines(forced, 50);  
+                continue;
+            }
+        }
+
+        if (result.result === 'partial' && result.leftover) {
+            pending.unshift(result.leftover);
         }
     }
-    
-    if (currentChunk.length > 0) {
-        chunks.push(currentChunk);
+
+    // Último chunk con contenido
+    if (curChunk.length > 0) {
+        chunks.push(curChunk);
     }
-    
+
     return chunks;
 });
 
-// Helper para saber si necesita página separada para info importante - SERVICIOS E4
 hbs.registerHelper('needsSeparatePageServicios4', function(items: any[]) {
     if (!items || items.length === 0) return false;
-    
+
     const chunks = hbs.helpers.smartChunkServicios4(items);
     if (chunks.length === 0) return true;
-    
+
     const lastChunk = chunks[chunks.length - 1];
-    let lastPageLines = 0;
-    const ROW_BASE_LINES = 1;
+    let lastTableLines = 0;
     
     for (const item of lastChunk) {
-        const descLines = calculateTextLines(item.nombre, 55);
-        lastPageLines += ROW_BASE_LINES + descLines;
+        lastTableLines += ROW_BASE_LINES + calculateTextLines(item.nombre, 50);
     }
-    
+
     const isFirstPage = chunks.length === 1;
-    const headerLines = isFirstPage ? 16 : 4;
-    const totalLinesOnLastPage = headerLines + lastPageLines;
-    const FOOTER_LINES = 22;
-    
-    // ✅ ULTRA AGRESIVO: Si hay más de 8 líneas de contenido en última página, footer va a página separada
-    if (lastPageLines > 8) return true;
-    
-    // También separar si no hay suficiente espacio
-    const availableSpace = (isFirstPage ? 45 : 55) - totalLinesOnLastPage;
-    return availableSpace < 22 || (totalLinesOnLastPage + FOOTER_LINES) > 45;
+    const headerLines = isFirstPage ? 14 : 3;
+    const totalNeeded = headerLines + lastTableLines + FOOTER_LINES;
+    const effectiveLimit = MAX_PAGE_CAPACITY - SAFETY_MARGIN;
+
+    // Margen de seguridad
+    return totalNeeded >= effectiveLimit;
 });
 
 function resolveBaseDir() {

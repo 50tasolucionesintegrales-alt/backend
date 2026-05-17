@@ -134,6 +134,9 @@
       padding:6px 8px; 
       font-size:12px; 
       background:#fff; 
+      white-space: pre-line;   
+      word-wrap: break-word;   
+      word-break: break-word;
     }
     
     /* Eliminar primer borde izquierdo de las celdas del cuerpo */
@@ -245,7 +248,7 @@
 
       <!-- EN PÁGINAS SUBSECUENTES, LA TABLA COMIENZA MÁS ARRIBA -->
       {{#if (gt @index 0)}}
-      <div style="margin-top: 100px;"></div> <!-- Espacio similar a donde va la fecha en primera página -->
+      <div style="margin-top: 100px;"></div> 
       {{/if}}
 
       <!-- TABLA DE ITEMS -->
@@ -254,7 +257,7 @@
           <thead>
             <tr>
               <th class="center" style="width:16mm;">Número</th>
-              <th class="center">Descripción</th>
+              <th class="center">Concepto</th>
               <th class="center" style="width:22mm;">Cantidad</th>
               <th class="center" style="width:22mm;">Unidad</th>
               <th class="center" style="width:30mm;">Precio Unitario</th>

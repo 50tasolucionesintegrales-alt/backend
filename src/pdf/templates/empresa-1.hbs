@@ -4,7 +4,6 @@
   <meta charset="utf-8">
   <title>{{titulo}}</title>
   <style>
-    /* ========== ESTILOS ORIGINALES (NO MODIFICADOS) ========== */
     :root {
       --brand: #c51b1b;
       --ink: #111;
@@ -291,7 +290,6 @@
 
       {{#if @last}}
         {{#if (needsSeparateImportantPage ../items)}}
-          <!-- No mostrar nada aquí, se creará página exclusiva después -->
         {{else}}
           <div class="footer-section">
             <div class="totals">
@@ -339,9 +337,7 @@
   {{#if (needsSeparateImportantPage items)}}
   <div class="page-container">
     <div class="page-bg"><img src="{{assets.bg}}" alt="membrete"></div>
-    <!-- content-area con padding-top normal (23mm) y sin márgenes extra -->
     <div class="content-area">
-      <!-- Se muestra el footer desde arriba, respetando el flujo normal -->
       <div class="footer-section" style="margin-top: 0; padding-top: 0;">
         <div class="totals">
           <table class="totals-table">

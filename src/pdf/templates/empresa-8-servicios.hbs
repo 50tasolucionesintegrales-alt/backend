@@ -92,14 +92,39 @@
     /* ===== Encabezados ===== */
     .meta-grid{
       margin: 25px 16mm 0 16mm;
-      display:grid; grid-template-columns: 1fr 1fr; gap: 10mm;
+      display:grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 10mm;
     }
-    .meta-block .row{ display:grid; grid-template-columns: 28mm 1fr; gap:6px; margin:3px 0; }
-    .meta-block .label{ color:#666; }
-    .meta-block .value{ font-weight:700; }
 
-    .bar{ margin:10px 16mm 0; text-align:center; background:#111; color:#fff; font-weight:700; padding:6px 10px; letter-spacing:.2px; }
-    .bar.light{ background:#f4f4f4; color:#222; border:1px solid #e5e5e5; font-weight:700; }
+    .meta-block .row{ 
+      display:grid; 
+      grid-template-columns: 28mm 1fr; 
+      gap:6px; margin:3px 0; 
+    }
+    .meta-block .label{ 
+      color:#666; 
+    }
+    .meta-block .value{ 
+      font-weight:700; 
+    }
+
+    .bar{
+      margin:10px 16mm 0; 
+      text-align:center; 
+      background:#111; 
+      color:#fff; 
+      font-weight:700; 
+      padding:6px 10px; 
+      letter-spacing:.2px; 
+    }
+
+    .bar.light{ 
+      background:#f4f4f4; 
+      color:#222; 
+      border:1px solid #e5e5e5; 
+      font-weight:700; 
+    }
 
     .intro{ margin:10px 16mm 0 16mm; line-height:1.55; color:#222; }
 
@@ -107,8 +132,25 @@
     .table-wrap{ margin:10px 6mm 0 6mm; }
     table{ width:100%; border-collapse:collapse; table-layout:fixed; }
     thead th{ background:var(--thead); color:var(--theadText); border:1px solid #000; padding:7px 8px; font-size:11px; text-align:left; }
-    tbody td{ border:1px solid #000; padding:6px 8px; font-size:11px; vertical-align:top; background:#fff; }
-    .center{ text-align:center; } .right{ text-align:right; }
+    
+    tbody td{ 
+      border:1px solid #000; 
+      padding:6px 8px; 
+      font-size:11px; 
+      vertical-align:top; 
+      background:#fff; 
+        white-space: pre-line;   
+        word-wrap: break-word;   
+        word-break: break-word;
+    }
+
+    .center{ 
+      text-align:center; 
+    } 
+
+    .right{ 
+      text-align:right; 
+    }
 
     .w-num{width:10mm;} .w-cant{width:16mm;} .w-unid{width:24mm;}
     .w-unit{width:26mm;} .w-sub{width:26mm;}
