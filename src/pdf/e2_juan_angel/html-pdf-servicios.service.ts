@@ -22,17 +22,31 @@ hbs.registerHelper('multiply', (a: any, b: any) => Number(a) * Number(b));
 hbs.registerHelper('not', (a: any) => !a);
 hbs.registerHelper('and', (a: any, b: any) => !!(a && b));
 
-// Cálculo preciso de líneas
+// FUNCION MEJORADA: Detecta mayúsculas y respeta saltos de línea
 function calculateTextLines(text: string, maxCharsPerLine: number = 58): number {
     if (!text) return 0;
     const plainText = text.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '');
+    
+    // Detectar porcentaje de mayúsculas
+    const upperCaseCount = (plainText.match(/[A-Z]/g) || []).length;
+    const totalLetters = (plainText.match(/[a-zA-Z]/g) || []).length;
+    const upperCaseRatio = totalLetters > 0 ? upperCaseCount / totalLetters : 0;
+    
+    // Ajustar chars por línea si hay muchas mayúsculas (Arial)
+    let adjustedCharsPerLine = maxCharsPerLine;
+    if (upperCaseRatio > 0.5) {
+        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.80);
+    } else if (upperCaseRatio > 0.3) {
+        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.88);
+    }
+    
     const lines = plainText.split(/\r?\n/);
     let totalLines = 0;
     for (const line of lines) {
         if (line.length === 0) {
             totalLines += 1;
-        } else if (line.length > maxCharsPerLine) {
-            totalLines += Math.ceil(line.length / maxCharsPerLine);
+        } else if (line.length > adjustedCharsPerLine) {
+            totalLines += Math.ceil(line.length / adjustedCharsPerLine);
         } else {
             totalLines += 1;
         }
@@ -40,29 +54,48 @@ function calculateTextLines(text: string, maxCharsPerLine: number = 58): number 
     return Math.max(totalLines, 1);
 }
 
-// CONSTANTES CON VALIDACIONES
+// CONSTANTES EMPRESA 2
 const MAX_FIRST_PAGE_LINES = 24;
-const MAX_OTHER_PAGES_LINES = 32;
+const MAX_OTHER_PAGES_LINES = 30;
 const ROW_BASE_LINES = 1;
-const FOOTER_LINES = 24;
 const MAX_PAGE_CAPACITY = 52;
-const MIN_LINES_TO_DIVIDE = 3; 
+const MIN_LINES_TO_DIVIDE = 3;
 
-// VALIDACIÓN: Verificar si hay espacio seguro para footer
-function canFitWithFooter(pageIdx: number, currentLines: number, additionalLines: number): boolean {
+// FOOTER DINÁMICO E2: Calcula líneas reales
+function calculateFooterLines(condiciones?: string): number {
+    // BASE: Totales(3) + Firma(8) + Espacios(5) = 16
+    const BASE_FOOTER = 16;
+    
+    if (!condiciones || !condiciones.trim()) {
+        return BASE_FOOTER;
+    }
+    
+    // Calcular líneas REALES de condiciones (con detección mayúsculas)
+    const condicionesLines = calculateTextLines(condiciones, 58);
+    
+    // +2 para título "Condiciones:" + margen
+    return BASE_FOOTER + condicionesLines + 2;
+}
+
+// VALIDACION: Verificar espacio con footer dinámico
+function canFitWithFooter(pageIdx: number, currentLines: number, additionalLines: number, footerLines: number): boolean {
     const headerLines = pageIdx === 0 ? 12 : 3;
-    const totalNeeded = headerLines + currentLines + additionalLines + FOOTER_LINES;
+    const totalNeeded = headerLines + currentLines + additionalLines + footerLines;
     return totalNeeded <= MAX_PAGE_CAPACITY;
 }
 
-// Verificar límites de página
+// VALIDACION: Verificar límites de página
 function isWithinPageLimits(pageIdx: number, lines: number): boolean {
     const maxAllowed = pageIdx === 0 ? MAX_FIRST_PAGE_LINES : MAX_OTHER_PAGES_LINES;
     return lines <= maxAllowed;
 }
 
-hbs.registerHelper('smartChunkServicios2', function(items: any[]) {
+hbs.registerHelper('smartChunkServicios2', function(items: any[], options: any) {
     if (!items || items.length === 0) return [];
+
+    // Obtener condiciones del contexto
+    const condiciones = options?.data?.root?.condiciones || '';
+    const footerLines = calculateFooterLines(condiciones);
 
     const pending = [...items];
     const chunks: any[][] = [];
@@ -80,30 +113,32 @@ hbs.registerHelper('smartChunkServicios2', function(items: any[]) {
         const text = item.nombre;
         const itemLines = ROW_BASE_LINES + calculateTextLines(text, 58);
         const pageIdx = chunks.length;
-        const avail = maxForPage(pageIdx) - curLines;
+        const maxLines = maxForPage(pageIdx);
+        const avail = maxLines - curLines;
         const isLastItem = pending.length === 1 && !item.isContinuation;
 
+        // VALIDACION 1: Item muy largo
+        if (itemLines > MAX_OTHER_PAGES_LINES) {
+            console.warn(`WARN: Item muy largo (${itemLines} lineas), se dividira forzosamente`);
+        }
 
-        // Verificar que no exceda límites absolutos
+        // VALIDACION 2: Verificar límites absolutos
         if (!isWithinPageLimits(pageIdx, curLines + itemLines)) {
-            // No cabe completo, intentar dividir
-            if (avail >= MIN_LINES_TO_DIVIDE) {
-                // Hay espacio para dividir
-            } else {
-                // No hay espacio suficiente, nueva página
+            if (avail < MIN_LINES_TO_DIVIDE) {
                 return { result: 'none' };
             }
         }
 
-        // Colocar completo si cabe
+        // Intento 1: Colocar completo si cabe
         if (itemLines <= avail) {
+            // VALIDACION 3: Si es el último item, verificar espacio con footer
             if (isLastItem) {
-                if (!canFitWithFooter(pageIdx, curLines, itemLines)) {
-                    return { result: 'none' }; 
+                if (!canFitWithFooter(pageIdx, curLines, itemLines, footerLines)) {
+                    return { result: 'none' };
                 }
             }
 
-            // Verificar que no exceda capacidad total
+            // VALIDACION 4: Verificar capacidad total
             const headerLines = pageIdx === 0 ? 12 : 3;
             if (headerLines + curLines + itemLines > MAX_PAGE_CAPACITY) {
                 return { result: 'none' };
@@ -119,11 +154,11 @@ hbs.registerHelper('smartChunkServicios2', function(items: any[]) {
             return { result: 'complete' };
         }
 
-        // Dividir el item
+        // Intento 2: Dividir el item
         if (avail >= MIN_LINES_TO_DIVIDE) {
             const maxDesc = avail - ROW_BASE_LINES;
             
-            // Verificar que maxDesc sea razonable
+            // VALIDACION 5: maxDesc razonable
             if (maxDesc < 1) {
                 return { result: 'none' };
             }
@@ -147,18 +182,18 @@ hbs.registerHelper('smartChunkServicios2', function(items: any[]) {
             const partB = words.slice(cut).join(' ');
 
             if (partA) {
-                const isLastFragment = pending.length === 1 && !partB;
                 const partALines = ROW_BASE_LINES + calculateTextLines(partA, 58);
+                const isLastFragment = pending.length === 1 && !partB;
 
-                // Si parte A es el último fragmento, verificar con footer
+                // VALIDACION 6: Si parte A es el último fragmento, verificar con footer
                 if (isLastFragment) {
-                    if (!canFitWithFooter(pageIdx, curLines, partALines)) {
+                    if (!canFitWithFooter(pageIdx, curLines, partALines, footerLines)) {
                         return { result: 'none' };
                     }
                 }
 
-                // Verificar que partA no exceda límites
-                if (curLines + partALines > maxForPage(pageIdx)) {
+                // VALIDACION 7: partA no excede límites
+                if (curLines + partALines > maxLines) {
                     return { result: 'none' };
                 }
 
@@ -193,7 +228,7 @@ hbs.registerHelper('smartChunkServicios2', function(items: any[]) {
         if (result.result === 'none') {
             // Nueva página
             if (curChunk.length > 0) {
-                // Verificar que el chunk no esté vacío
+                // VALIDACION 8: Chunk no vacío
                 chunks.push([...curChunk]);
                 curChunk = [];
                 curLines = 0;
@@ -203,8 +238,9 @@ hbs.registerHelper('smartChunkServicios2', function(items: any[]) {
             result = tryPlace(item, isCont);
 
             if (result.result === 'none') {
+                // VALIDACION 9: Truncamiento de emergencia
+                console.warn(`WARN: Item extremadamente largo, aplicando truncamiento de emergencia`);
                 
-                // Calcular cuánto texto cabe en una página completa
                 const maxLinesAvailable = MAX_OTHER_PAGES_LINES - ROW_BASE_LINES;
                 const maxChars = maxLinesAvailable * 58;
                 const forced = (item.nombre || '').substring(0, maxChars) + '…';
@@ -225,7 +261,7 @@ hbs.registerHelper('smartChunkServicios2', function(items: any[]) {
         }
     }
 
-    // Asegurar que el último chunk tenga contenido
+    // VALIDACION 10: Último chunk con contenido
     if (curChunk.length > 0) {
         chunks.push(curChunk);
     }
@@ -233,10 +269,14 @@ hbs.registerHelper('smartChunkServicios2', function(items: any[]) {
     return chunks;
 });
 
-hbs.registerHelper('needsSeparatePageServicios2', function(items: any[]) {
+hbs.registerHelper('needsSeparatePageServicios2', function(items: any[], options: any) {
     if (!items || items.length === 0) return false;
 
-    const chunks = hbs.helpers.smartChunkServicios2(items);
+    // Obtener condiciones del contexto
+    const condiciones = options?.data?.root?.condiciones || '';
+    const footerLines = calculateFooterLines(condiciones);
+
+    const chunks = hbs.helpers.smartChunkServicios2(items, options);
     if (chunks.length === 0) return true;
 
     const lastChunk = chunks[chunks.length - 1];
@@ -248,10 +288,12 @@ hbs.registerHelper('needsSeparatePageServicios2', function(items: any[]) {
 
     const isFirstPage = chunks.length === 1;
     const headerLines = isFirstPage ? 12 : 3;
-    const totalNeeded = headerLines + lastTableLines + FOOTER_LINES;
+    const safetyMargin = 5;
+    
+    const totalNeeded = headerLines + lastTableLines + footerLines;
+    const effectiveLimit = MAX_PAGE_CAPACITY - safetyMargin;
 
-    // Verificar espacio con margen de seguridad (2 líneas)
-    return totalNeeded > (MAX_PAGE_CAPACITY - 2);
+    return totalNeeded > effectiveLimit;
 });
 
 function resolveBaseDir() {
