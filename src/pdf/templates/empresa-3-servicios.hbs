@@ -206,7 +206,7 @@
 <body>
 
 <!-- PÁGINAS CON PAGINACIÓN INTELIGENTE -->
-{{#each (smartChunkServicios3 items)}}
+{{#each (smartChunk_s3 items)}}
 <div class="page-container">
   <div class="bg-page"><img src="assets/emp3.png" alt="membrete"></div>
   <div class="content-area">
@@ -253,7 +253,7 @@
     </div>
 
     {{#if @last}}
-      {{#if (not (needsSeparatePageServicios3 ../items))}}
+      {{#if (not (needsSeparateImportantPage_s3 ../items))}}
       <div class="important-content" style="margin-top: 12px;">
         <div class="summaryRow">
           <div class="totals">
@@ -323,7 +323,7 @@
 </div>
 {{/each}}
 
-{{#if (needsSeparatePageServicios3 items)}}
+{{#if (needsSeparateImportantPage_s3 items)}}
 <div class="page-container">
   <div class="bg-page"><img src="assets/emp3.png" alt="membrete"></div>
   <div class="content-area">

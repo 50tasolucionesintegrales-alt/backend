@@ -4,7 +4,6 @@ import * as path from 'node:path';
 import * as hbs from 'handlebars';
 import { chromium, Browser } from 'playwright';
 
-// Helpers básicos
 hbs.registerHelper('inc', (v: any) => Number(v) + 1);
 hbs.registerHelper('money', (n: any) => {
     const num = Number(n ?? 0);
@@ -22,96 +21,252 @@ hbs.registerHelper('multiply', (a: any, b: any) => Number(a) * Number(b));
 hbs.registerHelper('not', (a: any) => !a);
 hbs.registerHelper('and', (a: any, b: any) => !!(a && b));
 
-// Helper ÚNICO para empresa-3 (Giselle)
-hbs.registerHelper('smartChunk_e3', function(items: any[]) {
-    if (!items || items.length === 0) return [];
+function calculateTextLines(text: string, maxCharsPerLine: number = 58): number {
+    if (!text) return 0;
+    const plainText = text.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '');
     
-    const chunks: any[][] = [];
-    let currentChunk: any[] = [];
+    const upperCaseCount = (plainText.match(/[A-Z]/g) || []).length;
+    const totalLetters = (plainText.match(/[a-zA-Z]/g) || []).length;
+    const upperCaseRatio = totalLetters > 0 ? upperCaseCount / totalLetters : 0;
     
-    let currentLines = 0;
-    const MAX_FIRST_PAGE_LINES = 18;  // Primera página 
-    const MAX_OTHER_PAGES_LINES = 26; // Páginas subsecuentes 
+    let adjustedCharsPerLine = maxCharsPerLine;
+    if (upperCaseRatio > 0.75) {
+        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.72);
+    } else if (upperCaseRatio > 0.50) {
+        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.78);
+    } else if (upperCaseRatio > 0.25) {
+        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.82);
+    }
     
-    // ULTRA ESTRICTO: Footer necesita MUCHO espacio
-    const IMPORTANT_SECTION_LINES = 22; // MUY ALTO - deja muy poco espacio para productos
+    const lines = plainText.split(/\r?\n/);
+    let totalLines = 0;
     
-    for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        
-        const descLength = item.nombre ? item.nombre.length : 0;
-        let itemLines = 1;
-        
-        // ✅ ACTUALIZADO: Rangos para descripción hasta 300 caracteres
-        if (descLength > 200) itemLines = 5;
-        else if (descLength > 150) itemLines = 4;
-        else if (descLength > 100) itemLines = 3;
-        else if (descLength > 50) itemLines = 2;
-        else if (descLength > 30) itemLines = 1.5;
-        
-        const isFirstPage = chunks.length === 0 && currentChunk.length === 0;
-        const maxLines = isFirstPage ? MAX_FIRST_PAGE_LINES : MAX_OTHER_PAGES_LINES;
-        const isLastItem = i === items.length - 1;
-        
-        const wouldIncludeImportant = isLastItem && 
-            (currentLines + itemLines + IMPORTANT_SECTION_LINES <= maxLines);
-        
-        const maxAllowedLines = wouldIncludeImportant ? 
-            maxLines - IMPORTANT_SECTION_LINES : 
-            maxLines;
-        
-        if (currentLines + itemLines <= maxAllowedLines) {
-            currentChunk.push({
-                ...item,
-                globalIndex: i + 1
-            });
-            currentLines += itemLines;
-        } else {
-            if (currentChunk.length > 0) {
-                chunks.push([...currentChunk]);
+    for (const line of lines) {
+        if (line.length === 0) {
+            totalLines += 1;
+        } else if (line.length > adjustedCharsPerLine) {
+            const exactLines = line.length / adjustedCharsPerLine;
+            
+            if (exactLines <= 1.1) {
+                totalLines += 1;
+            } else if (exactLines <= 1.5) {
+                totalLines += 1.5;
+            } else if (exactLines <= 2) {
+                totalLines += 2;
+            } else if (exactLines <= 2.5) {
+                totalLines += 2.5;
+            } else if (exactLines < 3) {
+                totalLines += 3;
+            } else {
+                totalLines += Math.ceil(exactLines);
             }
-            currentChunk = [{
-                ...item,
-                globalIndex: i + 1
-            }];
-            currentLines = itemLines;
+        } else {
+            totalLines += 1;
         }
     }
     
-    if (currentChunk.length > 0) {
-        chunks.push(currentChunk);
+    return Math.max(totalLines, 1);
+}
+
+const MAX_FIRST_PAGE_LINES = 34;   
+const MAX_OTHER_PAGES_LINES = 40;  
+const ROW_BASE_LINES = 1;
+const MAX_PAGE_CAPACITY = 52;
+const MIN_LINES_TO_DIVIDE = 2;
+
+function calculateFooterLines(condiciones?: string): number {
+    const BASE_FOOTER = 16;
+    
+    if (!condiciones || !condiciones.trim()) {
+        return BASE_FOOTER;
     }
     
+    const condicionesLines = calculateTextLines(condiciones, 54);
+    return BASE_FOOTER + condicionesLines + 2;
+}
+
+function isWithinPageLimits(pageIdx: number, lines: number): boolean {
+    const maxAllowed = pageIdx === 0 ? MAX_FIRST_PAGE_LINES : MAX_OTHER_PAGES_LINES;
+    return lines <= maxAllowed;
+}
+
+hbs.registerHelper('smartChunk_e3', function(items: any[], options: any) {
+    if (!items || items.length === 0) return [];
+
+    const pending = [...items];
+    const chunks: any[][] = [];
+    let curChunk: any[] = [];
+    let curLines = 0;
+    let globalCounter = 1;
+
+    const maxForPage = (pageIdx: number) => 
+        pageIdx === 0 ? MAX_FIRST_PAGE_LINES : MAX_OTHER_PAGES_LINES;
+
+    const tryPlace = (item: any, isContinuation: boolean): { 
+        result: 'complete' | 'partial' | 'none'; 
+        leftover?: any 
+    } => {
+        const text = item.nombre;
+        const descLength = text.length;
+        const textLines = calculateTextLines(text, 58);
+        const itemLines = descLength <= 28 ? 1.5 : ROW_BASE_LINES + textLines;
+        
+        const pageIdx = chunks.length;
+        const maxLines = maxForPage(pageIdx);
+        const avail = maxLines - curLines;
+
+        if (!isWithinPageLimits(pageIdx, curLines + itemLines)) {
+            if (avail < MIN_LINES_TO_DIVIDE) {
+                return { result: 'none' };
+            }
+        }
+
+        if (itemLines <= avail) {
+            const headerLines = pageIdx === 0 ? 14 : 3;
+            if (headerLines + curLines + itemLines > MAX_PAGE_CAPACITY) {
+                return { result: 'none' };
+            }
+
+            curChunk.push({
+                ...item,
+                nombre: text,
+                isContinuation,
+                globalIndex: isContinuation ? '' : globalCounter++
+            });
+            curLines += itemLines;
+            return { result: 'complete' };
+        }
+
+        if (avail >= MIN_LINES_TO_DIVIDE) {
+            const maxDesc = avail - ROW_BASE_LINES;
+            
+            if (maxDesc < 1) {
+                return { result: 'none' };
+            }
+
+            const words = text.split(' ');
+            let partA = '';
+            let cut = 0;
+
+            for (let i = 0; i < words.length; i++) {
+                const test = partA ? `${partA} ${words[i]}` : words[i];
+                const testLines = calculateTextLines(test, 58);
+                
+                if (testLines > maxDesc && partA.length > 0) {
+                    cut = i;
+                    break;
+                }
+                partA = test;
+                cut = i + 1;
+            }
+
+            const partB = words.slice(cut).join(' ');
+
+            if (partA) {
+                const descLengthA = partA.length;
+                const partATextLines = calculateTextLines(partA, 58);
+                const partALines = descLengthA <= 28 ? 1.5 : ROW_BASE_LINES + partATextLines;
+
+                if (curLines + partALines > maxLines) {
+                    return { result: 'none' };
+                }
+
+                curChunk.push({
+                    ...item,
+                    nombre: partA,
+                    isContinuation,
+                    globalIndex: isContinuation ? '' : globalCounter++
+                });
+                curLines += partALines;
+
+                if (partB) {
+                    return { 
+                        result: 'partial', 
+                        leftover: { ...item, nombre: partB, isContinuation: true } 
+                    };
+                }
+                return { result: 'complete' };
+            }
+        }
+
+        return { result: 'none' };
+    };
+
+    while (pending.length > 0) {
+        const item = pending.shift()!;
+        const isCont = item.isContinuation || false;
+
+        let result = tryPlace(item, isCont);
+
+        if (result.result === 'none') {
+            if (curChunk.length > 0) {
+                chunks.push([...curChunk]);
+                curChunk = [];
+                curLines = 0;
+            }
+
+            result = tryPlace(item, isCont);
+
+            if (result.result === 'none') {
+                
+                const maxLinesAvailable = MAX_OTHER_PAGES_LINES - ROW_BASE_LINES;
+                const maxChars = maxLinesAvailable * 58;
+                const forced = (item.nombre || '').substring(0, maxChars) + '…';
+                
+                const forcedLength = forced.length;
+                const forcedTextLines = calculateTextLines(forced, 58);
+                const forcedItemLines = forcedLength <= 28 ? 1.5 : ROW_BASE_LINES + forcedTextLines;
+                
+                curChunk.push({
+                    ...item,
+                    nombre: forced,
+                    isContinuation: isCont,
+                    globalIndex: isCont ? '' : globalCounter++
+                });
+                curLines = forcedItemLines;
+                continue;
+            }
+        }
+
+        if (result.result === 'partial' && result.leftover) {
+            pending.unshift(result.leftover);
+        }
+    }
+
+    if (curChunk.length > 0) {
+        chunks.push(curChunk);
+    }
+
     return chunks;
 });
 
-// Helper ÚNICO para empresa-3 - SIMPLIFICADO como Michelle
-hbs.registerHelper('needsSeparateImportantPage_e3', function(items: any[]) {
+hbs.registerHelper('needsSeparateImportantPage_e3', function(items: any[], options: any) {
     if (!items || items.length === 0) return false;
-    
-    const chunks = hbs.helpers.smartChunk_e3(items);
+
+    const condiciones = options?.data?.root?.condiciones || '';
+    const footerLines = calculateFooterLines(condiciones);
+
+    const chunks = hbs.helpers.smartChunk_e3(items, options);
     if (chunks.length === 0) return true;
-    
+
     const lastChunk = chunks[chunks.length - 1];
-    let lastPageLines = 0;
+    let lastTableLines = 0;
     
     for (const item of lastChunk) {
-        const descLength = item.nombre ? item.nombre.length : 0;
-        let itemLines = 1;
-        
-        // ✅ ACTUALIZADO: Rangos para descripción hasta 300 caracteres
-        if (descLength > 200) itemLines = 5;
-        else if (descLength > 150) itemLines = 4;
-        else if (descLength > 100) itemLines = 3;
-        else if (descLength > 50) itemLines = 2;
-        else if (descLength > 30) itemLines = 1.5;
-        
-        lastPageLines += itemLines;
+        const descLength = item.nombre?.length || 0;
+        const textLines = calculateTextLines(item.nombre, 58);
+        const itemLines = descLength <= 28 ? 1.5 : ROW_BASE_LINES + textLines;
+        lastTableLines += itemLines;
     }
-    
-    // ULTRA ESTRICTO: Footer salta casi SIEMPRE
-    // Si última página tiene más de 4 líneas (~1-2 productos) → Footer a página separada
-    return lastPageLines > 4; // MUY RESTRICTIVO
+
+    const isFirstPage = chunks.length === 1;
+    const headerLines = isFirstPage ? 14 : 3;
+    const safetyMargin = 2;
+
+    const totalNeeded = headerLines + lastTableLines + footerLines;
+    const effectiveLimit = MAX_PAGE_CAPACITY - safetyMargin;
+
+    return totalNeeded > effectiveLimit;
 });
 
 function resolveBaseDir() {

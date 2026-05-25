@@ -182,7 +182,7 @@
     .conds .body{ background:#f6f6f6; padding:10px 12px; color:#222; line-height:1.55; }
 
     .sign-row{ margin:12mm 12mm 0; display:grid; grid-template-columns:1fr 92mm; gap:14mm; align-items:start; }
-    .sign-box{ min-height:46mm; position:relative; background:#fff; }
+    .sign-box{ min-height:46mm; position:relative; background:transparent; }
     .sign-inner{ position:absolute; inset:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-align:center; }
     .sign-caption{ font-size:11px; color:#555; }
     .sign-name{ font-weight:700; }
@@ -193,7 +193,6 @@
       font-size: 11px;
       color: #333;
       line-height: 1.4;
-      border-top: 1px solid var(--line);
       padding-top: 8px;
     }
   </style>
@@ -201,7 +200,7 @@
 <body>
 
 <!-- PÁGINAS CON PAGINACIÓN INTELIGENTE -->
-{{#each (smartChunkServicios10 items)}}
+{{#each (smartChunk_s10 items)}}
 <div class="page-container">
   <div class="bg-page"><img src="assets/emp10.png" alt="membrete"></div>
   <div class="content-area">
@@ -249,7 +248,7 @@
 
     <!-- SECCIÓN IMPORTANTE SOLO EN ÚLTIMA PÁGINA SI HAY ESPACIO -->
     {{#if @last}}
-      {{#if (not (needsSeparatePageServicios10 ../items))}}
+      {{#if (not (needsSeparateImportantPage_s10 ../items))}}
       <div style="margin-top: 12px;">
         <!-- Totales -->
         <div class="totals-wrap">
@@ -328,7 +327,7 @@
 {{/each}}
 
 <!-- PÁGINA SEPARADA PARA INFORMACIÓN IMPORTANTE SI NO CABE EN LA ÚLTIMA -->
-{{#if (needsSeparatePageServicios10 items)}}
+{{#if (needsSeparateImportantPage_s10 items)}}
 <div class="page-container">
   <div class="bg-page"><img src="assets/emp10.png" alt="membrete"></div>
   <div class="content-area">

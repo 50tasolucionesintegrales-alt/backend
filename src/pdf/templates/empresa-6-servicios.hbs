@@ -141,7 +141,7 @@
 <body>
 
 <!-- PÁGINAS CON PAGINACIÓN INTELIGENTE -->
-{{#each (smartChunkServicios6 items)}}
+{{#each (smartChunk_s6 items)}}
 <div class="page-container">
   <div class="bg-page"><img src="assets/emp6.png" alt="membrete"></div>
   <div class="content-area">
@@ -155,6 +155,12 @@
     <!-- Destinatario -->
     <div class="dest">{{../destinatario}}</div>
     <div class="presente">{{../presente}}</div>
+
+    <!-- Texto de cortesía -->
+    <div class="summary" style="margin-top:8px;">
+      Un cordial saludo, le envío la cotización que se me requirió con anterioridad.
+    </div>
+
     {{/if}}
 
     <!-- EN PÁGINAS SUBSECUENTES, LA TABLA COMIENZA MÁS ARRIBA -->
@@ -190,7 +196,7 @@
 
     <!-- SECCIÓN IMPORTANTE SOLO EN ÚLTIMA PÁGINA SI HAY ESPACIO -->
     {{#if @last}}
-      {{#if (not (needsSeparatePageServicios6 ../items))}}
+      {{#if (not (needsSeparateImportantPage_s6 ../items))}}
       <div style="margin-top: 12px;">
 
         <!-- Totales -->
@@ -209,13 +215,6 @@
           <div><span class="label">Total:</span> {{money ../totales.total}}</div>
           <div><span class="label">Total en letra:</span> {{../totalEnLetra}}</div>
         </div>
-
-        <!-- Texto de cortesía -->
-        <div class="summary" style="margin-top:8px;">
-          Un cordial saludo, le envío la cotización que se me requirió con anterioridad.
-        </div>
-
-
 
         <!-- Términos -->
         {{#if ../condiciones}}
@@ -280,7 +279,7 @@
 {{/each}}
 
 <!-- PÁGINA SEPARADA PARA INFORMACIÓN IMPORTANTE SI NO CABE EN LA ÚLTIMA -->
-{{#if (needsSeparatePageServicios6 items)}}
+{{#if (needsSeparateImportantPage_s6 items)}}
 <div class="page-container">
   <div class="bg-page"><img src="assets/emp6.png" alt="mambrete"></div>
   <div class="content-area">
@@ -304,12 +303,6 @@
         <div><span class="label">Total:</span> {{money totales.total}}</div>
         <div><span class="label">Total en letra:</span> {{totalEnLetra}}</div>
       </div>
-    
-      <!-- Texto de cortesía -->
-      <div class="summary" style="margin-top:8px;">
-        Un cordial saludo, le envío la cotización que se me requirió con anterioridad.
-      </div>
-
 
       <!-- Términos -->
       {{#if condiciones}}
@@ -321,7 +314,7 @@
       </div>
       {{/if}}
 
-          <div style="margin-top: 12px;">
+      <div style="margin-top: 12px;">
       <!-- Firma (alineación derecha, respetando la estructura original del formato) -->
       <div class="sig-row">
         <div></div>

@@ -189,10 +189,12 @@
     .totals .label {
       font-weight: 700;
       background: #f6f6f6;
+      width: 35%;
     }
 
     .totals .value {
       text-align: right;
+      width: 65%;
     }
 
     .footer-section {
@@ -205,7 +207,6 @@
       color: #666;
       line-height: 1.4;
       text-align: center;
-      border-top: 1px solid #ddd;
       padding-top: 8px;
     }
 
@@ -240,7 +241,7 @@
 <body>
 
 {{#if items}}
-  {{#each (smartChunkServicios items)}}
+  {{#each (smartChunk_s1 items)}}
   <div class="page-container">
     <div class="page-bg"><img src="{{../assets.bg}}" alt="membrete"></div>
     <div class="content-area">
@@ -289,7 +290,7 @@
       </div>
 
       {{#if @last}}
-        {{#if (needsSeparatePageServicios ../items)}}
+        {{#if (needsSeparateImportantPage_s1 ../items)}}
         {{else}}
           <div class="footer-section">
             <div class="totals">
@@ -334,7 +335,7 @@
   </div>
   {{/each}}
 
-  {{#if (needsSeparatePageServicios items)}}
+  {{#if (needsSeparateImportantPage_s1 items)}}
   <div class="page-container">
     <div class="page-bg"><img src="{{assets.bg}}" alt="membrete"></div>
     <div class="content-area">

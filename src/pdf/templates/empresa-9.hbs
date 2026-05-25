@@ -151,7 +151,7 @@
 
     /* Fila inferior: términos izq. + bloque de firma der. (solo espacio si no hay firma) */
     .bottom-row{
-      margin: 14px 18mm 0 18mm;
+      margin: 30px 18mm 0 18mm;
       display: grid;
       grid-template-columns: 1fr 34%;
       gap: 18mm;
@@ -163,21 +163,21 @@
 
     .firma-box{
       min-height: 42mm;
-      padding: 10px 12px;
+      padding: 10px 0px 10px 12px;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
-      align-items: flex-start;
+      align-items: flex-end;
     }
     .firma-box{
       font-weight:700;
       margin-bottom: 8px;
     }
     .atentamente{
-      margin-bottom: 75px;
+      margin-bottom: 15px;
     }
     .firma-box img{
-      height: 48px;
+      height: 75px;
       display: inline-block;
       margin: 2px 0 6px;
     }
@@ -376,7 +376,6 @@
           {{#if incluirFirma}}
             {{#if firmaUrl}}<img src="{{firmaUrl}}" alt="firma">{{/if}}
           {{else}}
-            <!-- Espacio reservado para la firma cuando no hay imagen -->
             <div style="height:48px; margin: 2px 0 6px;"></div>
           {{/if}}
           {{#if firmanteNombre}}

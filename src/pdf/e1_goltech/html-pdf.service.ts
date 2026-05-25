@@ -4,7 +4,6 @@ import * as path from 'node:path';
 import * as hbs from 'handlebars';
 import { chromium, Browser } from 'playwright';
 
-// ========== Helpers básicos (sin cambios) ==========
 hbs.registerHelper('inc', (v: any) => Number(v) + 1);
 hbs.registerHelper('money', (n: any) => {
     const num = Number(n ?? 0);
@@ -22,93 +21,249 @@ hbs.registerHelper('multiply', (a: any, b: any) => Number(a) * Number(b));
 hbs.registerHelper('not', (a: any) => !a);
 hbs.registerHelper('and', (a: any, b: any) => !!(a && b));
 
-// Paginación 
-hbs.registerHelper('smartChunk', function(items: any[]) {
-    if (!items || items.length === 0) return [];
-
-    const chunks: any[][] = [];
-    let currentChunk: any[] = [];
-    let currentLines = 0;
-    const MAX_LINES_PER_PAGE = 20; 
-
-    for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        const descLength = item.nombre ? item.nombre.length : 0;
-        let itemLines = 1;
-        if (descLength > 200) itemLines = 5;
-        else if (descLength > 150) itemLines = 4;
-        else if (descLength > 100) itemLines = 3;
-        else if (descLength > 50) itemLines = 2;
-        else if (descLength > 30) itemLines = 1.5;
-
-        if (currentLines + itemLines <= MAX_LINES_PER_PAGE) {
-            currentChunk.push({ ...item, globalIndex: i + 1 });
-            currentLines += itemLines;
+function calculateTextLines(text: string, maxCharsPerLine: number = 55): number {
+    if (!text) return 0;
+    const plainText = text.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '');
+    
+    const upperCaseCount = (plainText.match(/[A-Z]/g) || []).length;
+    const totalLetters = (plainText.match(/[a-zA-Z]/g) || []).length;
+    const upperCaseRatio = totalLetters > 0 ? upperCaseCount / totalLetters : 0;
+    
+    let adjustedCharsPerLine = maxCharsPerLine;
+    if (upperCaseRatio > 0.5) {
+        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.80);
+    } else if (upperCaseRatio > 0.3) {
+        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.88);
+    }
+    
+    const lines = plainText.split(/\r?\n/);
+    let totalLines = 0;
+    
+    for (const line of lines) {
+        if (line.length === 0) {
+            totalLines += 1;
+        } else if (line.length > adjustedCharsPerLine) {
+            const exactLines = line.length / adjustedCharsPerLine;
+            
+            if (exactLines <= 1.1) {
+                totalLines += 1;
+            } else if (exactLines <= 1.5) {
+                totalLines += 1.5;
+            } else if (exactLines <= 2) {
+                totalLines += 2;
+            } else if (exactLines <= 2.5) {
+                totalLines += 2.5;
+            } else if (exactLines < 3) {
+                totalLines += 3;
+            } else {
+                totalLines += Math.ceil(exactLines);
+            }
         } else {
-            if (currentChunk.length) chunks.push([...currentChunk]);
-            currentChunk = [{ ...item, globalIndex: i + 1 }];
-            currentLines = itemLines;
+            totalLines += 1;
         }
     }
-    if (currentChunk.length) chunks.push(currentChunk);
+    
+    return Math.max(totalLines, 1);
+}
+
+const MAX_FIRST_PAGE_LINES = 37;
+const MAX_OTHER_PAGES_LINES = 47;
+const ROW_BASE_LINES = 1;
+const MAX_PAGE_CAPACITY = 52;
+const MIN_LINES_TO_DIVIDE = 2;
+
+function calculateFooterLines(condiciones?: string): number {
+    const BASE_FOOTER = 10;
+    
+    if (!condiciones || !condiciones.trim()) {
+        return BASE_FOOTER;
+    }
+    
+    const condicionesLines = calculateTextLines(condiciones, 80);
+    return BASE_FOOTER + condicionesLines + 1;
+}
+
+function isWithinPageLimits(pageIdx: number, lines: number): boolean {
+    const maxAllowed = pageIdx === 0 ? MAX_FIRST_PAGE_LINES : MAX_OTHER_PAGES_LINES;
+    return lines <= maxAllowed;
+}
+
+hbs.registerHelper('smartChunk_e1', function(items: any[], options: any) {
+    if (!items || items.length === 0) return [];
+
+    const pending = [...items];
+    const chunks: any[][] = [];
+    let curChunk: any[] = [];
+    let curLines = 0;
+    let globalCounter = 1;
+
+    const maxForPage = (pageIdx: number) => 
+        pageIdx === 0 ? MAX_FIRST_PAGE_LINES : MAX_OTHER_PAGES_LINES;
+
+    const tryPlace = (item: any, isContinuation: boolean): { 
+        result: 'complete' | 'partial' | 'none'; 
+        leftover?: any 
+    } => {
+        const text = item.nombre;
+        const descLength = text.length;
+        const textLines = calculateTextLines(text, 55);
+        const itemLines = descLength <= 30 ? 1.6 : ROW_BASE_LINES + textLines;
+        
+        const pageIdx = chunks.length;
+        const maxLines = maxForPage(pageIdx);
+        const avail = maxLines - curLines;
+
+        if (!isWithinPageLimits(pageIdx, curLines + itemLines)) {
+            if (avail < MIN_LINES_TO_DIVIDE) {
+                return { result: 'none' };
+            }
+        }
+
+        if (itemLines <= avail) {
+            const headerLines = pageIdx === 0 ? 15 : 3;
+            if (headerLines + curLines + itemLines > MAX_PAGE_CAPACITY) {
+                return { result: 'none' };
+            }
+
+            curChunk.push({
+                ...item,
+                nombre: text,
+                isContinuation,
+                globalIndex: isContinuation ? '' : globalCounter++
+            });
+            curLines += itemLines;
+            return { result: 'complete' };
+        }
+
+        if (avail >= MIN_LINES_TO_DIVIDE) {
+            const maxDesc = avail - ROW_BASE_LINES;
+            
+            if (maxDesc < 1) {
+                return { result: 'none' };
+            }
+
+            const words = text.split(' ');
+            let partA = '';
+            let cut = 0;
+
+            for (let i = 0; i < words.length; i++) {
+                const test = partA ? `${partA} ${words[i]}` : words[i];
+                const testLines = calculateTextLines(test, 55);
+                
+                if (testLines > maxDesc && partA.length > 0) {
+                    cut = i;
+                    break;
+                }
+                partA = test;
+                cut = i + 1;
+            }
+
+            const partB = words.slice(cut).join(' ');
+
+            if (partA) {
+                const descLengthA = partA.length;
+                const partATextLines = calculateTextLines(partA, 55);
+                const partALines = descLengthA <= 30 ? 1.6 : ROW_BASE_LINES + partATextLines;
+
+                if (curLines + partALines > maxLines) {
+                    return { result: 'none' };
+                }
+
+                curChunk.push({
+                    ...item,
+                    nombre: partA,
+                    isContinuation,
+                    globalIndex: isContinuation ? '' : globalCounter++
+                });
+                curLines += partALines;
+
+                if (partB) {
+                    return { 
+                        result: 'partial', 
+                        leftover: { ...item, nombre: partB, isContinuation: true } 
+                    };
+                }
+                return { result: 'complete' };
+            }
+        }
+
+        return { result: 'none' };
+    };
+
+    while (pending.length > 0) {
+        const item = pending.shift()!;
+        const isCont = item.isContinuation || false;
+
+        let result = tryPlace(item, isCont);
+
+        if (result.result === 'none') {
+            if (curChunk.length > 0) {
+                chunks.push([...curChunk]);
+                curChunk = [];
+                curLines = 0;
+            }
+
+            result = tryPlace(item, isCont);
+
+            if (result.result === 'none') {
+                const maxLinesAvailable = MAX_OTHER_PAGES_LINES - ROW_BASE_LINES;
+                const maxChars = maxLinesAvailable * 55;
+                const forced = (item.nombre || '').substring(0, maxChars) + '…';
+                
+                const forcedLength = forced.length;
+                const forcedTextLines = calculateTextLines(forced, 55);
+                const forcedItemLines = forcedLength <= 30 ? 1.6 : ROW_BASE_LINES + forcedTextLines;
+                
+                curChunk.push({
+                    ...item,
+                    nombre: forced,
+                    isContinuation: isCont,
+                    globalIndex: isCont ? '' : globalCounter++
+                });
+                curLines = forcedItemLines;
+                continue;
+            }
+        }
+
+        if (result.result === 'partial' && result.leftover) {
+            pending.unshift(result.leftover);
+        }
+    }
+
+    if (curChunk.length > 0) {
+        chunks.push(curChunk);
+    }
+
     return chunks;
 });
 
-// detecta si el footer cabe en la última págin
-hbs.registerHelper('needsSeparateImportantPage', function(items: any[], options?: any) {
+hbs.registerHelper('needsSeparateImportantPage_e1', function(items: any[], options: any) {
     if (!items || items.length === 0) return false;
 
-    const root = options?.data?.root || {};
-    const MAX_LINES_PER_PAGE = 20; // Mismo valor que en smartChunk
+    const condiciones = options?.data?.root?.condiciones || '';
+    const footerLines = calculateFooterLines(condiciones);
 
-    // Función para calcular líneas que ocupa UN ítem (coherente con smartChunk)
-    const getItemLines = (item: any) => {
-        const len = item.nombre?.length || 0;
-        if (len > 200) return 5;
-        if (len > 150) return 4;
-        if (len > 100) return 3;
-        if (len > 50) return 2;
-        if (len > 30) return 1.5;
-        return 1;
-    };
+    const chunks = hbs.helpers.smartChunk_e1(items, options);
+    if (chunks.length === 0) return true;
 
-    // Calcular líneas ocupadas por los ítems de la última página
-    const chunks = hbs.helpers.smartChunk(items);
-    if (!chunks.length) return true;
     const lastChunk = chunks[chunks.length - 1];
-    let itemsLines = 0;
-    for (const it of lastChunk) itemsLines += getItemLines(it);
-
-    // Calcular líneas que ocupa el footer (según contenido real)
-    let footerLines = 0;
-
-    // Totales (3 filas)
-    footerLines += 3;
-
-    footerLines += 1;
-
-    // Condiciones: cada ~85 caracteres sin etiquetas = 1 línea
-    if (root.condiciones) {
-        const cleanText = root.condiciones.replace(/<[^>]*>/g, '');
-        footerLines += Math.max(1, Math.ceil(cleanText.length / 85));
+    let lastTableLines = 0;
+    
+    for (const item of lastChunk) {
+        const descLength = item.nombre?.length || 0;
+        const textLines = calculateTextLines(item.nombre, 55);
+        const itemLines = descLength <= 30 ? 1.6 : ROW_BASE_LINES + textLines;
+        lastTableLines += itemLines;
     }
 
-    footerLines += 1 + 5 + 1;
-    if (root.firmantePuesto) footerLines += 1;
+    const isFirstPage = chunks.length === 1;
+    const headerLines = isFirstPage ? 15 : 3;
+    const safetyMargin = 2;
 
-    // Datos de contacto: cada campo presente es una línea (tal como aparecen en HTML)
-    if (root.contactoTelefono) footerLines++;
-    if (root.contactoRFC) footerLines++;
-    if (root.contactoEmail) footerLines++;
-    if (root.contactoEmpresa) footerLines++;
-    if (root.contactoDireccion) footerLines++;
-    if (root.contactoCiudad) footerLines++;
+    const totalNeeded = headerLines + lastTableLines + footerLines;
+    const effectiveLimit = MAX_PAGE_CAPACITY - safetyMargin;
 
-    // El footer además tiene un border-top y padding que consumen ~1 línea adicional
-    footerLines += 1;
-
-    // Decisión: si la suma supera el máximo, necesita página separada
-    return (itemsLines + footerLines) > MAX_LINES_PER_PAGE;
+    return totalNeeded > effectiveLimit;
 });
 
 function resolveBaseDir() {
@@ -158,6 +313,9 @@ export class HtmlPdfService1 implements OnModuleInit, OnModuleDestroy {
     private getTemplate(name: string) {
         if (!this.templates.has(name)) {
             const file = path.join(this.baseDir, 'templates', `${name}.hbs`);
+            if (!fs.existsSync(file)) {
+                throw new Error(`Template ${name} no encontrado en ${file}`);
+            }
             const str = fs.readFileSync(file, 'utf8');
             const tpl = hbs.compile(str, { noEscape: true });
             this.templates.set(name, tpl);
@@ -181,7 +339,7 @@ export class HtmlPdfService1 implements OnModuleInit, OnModuleDestroy {
         const ctx = await this.browser.newContext();
         const page = await ctx.newPage();
         const fileUrl = 'file://' + tmpFile.replace(/\\/g, '/');
-        await page.goto(fileUrl, { waitUntil: 'load' });
+        await page.goto(fileUrl, { waitUntil: 'load', timeout: 30000 });
 
         const pdf = await page.pdf({
             format: 'Letter',

@@ -166,7 +166,7 @@
 <body>
 
 <!-- PÁGINAS CON PAGINACIÓN INTELIGENTE -->
-{{#each (smartChunkServicios4 items)}}
+{{#each (smartChunk_s4 items)}}
 <div class="page-container">
   <div class="bg-page"><img src="assets/emp4.png" alt="membrete"></div>
   <div class="content-area">
@@ -188,7 +188,7 @@
       {{{../descripcion}}}
     </div>
     {{/if}}
-
+  
     <!-- EN PÁGINAS SUBSECUENTES, LA TABLA COMIENZA MÁS ARRIBA -->
     {{#if (gt @index 0)}}
     <div style="margin-top: 20px;"></div>
@@ -224,7 +224,7 @@
 
     <!-- SECCIÓN IMPORTANTE SOLO EN ÚLTIMA PÁGINA SI HAY ESPACIO -->
     {{#if @last}}
-      {{#if (not (needsSeparatePageServicios4 ../items))}}
+      {{#if (not (needsSeparateImportantPage_s4 ../items))}}
       <div class="important-content" style="margin-top: 12px;">
         <!-- En letra -->
         <div class="intro" style="margin-top:6px;">
@@ -297,7 +297,7 @@
 {{/each}}
 
 <!-- PÁGINA SEPARADA PARA INFORMACIÓN IMPORTANTE SI NO CABE EN LA ÚLTIMA -->
-{{#if (needsSeparatePageServicios4 items)}}
+{{#if (needsSeparateImportantPage_s4 items)}}
 <div class="page-container">
   <div class="bg-page"><img src="assets/emp4.png" alt="membrete"></div>
   <div class="content-area">

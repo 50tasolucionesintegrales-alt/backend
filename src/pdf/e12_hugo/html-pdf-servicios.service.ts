@@ -4,7 +4,6 @@ import * as path from 'node:path';
 import * as hbs from 'handlebars';
 import { chromium, Browser } from 'playwright';
 
-// Helpers básicos
 hbs.registerHelper('inc', (v: any) => Number(v) + 1);
 hbs.registerHelper('money', (n: any) => {
     const num = Number(n ?? 0);
@@ -26,77 +25,84 @@ hbs.registerHelper('split', function(str: string, delimiter: string) {
     return str.split(delimiter);
 });
 
-// FUNCION MEJORADA: Detecta mayúsculas y respeta saltos de línea
 function calculateTextLines(text: string, maxCharsPerLine: number = 55): number {
     if (!text) return 0;
     const plainText = text.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '');
     
-    // Detectar porcentaje de mayúsculas
     const upperCaseCount = (plainText.match(/[A-Z]/g) || []).length;
     const totalLetters = (plainText.match(/[a-zA-Z]/g) || []).length;
     const upperCaseRatio = totalLetters > 0 ? upperCaseCount / totalLetters : 0;
     
-    // Ajustar chars por línea si hay muchas mayúsculas (Calibri similar Arial)
     let adjustedCharsPerLine = maxCharsPerLine;
-    if (upperCaseRatio > 0.5) {
-        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.80);
-    } else if (upperCaseRatio > 0.3) {
-        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.88);
+    if (upperCaseRatio > 0.75) {
+        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.72);
+    } else if (upperCaseRatio > 0.50) {
+        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.78);
+    } else if (upperCaseRatio > 0.25) {
+        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.82);
     }
     
     const lines = plainText.split(/\r?\n/);
     let totalLines = 0;
+    
     for (const line of lines) {
         if (line.length === 0) {
             totalLines += 1;
         } else if (line.length > adjustedCharsPerLine) {
-            totalLines += Math.ceil(line.length / adjustedCharsPerLine);
+            const exactLines = line.length / adjustedCharsPerLine;
+            
+            if (exactLines <= 1.1) {
+                totalLines += 1;
+            } else if (exactLines <= 1.5) {
+                totalLines += 1.5;
+            } else if (exactLines <= 2) {
+                totalLines += 2;
+            } else if (exactLines <= 2.5) {
+                totalLines += 2.5;
+            } else if (exactLines < 3) {
+                totalLines += 3;
+            } else {
+                totalLines += Math.ceil(exactLines);
+            }
         } else {
             totalLines += 1;
         }
     }
+    
     return Math.max(totalLines, 1);
 }
 
-// CONSTANTES EMPRESA 12
-const MAX_FIRST_PAGE_LINES = 14;
-const MAX_OTHER_PAGES_LINES = 28;
+const MAX_FIRST_PAGE_LINES = 26;
+const MAX_OTHER_PAGES_LINES = 36;
 const ROW_BASE_LINES = 1;
-const MAX_PAGE_CAPACITY = 58;
+const MAX_PAGE_CAPACITY = 52;
 const MIN_LINES_TO_DIVIDE = 2;
 
-// FOOTER DINÁMICO 
 function calculateFooterLines(condiciones?: string): number {
-    const BASE_FOOTER = 22;
+    const BASE_FOOTER = 20;
     
     if (!condiciones || !condiciones.trim()) {
         return BASE_FOOTER;
     }
     
-    // Calcular líneas REALES de condiciones (con detección mayúsculas)
-    const condicionesLines = calculateTextLines(condiciones, 55);
-    
-    // +2 para título "Condiciones Generales:" + margen
-    return BASE_FOOTER + condicionesLines + 6;
+    const condicionesLines = calculateTextLines(condiciones, 40);
+    return BASE_FOOTER + condicionesLines + 2;
 }
 
-// VALIDACION: Verificar espacio con footer dinámico
 function canFitWithFooter(pageIdx: number, currentLines: number, additionalLines: number, footerLines: number): boolean {
     const headerLines = pageIdx === 0 ? 16 : 4;
     const totalNeeded = headerLines + currentLines + additionalLines + footerLines;
     return totalNeeded <= MAX_PAGE_CAPACITY;
 }
 
-// VALIDACION: Verificar límites de página
 function isWithinPageLimits(pageIdx: number, lines: number): boolean {
     const maxAllowed = pageIdx === 0 ? MAX_FIRST_PAGE_LINES : MAX_OTHER_PAGES_LINES;
     return lines <= maxAllowed;
 }
 
-hbs.registerHelper('smartChunkServicios12', function(items: any[], options: any) {
+hbs.registerHelper('smartChunk_s12', function(items: any[], options: any) {
     if (!items || items.length === 0) return [];
 
-    // Obtener condiciones del contexto
     const condiciones = options?.data?.root?.condiciones || '';
     const footerLines = calculateFooterLines(condiciones);
 
@@ -120,28 +126,19 @@ hbs.registerHelper('smartChunkServicios12', function(items: any[], options: any)
         const avail = maxLines - curLines;
         const isLastItem = pending.length === 1 && !item.isContinuation;
 
-        // VALIDACION 1: Item muy largo
-        if (itemLines > MAX_OTHER_PAGES_LINES) {
-            console.warn(`WARN: Item muy largo (${itemLines} lineas), se dividira forzosamente`);
-        }
-
-        // VALIDACION 2: Verificar límites absolutos
         if (!isWithinPageLimits(pageIdx, curLines + itemLines)) {
             if (avail < MIN_LINES_TO_DIVIDE) {
                 return { result: 'none' };
             }
         }
 
-        // Intento 1: Colocar completo si cabe
         if (itemLines <= avail) {
-            // VALIDACION 3: Si es el último item, verificar espacio con footer
             if (isLastItem) {
                 if (!canFitWithFooter(pageIdx, curLines, itemLines, footerLines)) {
                     return { result: 'none' };
                 }
             }
 
-            // VALIDACION 4: Verificar capacidad total
             const headerLines = pageIdx === 0 ? 16 : 4;
             if (headerLines + curLines + itemLines > MAX_PAGE_CAPACITY) {
                 return { result: 'none' };
@@ -157,11 +154,9 @@ hbs.registerHelper('smartChunkServicios12', function(items: any[], options: any)
             return { result: 'complete' };
         }
 
-        // Intento 2: Dividir el item
         if (avail >= MIN_LINES_TO_DIVIDE) {
             const maxDesc = avail - ROW_BASE_LINES;
             
-            // VALIDACION 5: maxDesc razonable
             if (maxDesc < 1) {
                 return { result: 'none' };
             }
@@ -188,14 +183,12 @@ hbs.registerHelper('smartChunkServicios12', function(items: any[], options: any)
                 const partALines = ROW_BASE_LINES + calculateTextLines(partA, 55);
                 const isLastFragment = pending.length === 1 && !partB;
 
-                // VALIDACION 6: Si parte A es el último fragmento, verificar con footer
                 if (isLastFragment) {
                     if (!canFitWithFooter(pageIdx, curLines, partALines, footerLines)) {
                         return { result: 'none' };
                     }
                 }
 
-                // VALIDACION 7: partA no excede límites
                 if (curLines + partALines > maxLines) {
                     return { result: 'none' };
                 }
@@ -221,7 +214,6 @@ hbs.registerHelper('smartChunkServicios12', function(items: any[], options: any)
         return { result: 'none' };
     };
 
-    // Bucle principal con validaciones
     while (pending.length > 0) {
         const item = pending.shift()!;
         const isCont = item.isContinuation || false;
@@ -229,21 +221,15 @@ hbs.registerHelper('smartChunkServicios12', function(items: any[], options: any)
         let result = tryPlace(item, isCont);
 
         if (result.result === 'none') {
-            // Nueva página
             if (curChunk.length > 0) {
-                // VALIDACION 8: Chunk no vacío
                 chunks.push([...curChunk]);
                 curChunk = [];
                 curLines = 0;
             }
 
-            // Reintentar en página limpia
             result = tryPlace(item, isCont);
 
             if (result.result === 'none') {
-                // VALIDACION 9: Truncamiento de emergencia
-                console.warn(`WARN: Item extremadamente largo, aplicando truncamiento de emergencia`);
-                
                 const maxLinesAvailable = MAX_OTHER_PAGES_LINES - ROW_BASE_LINES;
                 const maxChars = maxLinesAvailable * 55;
                 const forced = (item.nombre || '').substring(0, maxChars) + '…';
@@ -264,7 +250,6 @@ hbs.registerHelper('smartChunkServicios12', function(items: any[], options: any)
         }
     }
 
-    // VALIDACION 10: Último chunk con contenido
     if (curChunk.length > 0) {
         chunks.push(curChunk);
     }
@@ -272,14 +257,13 @@ hbs.registerHelper('smartChunkServicios12', function(items: any[], options: any)
     return chunks;
 });
 
-hbs.registerHelper('needsSeparatePageServicios12', function(items: any[], options: any) {
+hbs.registerHelper('needsSeparateImportantPage_s12', function(items: any[], options: any) {
     if (!items || items.length === 0) return false;
 
-    // Obtener condiciones del contexto
     const condiciones = options?.data?.root?.condiciones || '';
     const footerLines = calculateFooterLines(condiciones);
 
-    const chunks = hbs.helpers.smartChunkServicios12(items, options);
+    const chunks = hbs.helpers.smartChunk_s12(items, options);
     if (chunks.length === 0) return true;
 
     const lastChunk = chunks[chunks.length - 1];
@@ -340,9 +324,6 @@ export class HtmlPdfServiciosService12 implements OnModuleInit, OnModuleDestroy 
     private getTemplate(name: string) {
         if (!this.templates.has(name)) {
             const file = path.join(this.baseDir, 'templates', `${name}.hbs`);
-            if (!fs.existsSync(file)) {
-                throw new Error(`Template ${name} no encontrado en ${file}`);
-            }
             const str = fs.readFileSync(file, 'utf8');
             const tpl = hbs.compile(str, { noEscape: true });
             this.templates.set(name, tpl);
@@ -354,25 +335,20 @@ export class HtmlPdfServiciosService12 implements OnModuleInit, OnModuleDestroy 
         const tpl = this.getTemplate(templateName);
         const html = tpl(data);
 
-        const tmpFile = path.join(this.baseDir, `__tmp_${templateName}_${Date.now()}.html`);
+        const tmpDir = this.baseDir;
+        const tmpFile = path.join(tmpDir, `__tmp_${templateName}_${Date.now()}.html`);
+
         fs.writeFileSync(tmpFile, html, 'utf8');
 
         const ctx = await this.browser.newContext();
         const page = await ctx.newPage();
 
         const fileUrl = 'file://' + tmpFile.replace(/\\/g, '/');
-        await page.goto(fileUrl, { waitUntil: 'load', timeout: 30000 });
+        await page.goto(fileUrl, { waitUntil: 'load' });
 
         const pdf = await page.pdf({
             format: 'Letter',
             printBackground: true,
-            margin: {
-                top: '0.5cm',
-                right: '0.5cm',
-                bottom: '0.5cm',
-                left: '0.5cm',
-            },
-            preferCSSPageSize: true,
         });
 
         await ctx.close();

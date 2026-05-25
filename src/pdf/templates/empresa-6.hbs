@@ -144,6 +144,12 @@
     <!-- Destinatario -->
     <div class="dest">{{../destinatario}}</div>
     <div class="presente">{{../presente}}</div>
+    
+    <!-- Texto de cortesía -->
+    <div class="summary" style="margin-top:8px;">
+      Un cordial saludo, le envío la cotización que se me requirió con anterioridad.
+     </div>
+
     {{/if}}
 
     <!-- EN PÁGINAS SUBSECUENTES, LA TABLA COMIENZA MÁS ARRIBA -->
@@ -198,13 +204,6 @@
           <div><span class="label">Total:</span> {{money ../totales.total}}</div>
           <div><span class="label">Total en letra:</span> {{../totalEnLetra}}</div>
         </div>
-
-        <!-- Texto de cortesía -->
-        <div class="summary" style="margin-top:8px;">
-          Un cordial saludo, le envío la cotización que se me requirió con anterioridad.
-        </div>
-
-
 
         <!-- Términos -->
         {{#if ../condiciones}}
@@ -294,12 +293,6 @@
         <div><span class="label">Total en letra:</span> {{totalEnLetra}}</div>
       </div>
     
-      <!-- Texto de cortesía -->
-      <div class="summary" style="margin-top:8px;">
-        Un cordial saludo, le envío la cotización que se me requirió con anterioridad.
-      </div>
-
-
       <!-- Términos -->
       {{#if condiciones}}
       <div class="terms">

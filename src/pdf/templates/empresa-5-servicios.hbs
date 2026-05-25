@@ -201,7 +201,6 @@
       color: #333;
       line-height: 1.4;
       text-align: center;
-      border-top: 1px solid #ccc;
       padding-top: 10px;
     }
 
@@ -214,7 +213,7 @@
 <body>
 
 <!-- PÁGINAS CON PAGINACIÓN INTELIGENTE -->
-{{#each (smartChunkServicios5 items)}}
+{{#each (smartChunk_s5 items)}}
 <div class="page-container">
   <div class="bg-page"><img src="assets/emp5.png" alt="membrete"></div>
   <div class="content-area">
@@ -265,7 +264,7 @@
 
     <!-- SECCIÓN IMPORTANTE SOLO EN ÚLTIMA PÁGINA -->
     {{#if @last}}
-      {{#if (not (needsSeparatePageServicios5 ../items))}}
+      {{#if (not (needsSeparateImportantPage_s5 ../items))}}
       <div class="important-content">
         <!-- Totales -->
         <div class="totals-wrapper">
@@ -351,7 +350,7 @@
 {{/each}}
 
 <!-- PÁGINA SEPARADA PARA INFORMACIÓN IMPORTANTE SI NO CABE EN LA ÚLTIMA -->
-{{#if (needsSeparatePageServicios5 items)}}
+{{#if (needsSeparateImportantPage_s5 items)}}
 <div class="page-container">
   <div class="bg-page"><img src="assets/emp5.png" alt="membrete"></div>
   <div class="content-area">

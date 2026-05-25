@@ -4,7 +4,6 @@ import * as path from 'node:path';
 import * as hbs from 'handlebars';
 import { chromium, Browser } from 'playwright';
 
-// Helpers básicos (compartidos globalmente)
 hbs.registerHelper('inc', (v: any) => Number(v) + 1);
 hbs.registerHelper('money', (n: any) => {
     const num = Number(n ?? 0);
@@ -22,61 +21,86 @@ hbs.registerHelper('multiply', (a: any, b: any) => Number(a) * Number(b));
 hbs.registerHelper('not', (a: any) => !a);
 hbs.registerHelper('and', (a: any, b: any) => !!(a && b));
 
-// FUNCION MEJORADA: Detecta mayúsculas y ajusta cálculo + respeta saltos de línea
 function calculateTextLines(text: string, maxCharsPerLine: number = 55): number {
     if (!text) return 0;
     const plainText = text.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '');
     
-    // Detectar porcentaje de mayúsculas
     const upperCaseCount = (plainText.match(/[A-Z]/g) || []).length;
     const totalLetters = (plainText.match(/[a-zA-Z]/g) || []).length;
     const upperCaseRatio = totalLetters > 0 ? upperCaseCount / totalLetters : 0;
     
-    // Ajustar chars por línea si hay muchas mayúsculas
     let adjustedCharsPerLine = maxCharsPerLine;
-    if (upperCaseRatio > 0.5) {
-        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.80);
-    } else if (upperCaseRatio > 0.3) {
-        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.88);
+    if (upperCaseRatio > 0.75) {
+        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.72);
+    } else if (upperCaseRatio > 0.50) {
+        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.78);
+    } else if (upperCaseRatio > 0.25) {
+        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.82);
     }
     
     const lines = plainText.split(/\r?\n/);
     let totalLines = 0;
+    
     for (const line of lines) {
         if (line.length === 0) {
             totalLines += 1;
         } else if (line.length > adjustedCharsPerLine) {
-            totalLines += Math.ceil(line.length / adjustedCharsPerLine);
+            const exactLines = line.length / adjustedCharsPerLine;
+            
+            if (exactLines <= 1.1) {
+                totalLines += 1;
+            } else if (exactLines <= 1.5) {
+                totalLines += 1.5;
+            } else if (exactLines <= 2) {
+                totalLines += 2;
+            } else if (exactLines <= 2.5) {
+                totalLines += 2.5;
+            } else if (exactLines < 3) {
+                totalLines += 3;
+            } else {
+                totalLines += Math.ceil(exactLines);
+            }
         } else {
             totalLines += 1;
         }
     }
+    
     return Math.max(totalLines, 1);
 }
 
-// CONSTANTES EMPRESA 10
-const MAX_FIRST_PAGE_LINES = 18;      
-const MAX_OTHER_PAGES_LINES = 29;     
+const MAX_FIRST_PAGE_LINES = 24;
+const MAX_OTHER_PAGES_LINES = 29;
 const ROW_BASE_LINES = 1;
-const FOOTER_LINES = 18;  
-const MAX_PAGE_CAPACITY = 48;         
+const MAX_PAGE_CAPACITY = 48;
 const MIN_LINES_TO_DIVIDE = 2;
 
-// VALIDACION: Verificar espacio con footer
-function canFitWithFooter(pageIdx: number, currentLines: number, additionalLines: number): boolean {
-    const headerLines = pageIdx === 0 ? 12 : 3;
-    const totalNeeded = headerLines + currentLines + additionalLines + FOOTER_LINES;
+function calculateFooterLines(condiciones?: string): number {
+    const BASE_FOOTER = 15;
+    
+    if (!condiciones || !condiciones.trim()) {
+        return BASE_FOOTER;
+    }
+    
+    const condicionesLines = calculateTextLines(condiciones, 70);
+    return BASE_FOOTER + condicionesLines + 3;
+}
+
+function canFitWithFooter(pageIdx: number, currentLines: number, additionalLines: number, footerLines: number): boolean {
+    const headerLines = pageIdx === 0 ? 10 : 3;
+    const totalNeeded = headerLines + currentLines + additionalLines + footerLines;
     return totalNeeded <= MAX_PAGE_CAPACITY;
 }
 
-// VALIDACION: Verificar límites de página
 function isWithinPageLimits(pageIdx: number, lines: number): boolean {
     const maxAllowed = pageIdx === 0 ? MAX_FIRST_PAGE_LINES : MAX_OTHER_PAGES_LINES;
     return lines <= maxAllowed;
 }
 
-hbs.registerHelper('smartChunkServicios10', function(items: any[]) {
+hbs.registerHelper('smartChunk_s10', function(items: any[], options: any) {
     if (!items || items.length === 0) return [];
+
+    const condiciones = options?.data?.root?.condiciones || '';
+    const footerLines = calculateFooterLines(condiciones);
 
     const pending = [...items];
     const chunks: any[][] = [];
@@ -98,29 +122,20 @@ hbs.registerHelper('smartChunkServicios10', function(items: any[]) {
         const avail = maxLines - curLines;
         const isLastItem = pending.length === 1 && !item.isContinuation;
 
-        // VALIDACION 1: Item muy largo
-        if (itemLines > MAX_OTHER_PAGES_LINES) {
-            console.warn(`WARN: Item muy largo (${itemLines} lineas), se dividira forzosamente`);
-        }
-
-        // VALIDACION 2: Verificar límites absolutos
         if (!isWithinPageLimits(pageIdx, curLines + itemLines)) {
             if (avail < MIN_LINES_TO_DIVIDE) {
                 return { result: 'none' };
             }
         }
 
-        // Intento 1: Colocar completo si cabe
         if (itemLines <= avail) {
-            // VALIDACION 3: Si es el último item, verificar espacio con footer
             if (isLastItem) {
-                if (!canFitWithFooter(pageIdx, curLines, itemLines)) {
+                if (!canFitWithFooter(pageIdx, curLines, itemLines, footerLines)) {
                     return { result: 'none' };
                 }
             }
 
-            // VALIDACION 4: Verificar capacidad total
-            const headerLines = pageIdx === 0 ? 12 : 3;
+            const headerLines = pageIdx === 0 ? 10 : 3;
             if (headerLines + curLines + itemLines > MAX_PAGE_CAPACITY) {
                 return { result: 'none' };
             }
@@ -135,16 +150,9 @@ hbs.registerHelper('smartChunkServicios10', function(items: any[]) {
             return { result: 'complete' };
         }
 
-        // ✅ FIX CRÍTICO: SI ES PRIMERA PÁGINA VACÍA Y ÚLTIMO ITEM, NO DIVIDIR
-        if (pageIdx === 0 && isLastItem && curChunk.length === 0) {
-            return { result: 'none' };  // Forzar nueva página, NO dividir
-        }
-
-        // Intento 2: Dividir el item
         if (avail >= MIN_LINES_TO_DIVIDE) {
             const maxDesc = avail - ROW_BASE_LINES;
             
-            // VALIDACION 5: maxDesc razonable
             if (maxDesc < 1) {
                 return { result: 'none' };
             }
@@ -171,14 +179,12 @@ hbs.registerHelper('smartChunkServicios10', function(items: any[]) {
                 const partALines = ROW_BASE_LINES + calculateTextLines(partA, 55);
                 const isLastFragment = pending.length === 1 && !partB;
 
-                // VALIDACION 6: Si parte A es el último fragmento, verificar con footer
                 if (isLastFragment) {
-                    if (!canFitWithFooter(pageIdx, curLines, partALines)) {
+                    if (!canFitWithFooter(pageIdx, curLines, partALines, footerLines)) {
                         return { result: 'none' };
                     }
                 }
 
-                // VALIDACION 7: partA no excede límites
                 if (curLines + partALines > maxLines) {
                     return { result: 'none' };
                 }
@@ -204,7 +210,6 @@ hbs.registerHelper('smartChunkServicios10', function(items: any[]) {
         return { result: 'none' };
     };
 
-    // Bucle principal con validaciones
     while (pending.length > 0) {
         const item = pending.shift()!;
         const isCont = item.isContinuation || false;
@@ -212,21 +217,15 @@ hbs.registerHelper('smartChunkServicios10', function(items: any[]) {
         let result = tryPlace(item, isCont);
 
         if (result.result === 'none') {
-            // Nueva página
             if (curChunk.length > 0) {
-                // VALIDACION 8: Chunk no vacío
                 chunks.push([...curChunk]);
                 curChunk = [];
                 curLines = 0;
             }
 
-            // Reintentar en página limpia
             result = tryPlace(item, isCont);
 
             if (result.result === 'none') {
-                // VALIDACION 9: Truncamiento de emergencia
-                console.warn(`WARN: Item extremadamente largo, aplicando truncamiento de emergencia`);
-                
                 const maxLinesAvailable = MAX_OTHER_PAGES_LINES - ROW_BASE_LINES;
                 const maxChars = maxLinesAvailable * 55;
                 const forced = (item.nombre || '').substring(0, maxChars) + '…';
@@ -247,7 +246,6 @@ hbs.registerHelper('smartChunkServicios10', function(items: any[]) {
         }
     }
 
-    // VALIDACION 10: Último chunk con contenido
     if (curChunk.length > 0) {
         chunks.push(curChunk);
     }
@@ -255,10 +253,13 @@ hbs.registerHelper('smartChunkServicios10', function(items: any[]) {
     return chunks;
 });
 
-hbs.registerHelper('needsSeparatePageServicios10', function(items: any[]) {
+hbs.registerHelper('needsSeparateImportantPage_s10', function(items: any[], options: any) {
     if (!items || items.length === 0) return false;
 
-    const chunks = hbs.helpers.smartChunkServicios10(items);
+    const condiciones = options?.data?.root?.condiciones || '';
+    const footerLines = calculateFooterLines(condiciones);
+
+    const chunks = hbs.helpers.smartChunk_s10(items, options);
     if (chunks.length === 0) return true;
 
     const lastChunk = chunks[chunks.length - 1];
@@ -269,11 +270,8 @@ hbs.registerHelper('needsSeparatePageServicios10', function(items: any[]) {
     }
 
     const isFirstPage = chunks.length === 1;
-    const headerLines = isFirstPage ? 12 : 3;
-    
-    // ✅ FOOTER Y SAFETY DINÁMICOS (patrón E9)
-    const footerLines = chunks.length > 2 ? 24 : 18;
-    const safetyMargin = chunks.length > 2 ? 10 : 5;
+    const headerLines = isFirstPage ? 10 : 3;
+    const safetyMargin = 8;
     
     const totalNeeded = headerLines + lastTableLines + footerLines;
     const effectiveLimit = MAX_PAGE_CAPACITY - safetyMargin;

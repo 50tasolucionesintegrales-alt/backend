@@ -103,7 +103,7 @@ export class PdfService4 {
       ).toFixed(2);
 
       return { 
-        nombre: descripcion, // CAMBIO: Se asigna la descripción al campo "nombre"
+        nombre: descripcion,
         unidad, 
         cantidad, 
         unitario, 
@@ -122,10 +122,6 @@ export class PdfService4 {
     return { items, ivaPct, subtotales: { subtotal, iva, total } };
   }
 
-  // ───────────────────────────────────────────────────────────────
-  // Conversor a letras en español (MXN) sencillo y suficiente
-  // Maneja hasta miles de millones; redondea a 2 decimales; "PESOS XX/100 M.N."
-  // ───────────────────────────────────────────────────────────────
   private numeroEnLetrasMXN(n: number) {
     const entero = Math.floor(n);
     const cent = Math.round((n - entero) * 100);

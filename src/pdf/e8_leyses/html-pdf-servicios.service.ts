@@ -4,7 +4,6 @@ import * as path from 'node:path';
 import * as hbs from 'handlebars';
 import { chromium, Browser } from 'playwright';
 
-// Helpers básicos
 hbs.registerHelper('inc', (v: any) => Number(v) + 1);
 hbs.registerHelper('money', (n: any) => {
     const num = Number(n ?? 0);
@@ -22,63 +21,86 @@ hbs.registerHelper('multiply', (a: any, b: any) => Number(a) * Number(b));
 hbs.registerHelper('not', (a: any) => !a);
 hbs.registerHelper('and', (a: any, b: any) => !!(a && b));
 
-// FUNCION MEJORADA: Detecta mayúsculas y ajusta cálculo + respeta saltos de línea
-function calculateTextLines(text: string, maxCharsPerLine: number = 55): number {
+function calculateTextLines(text: string, maxCharsPerLine: number = 56): number {
     if (!text) return 0;
     const plainText = text.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '');
     
-    // Detectar porcentaje de mayúsculas
     const upperCaseCount = (plainText.match(/[A-Z]/g) || []).length;
     const totalLetters = (plainText.match(/[a-zA-Z]/g) || []).length;
     const upperCaseRatio = totalLetters > 0 ? upperCaseCount / totalLetters : 0;
     
-    // Ajustar chars por línea si hay muchas mayúsculas
-    // ProtoMono es monoespaciada, pero mayúsculas aún ocupan más visualmente
     let adjustedCharsPerLine = maxCharsPerLine;
-    if (upperCaseRatio > 0.5) {
-        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.85); // Menos agresivo para monoespacio
-    } else if (upperCaseRatio > 0.3) {
-        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.92); // Menos agresivo
+    if (upperCaseRatio > 0.75) {
+        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.72);
+    } else if (upperCaseRatio > 0.50) {
+        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.78);
+    } else if (upperCaseRatio > 0.25) {
+        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.82);
     }
     
     const lines = plainText.split(/\r?\n/);
     let totalLines = 0;
+    
     for (const line of lines) {
         if (line.length === 0) {
             totalLines += 1;
         } else if (line.length > adjustedCharsPerLine) {
-            totalLines += Math.ceil(line.length / adjustedCharsPerLine);
+            const exactLines = line.length / adjustedCharsPerLine;
+            
+            if (exactLines <= 1.1) {
+                totalLines += 1;
+            } else if (exactLines <= 1.5) {
+                totalLines += 1.5;
+            } else if (exactLines <= 2) {
+                totalLines += 2;
+            } else if (exactLines <= 2.5) {
+                totalLines += 2.5;
+            } else if (exactLines < 3) {
+                totalLines += 3;
+            } else {
+                totalLines += Math.ceil(exactLines);
+            }
         } else {
             totalLines += 1;
         }
     }
+    
     return Math.max(totalLines, 1);
 }
 
-// CONSTANTES 
-const MAX_FIRST_PAGE_LINES = 36;
-const MAX_OTHER_PAGES_LINES = 46;
+const MAX_FIRST_PAGE_LINES = 42;
+const MAX_OTHER_PAGES_LINES = 56;
 const ROW_BASE_LINES = 1;
-const FOOTER_LINES = 16;
-const MAX_PAGE_CAPACITY = 52;
+const MAX_PAGE_CAPACITY = 59;
 const MIN_LINES_TO_DIVIDE = 2;
-const SAFETY_MARGIN = 8;
 
-// VALIDACION: Verificar espacio con footer
-function canFitWithFooter(pageIdx: number, currentLines: number, additionalLines: number): boolean {
+function calculateFooterLines(condiciones?: string): number {
+    const BASE_FOOTER = 16;
+    
+    if (!condiciones || !condiciones.trim()) {
+        return BASE_FOOTER;
+    }
+    
+    const condicionesLines = calculateTextLines(condiciones, 58);
+    return BASE_FOOTER + condicionesLines + 2;
+}
+
+function canFitWithFooter(pageIdx: number, currentLines: number, additionalLines: number, footerLines: number): boolean {
     const headerLines = pageIdx === 0 ? 14 : 3;
-    const totalNeeded = headerLines + currentLines + additionalLines + FOOTER_LINES;
+    const totalNeeded = headerLines + currentLines + additionalLines + footerLines;
     return totalNeeded <= MAX_PAGE_CAPACITY;
 }
 
-// VALIDACION: Verificar límites de página
 function isWithinPageLimits(pageIdx: number, lines: number): boolean {
     const maxAllowed = pageIdx === 0 ? MAX_FIRST_PAGE_LINES : MAX_OTHER_PAGES_LINES;
     return lines <= maxAllowed;
 }
 
-hbs.registerHelper('smartChunkServicios8', function(items: any[]) {
+hbs.registerHelper('smartChunk_s8', function(items: any[], options: any) {
     if (!items || items.length === 0) return [];
+
+    const condiciones = options?.data?.root?.condiciones || '';
+    const footerLines = calculateFooterLines(condiciones);
 
     const pending = [...items];
     const chunks: any[][] = [];
@@ -94,34 +116,25 @@ hbs.registerHelper('smartChunkServicios8', function(items: any[]) {
         leftover?: any 
     } => {
         const text = item.nombre;
-        const itemLines = ROW_BASE_LINES + calculateTextLines(text, 55);
+        const itemLines = ROW_BASE_LINES + calculateTextLines(text, 56);
         const pageIdx = chunks.length;
         const maxLines = maxForPage(pageIdx);
         const avail = maxLines - curLines;
         const isLastItem = pending.length === 1 && !item.isContinuation;
 
-        // VALIDACION 1: Item muy largo
-        if (itemLines > MAX_OTHER_PAGES_LINES) {
-            console.warn(`WARN: Item muy largo (${itemLines} lineas), se dividira forzosamente`);
-        }
-
-        // VALIDACION 2: Verificar límites absolutos
         if (!isWithinPageLimits(pageIdx, curLines + itemLines)) {
             if (avail < MIN_LINES_TO_DIVIDE) {
                 return { result: 'none' };
             }
         }
 
-        // Intento 1: Colocar completo si cabe
         if (itemLines <= avail) {
-            // VALIDACION 3: Si es el último item, verificar espacio con footer
             if (isLastItem) {
-                if (!canFitWithFooter(pageIdx, curLines, itemLines)) {
+                if (!canFitWithFooter(pageIdx, curLines, itemLines, footerLines)) {
                     return { result: 'none' };
                 }
             }
 
-            // VALIDACION 4: Verificar capacidad total
             const headerLines = pageIdx === 0 ? 14 : 3;
             if (headerLines + curLines + itemLines > MAX_PAGE_CAPACITY) {
                 return { result: 'none' };
@@ -137,11 +150,9 @@ hbs.registerHelper('smartChunkServicios8', function(items: any[]) {
             return { result: 'complete' };
         }
 
-        // Intento 2: Dividir el item
         if (avail >= MIN_LINES_TO_DIVIDE) {
             const maxDesc = avail - ROW_BASE_LINES;
             
-            // VALIDACION 5: maxDesc razonable
             if (maxDesc < 1) {
                 return { result: 'none' };
             }
@@ -152,7 +163,7 @@ hbs.registerHelper('smartChunkServicios8', function(items: any[]) {
 
             for (let i = 0; i < words.length; i++) {
                 const test = partA ? `${partA} ${words[i]}` : words[i];
-                const testLines = calculateTextLines(test, 55);
+                const testLines = calculateTextLines(test, 56);
                 
                 if (testLines > maxDesc && partA.length > 0) {
                     cut = i;
@@ -165,17 +176,15 @@ hbs.registerHelper('smartChunkServicios8', function(items: any[]) {
             const partB = words.slice(cut).join(' ');
 
             if (partA) {
-                const partALines = ROW_BASE_LINES + calculateTextLines(partA, 55);
+                const partALines = ROW_BASE_LINES + calculateTextLines(partA, 56);
                 const isLastFragment = pending.length === 1 && !partB;
 
-                // VALIDACION 6: Si parte A es el último fragmento, verificar con footer
                 if (isLastFragment) {
-                    if (!canFitWithFooter(pageIdx, curLines, partALines)) {
+                    if (!canFitWithFooter(pageIdx, curLines, partALines, footerLines)) {
                         return { result: 'none' };
                     }
                 }
 
-                // VALIDACION 7: partA no excede límites
                 if (curLines + partALines > maxLines) {
                     return { result: 'none' };
                 }
@@ -201,7 +210,6 @@ hbs.registerHelper('smartChunkServicios8', function(items: any[]) {
         return { result: 'none' };
     };
 
-    // Bucle principal con validaciones
     while (pending.length > 0) {
         const item = pending.shift()!;
         const isCont = item.isContinuation || false;
@@ -209,23 +217,17 @@ hbs.registerHelper('smartChunkServicios8', function(items: any[]) {
         let result = tryPlace(item, isCont);
 
         if (result.result === 'none') {
-            // Nueva página
             if (curChunk.length > 0) {
-                // VALIDACION 8: Chunk no vacío
                 chunks.push([...curChunk]);
                 curChunk = [];
                 curLines = 0;
             }
 
-            // Reintentar en página limpia
             result = tryPlace(item, isCont);
 
             if (result.result === 'none') {
-                // VALIDACION 9: Truncamiento de emergencia
-                console.warn(`WARN: Item extremadamente largo, aplicando truncamiento de emergencia`);
-                
                 const maxLinesAvailable = MAX_OTHER_PAGES_LINES - ROW_BASE_LINES;
-                const maxChars = maxLinesAvailable * 55;
+                const maxChars = maxLinesAvailable * 56;
                 const forced = (item.nombre || '').substring(0, maxChars) + '…';
                 
                 curChunk.push({
@@ -234,7 +236,7 @@ hbs.registerHelper('smartChunkServicios8', function(items: any[]) {
                     isContinuation: isCont,
                     globalIndex: isCont ? '' : globalCounter++
                 });
-                curLines = ROW_BASE_LINES + calculateTextLines(forced, 55);
+                curLines = ROW_BASE_LINES + calculateTextLines(forced, 56);
                 continue;
             }
         }
@@ -244,7 +246,6 @@ hbs.registerHelper('smartChunkServicios8', function(items: any[]) {
         }
     }
 
-    // VALIDACION 10: Último chunk con contenido
     if (curChunk.length > 0) {
         chunks.push(curChunk);
     }
@@ -252,26 +253,30 @@ hbs.registerHelper('smartChunkServicios8', function(items: any[]) {
     return chunks;
 });
 
-hbs.registerHelper('needsSeparatePageServicios8', function(items: any[]) {
+hbs.registerHelper('needsSeparateImportantPage_s8', function(items: any[], options: any) {
     if (!items || items.length === 0) return false;
 
-    const chunks = hbs.helpers.smartChunkServicios8(items);
+    const condiciones = options?.data?.root?.condiciones || '';
+    const footerLines = calculateFooterLines(condiciones);
+
+    const chunks = hbs.helpers.smartChunk_s8(items, options);
     if (chunks.length === 0) return true;
 
     const lastChunk = chunks[chunks.length - 1];
     let lastTableLines = 0;
     
     for (const item of lastChunk) {
-        lastTableLines += ROW_BASE_LINES + calculateTextLines(item.nombre, 55);
+        lastTableLines += ROW_BASE_LINES + calculateTextLines(item.nombre, 56);
     }
 
     const isFirstPage = chunks.length === 1;
     const headerLines = isFirstPage ? 14 : 3;
-    const totalNeeded = headerLines + lastTableLines + FOOTER_LINES;
-    const effectiveLimit = MAX_PAGE_CAPACITY - SAFETY_MARGIN;
+    const safetyMargin = 6;
+    
+    const totalNeeded = headerLines + lastTableLines + footerLines;
+    const effectiveLimit = MAX_PAGE_CAPACITY - safetyMargin;
 
-    // VALIDACION FINAL: Margen de seguridad
-    return totalNeeded >= effectiveLimit;
+    return totalNeeded > effectiveLimit;
 });
 
 function resolveBaseDir() {

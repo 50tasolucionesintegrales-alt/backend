@@ -228,7 +228,7 @@
 
 <!-- PÁGINAS CON PAGINACIÓN INTELIGENTE -->
 {{#if items}}
-  {{#each (smartChunkServicios11 items)}}
+  {{#each (smartChunk_s11 items)}}
   <div class="page-container">
     <div class="bg-page"><img src="assets/emp11.png" alt="membrete"></div>
     <div class="content-area">
@@ -281,7 +281,7 @@
 
       <!-- SECCIÓN IMPORTANTE SOLO EN ÚLTIMA PÁGINA SI HAY ESPACIO -->
       {{#if @last}}
-        {{#if (not (needsSeparatePageServicios11 ../items))}}
+        {{#if (not (needsSeparateImportantPage_s11 ../items))}}
         <div class="important-content" style="margin-top: 12px;">
           <!-- Totales -->
           <div class="totals">
@@ -356,7 +356,7 @@
   {{/each}}
 
   <!-- PÁGINA SEPARADA PARA INFORMACIÓN IMPORTANTE SI NO CABE EN LA ÚLTIMA -->
-  {{#if (needsSeparatePageServicios11 items)}}
+  {{#if (needsSeparateImportantPage_s11 items)}}
   <div class="page-container">
     <div class="bg-page"><img src="assets/emp11.png" alt="membrete"></div>
     <div class="content-area">

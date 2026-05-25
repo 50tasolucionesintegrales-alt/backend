@@ -4,7 +4,6 @@ import * as path from 'node:path';
 import * as hbs from 'handlebars';
 import { chromium, Browser } from 'playwright';
 
-// Helpers básicos (sin cambios)
 hbs.registerHelper('inc', (v: any) => Number(v) + 1);
 hbs.registerHelper('money', (n: any) => {
     const num = Number(n ?? 0);
@@ -22,93 +21,262 @@ hbs.registerHelper('multiply', (a: any, b: any) => Number(a) * Number(b));
 hbs.registerHelper('not', (a: any) => !a);
 hbs.registerHelper('and', (a: any, b: any) => !!(a && b));
 
-// Helper smartChunk_e7 
-hbs.registerHelper('smartChunk_e7', function(items: any[]) {
-    if (!items || items.length === 0) return [];
-
-    const chunks: any[][] = [];
-    let currentChunk: any[] = [];
-    let currentLines = 0;
-
-    // CONSTANTES 
-    const MAX_LINES_PER_PAGE = 24;          
-    const HEADER_LINES_FIRST_PAGE = 12;          
-    const MAX_ITEMS_LINES_FIRST_PAGE = 12;       
-    const MAX_ITEMS_LINES_OTHER = 24;             
-
-    // Cálculo de líneas por ítem 
-    const getItemLines = (item: any) => {
-        const len = item.nombre?.length || 0;
-        if (len > 250) return 7;
-        if (len > 200) return 6;
-        if (len > 150) return 5;
-        if (len > 100) return 4;
-        if (len > 70) return 3;
-        if (len > 40) return 2;
-        if (len > 20) return 2;
-        return 1;
-    };
-
-    for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        const itemLines = getItemLines(item);
-        const isFirstPage = (chunks.length === 0 && currentChunk.length === 0);
-        const maxAllowed = isFirstPage ? MAX_ITEMS_LINES_FIRST_PAGE : MAX_ITEMS_LINES_OTHER;
-
-        if (itemLines > maxAllowed) {
-            if (currentChunk.length) chunks.push([...currentChunk]);
-            currentChunk = [{ ...item, globalIndex: i + 1 }];
-            currentLines = itemLines;
-        } 
-        else if (currentLines + itemLines <= maxAllowed) {
-            currentChunk.push({ ...item, globalIndex: i + 1 });
-            currentLines += itemLines;
+function calculateTextLines(text: string, maxCharsPerLine: number = 54): number {
+    if (!text) return 0;
+    const plainText = text.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '');
+    
+    const upperCaseCount = (plainText.match(/[A-Z]/g) || []).length;
+    const totalLetters = (plainText.match(/[a-zA-Z]/g) || []).length;
+    const upperCaseRatio = totalLetters > 0 ? upperCaseCount / totalLetters : 0;
+    
+    let adjustedCharsPerLine = maxCharsPerLine;
+    if (upperCaseRatio > 0.75) {
+        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.72);
+    } else if (upperCaseRatio > 0.50) {
+        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.78);
+    } else if (upperCaseRatio > 0.25) {
+        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.82);
+    }
+    
+    const lines = plainText.split(/\r?\n/);
+    let totalLines = 0;
+    
+    for (const line of lines) {
+        if (line.length === 0) {
+            totalLines += 1;
+        } else if (line.length > adjustedCharsPerLine) {
+            const exactLines = line.length / adjustedCharsPerLine;
+            
+            if (exactLines <= 1.1) {
+                totalLines += 1;
+            } else if (exactLines <= 1.5) {
+                totalLines += 1.5;
+            } else if (exactLines <= 2) {
+                totalLines += 2;
+            } else if (exactLines <= 2.5) {
+                totalLines += 2.5;
+            } else if (exactLines < 3) {
+                totalLines += 3;
+            } else {
+                totalLines += Math.ceil(exactLines);
+            }
         } else {
-            if (currentChunk.length) chunks.push([...currentChunk]);
-            currentChunk = [{ ...item, globalIndex: i + 1 }];
-            currentLines = itemLines;
+            totalLines += 1;
         }
     }
-    if (currentChunk.length) chunks.push(currentChunk);
+    
+    return Math.max(totalLines, 1);
+}
+
+const MAX_FIRST_PAGE_LINES = 28;
+const MAX_OTHER_PAGES_LINES = 34;
+const ROW_BASE_LINES = 1;
+const MAX_PAGE_CAPACITY = 52;
+const MIN_LINES_TO_DIVIDE = 2;
+
+function calculateFooterLines(condiciones?: string): number {
+    const BASE_FOOTER = 18;
+    
+    if (!condiciones || !condiciones.trim()) {
+        return BASE_FOOTER;
+    }
+    
+    const condicionesLines = calculateTextLines(condiciones, 52);
+    return BASE_FOOTER + condicionesLines + 2;
+}
+
+function isWithinPageLimits(pageIdx: number, lines: number): boolean {
+    const maxAllowed = pageIdx === 0 ? MAX_FIRST_PAGE_LINES : MAX_OTHER_PAGES_LINES;
+    return lines <= maxAllowed;
+}
+
+hbs.registerHelper('smartChunk_e7', function(items: any[], options: any) {
+    if (!items || items.length === 0) return [];
+
+    const pending = [...items];
+    const chunks: any[][] = [];
+    let curChunk: any[] = [];
+    let curLines = 0;
+    let globalCounter = 1;
+
+    const maxForPage = (pageIdx: number) => 
+        pageIdx === 0 ? MAX_FIRST_PAGE_LINES : MAX_OTHER_PAGES_LINES;
+
+    const tryPlace = (item: any, isContinuation: boolean): { 
+        result: 'complete' | 'partial' | 'none'; 
+        leftover?: any 
+    } => {
+        const text = item.nombre;
+        const descLength = text.length;
+        const textLines = calculateTextLines(text, 54);
+        const itemLines = descLength <= 30 ? 1.5 : ROW_BASE_LINES + textLines;
+        
+        const pageIdx = chunks.length;
+        const maxLines = maxForPage(pageIdx);
+        const avail = maxLines - curLines;
+
+        if (!isWithinPageLimits(pageIdx, curLines + itemLines)) {
+            if (avail < MIN_LINES_TO_DIVIDE) {
+                return { result: 'none' };
+            }
+        }
+
+        if (itemLines <= avail) {
+            const headerLines = pageIdx === 0 ? 12 : 3;
+            if (headerLines + curLines + itemLines > MAX_PAGE_CAPACITY) {
+                return { result: 'none' };
+            }
+
+            curChunk.push({
+                ...item,
+                nombre: text,
+                isContinuation,
+                globalIndex: isContinuation ? '' : globalCounter++
+            });
+            curLines += itemLines;
+            return { result: 'complete' };
+        }
+
+        if (avail >= MIN_LINES_TO_DIVIDE) {
+            const maxDesc = avail - ROW_BASE_LINES;
+            
+            if (maxDesc < 1) {
+                return { result: 'none' };
+            }
+
+            const words = text.split(' ');
+            let partA = '';
+            let cut = 0;
+
+            for (let i = 0; i < words.length; i++) {
+                const test = partA ? `${partA} ${words[i]}` : words[i];
+                const testLines = calculateTextLines(test, 54);
+                
+                if (testLines > maxDesc && partA.length > 0) {
+                    cut = i;
+                    break;
+                }
+                partA = test;
+                cut = i + 1;
+            }
+
+            const partB = words.slice(cut).join(' ');
+
+            if (partA) {
+                const descLengthA = partA.length;
+                const partATextLines = calculateTextLines(partA, 54);
+                const partALines = descLengthA <= 30 ? 1.5 : ROW_BASE_LINES + partATextLines;
+
+                if (curLines + partALines > maxLines) {
+                    return { result: 'none' };
+                }
+
+                curChunk.push({
+                    ...item,
+                    nombre: partA,
+                    isContinuation,
+                    globalIndex: isContinuation ? '' : globalCounter++
+                });
+                curLines += partALines;
+
+                if (partB) {
+                    return { 
+                        result: 'partial', 
+                        leftover: { ...item, nombre: partB, isContinuation: true } 
+                    };
+                }
+                return { result: 'complete' };
+            }
+        }
+
+        return { result: 'none' };
+    };
+
+    while (pending.length > 0) {
+        const item = pending.shift()!;
+        const isCont = item.isContinuation || false;
+
+        let result = tryPlace(item, isCont);
+
+        if (result.result === 'none') {
+            if (curChunk.length > 0) {
+                chunks.push([...curChunk]);
+                curChunk = [];
+                curLines = 0;
+            }
+
+            result = tryPlace(item, isCont);
+
+            if (result.result === 'none') {
+                const maxLinesAvailable = MAX_OTHER_PAGES_LINES - ROW_BASE_LINES;
+                const maxChars = maxLinesAvailable * 54;
+                const forced = (item.nombre || '').substring(0, maxChars) + '…';
+                
+                const forcedLength = forced.length;
+                const forcedTextLines = calculateTextLines(forced, 54);
+                const forcedItemLines = forcedLength <= 30 ? 1.5 : ROW_BASE_LINES + forcedTextLines;
+                
+                curChunk.push({
+                    ...item,
+                    nombre: forced,
+                    isContinuation: isCont,
+                    globalIndex: isCont ? '' : globalCounter++
+                });
+                curLines = forcedItemLines;
+                continue;
+            }
+        }
+
+        if (result.result === 'partial' && result.leftover) {
+            pending.unshift(result.leftover);
+        }
+    }
+
+    if (curChunk.length > 0) {
+        chunks.push(curChunk);
+    }
+
     return chunks;
 });
 
-// Helper needsSeparateImportantPage_e7 
-hbs.registerHelper('needsSeparateImportantPage_e7', function(items: any[], options?: any) {
+hbs.registerHelper('needsSeparateImportantPage_e7', function(items: any[], options: any) {
     if (!items || items.length === 0) return false;
 
-    const MAX_LINES_PER_PAGE = 24;
-    const FOOTER_LINES_ESTIMATED = 16;   
+    const condiciones = options?.data?.root?.condiciones || '';
+    const footerLines = calculateFooterLines(condiciones);
 
-    const getItemLines = (item: any) => {
-        const len = item.nombre?.length || 0;
-        if (len > 250) return 7;
-        if (len > 200) return 6;
-        if (len > 150) return 5;
-        if (len > 100) return 4;
-        if (len > 70) return 3;
-        if (len > 40) return 2;
-        if (len > 20) return 2;
-        return 1;
-    };
+    const chunks = hbs.helpers.smartChunk_e7(items, options);
+    if (chunks.length === 0) return true;
 
-    const chunks = hbs.helpers.smartChunk_e7(items);
-    if (!chunks.length) return true;
     const lastChunk = chunks[chunks.length - 1];
-    let itemsLines = 0;
-    for (const it of lastChunk) itemsLines += getItemLines(it);
+    let lastTableLines = 0;
+    
+    for (const item of lastChunk) {
+        const descLength = item.nombre?.length || 0;
+        const textLines = calculateTextLines(item.nombre, 54);
+        const itemLines = descLength <= 30 ? 1.5 : ROW_BASE_LINES + textLines;
+        lastTableLines += itemLines;
+    }
 
-    return (itemsLines + FOOTER_LINES_ESTIMATED > MAX_LINES_PER_PAGE);
+    const isFirstPage = chunks.length === 1;
+    const headerLines = isFirstPage ? 12 : 3;
+    const safetyMargin = 2;
+
+    const totalNeeded = headerLines + lastTableLines + footerLines;
+    const effectiveLimit = MAX_PAGE_CAPACITY - safetyMargin;
+
+    return totalNeeded > effectiveLimit;
 });
 
-// ========== Resolución de rutas y servicio  ==========
 function resolveBaseDir() {
     const distDir = path.join(__dirname);
     const distTpl = path.join(distDir, 'templates');
     if (fs.existsSync(distTpl)) return distDir;
+
     const srcDir = path.join(process.cwd(), 'src', 'pdf');
     const srcTpl = path.join(srcDir, 'templates');
     if (fs.existsSync(srcTpl)) return srcDir;
+
     return distDir;
 }
 
@@ -120,6 +288,7 @@ export class HtmlPdfService7 implements OnModuleInit, OnModuleDestroy {
 
     async onModuleInit() {
         const partialsDir = path.join(this.baseDir, 'templates', 'partials');
+
         if (fs.existsSync(partialsDir)) {
             for (const f of fs.readdirSync(partialsDir)) {
                 if (f.endsWith('.hbs')) {
@@ -129,6 +298,7 @@ export class HtmlPdfService7 implements OnModuleInit, OnModuleDestroy {
                 }
             }
         }
+
         this.browser = await chromium.launch({ args: ['--no-sandbox'] });
     }
 
@@ -149,19 +319,27 @@ export class HtmlPdfService7 implements OnModuleInit, OnModuleDestroy {
     async renderToPdf(templateName: string, data: any): Promise<Buffer> {
         const tpl = this.getTemplate(templateName);
         const html = tpl(data);
+
         const tmpDir = this.baseDir;
         const tmpFile = path.join(tmpDir, `__tmp_${templateName}_${Date.now()}.html`);
+
         fs.writeFileSync(tmpFile, html, 'utf8');
+
         const ctx = await this.browser.newContext();
         const page = await ctx.newPage();
+
         const fileUrl = 'file://' + tmpFile.replace(/\\/g, '/');
         await page.goto(fileUrl, { waitUntil: 'load' });
+
         const pdf = await page.pdf({
             format: 'Letter',
             printBackground: true,
         });
+
         await ctx.close();
+
         try { fs.unlinkSync(tmpFile); } catch {}
+
         return pdf;
     }
 }

@@ -166,21 +166,21 @@
 
     .firma-box{
       min-height: 42mm;
-      padding: 10px 12px;
+      padding: 10px 0px 10px 12px;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
-      align-items: flex-start;
+      align-items: flex-end;
     }
     .firma-box{
       font-weight:700;
       margin-bottom: 8px;
     }
     .atentamente{
-      margin-bottom: 75px;
+      margin-bottom: 15px;
     }
     .firma-box img{
-      height: 48px;
+      height: 75px;
       display: inline-block;
       margin: 2px 0 6px;
     }
@@ -205,7 +205,7 @@
 <body>
 
 <!-- PÁGINAS CON PAGINACIÓN INTELIGENTE - SERVICIOS -->
-{{#each (smartChunkServicios9 items)}}
+{{#each (smartChunk_s9 items)}}
 <div class="page-container">
   <div class="bg-page"><img src="assets/emp9.png" alt="membrete"></div>
   <div class="content-area">
@@ -263,7 +263,7 @@
 
     <!-- SECCIÓN IMPORTANTE SOLO EN ÚLTIMA PÁGINA SI HAY ESPACIO -->
     {{#if @last}}
-      {{#if (not (needsSeparatePageServicios9 ../items))}}
+      {{#if (not (needsSeparateImportantPage_s9 ../items))}}
       <div style="margin-top: 12px;">
         <!-- Totales (derecha) -->
         <div class="totals-wrap">
@@ -340,7 +340,7 @@
 {{/each}}
 
 <!-- PÁGINA SEPARADA PARA INFORMACIÓN IMPORTANTE SI NO CABE EN LA ÚLTIMA -->
-{{#if (needsSeparatePageServicios9 items)}}
+{{#if (needsSeparateImportantPage_s9 items)}}
 <div class="page-container">
   <div class="bg-page"><img src="assets/emp9.png" alt="membrete"></div>
   <div class="content-area">
