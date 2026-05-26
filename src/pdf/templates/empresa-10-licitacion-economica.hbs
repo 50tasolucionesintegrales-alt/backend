@@ -1,0 +1,262 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{{tituloLicitacion}}</title>
+  <style>
+    :root { --ink: #111; --line: #cfd2d7; --thead: #000; --thead-text: #fff; }
+
+    @page { size: Letter; margin: 0; }
+
+    @font-face {
+      font-family: "TahomaLocal";
+      src: url("assets/fonts/tahoma.ttf") format("truetype");
+      font-weight: 400; font-style: normal; font-display: swap;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: "TahomaLocal", Arial, sans-serif;
+      font-size: 12px;
+      line-height: 1.45;
+      color: var(--ink);
+    }
+
+    .page-container {
+      position: relative;
+      width: 215.9mm;
+      min-height: 279.4mm;
+      break-after: page;
+      page-break-after: always;
+    }
+
+    .page-container:last-child { break-after: auto; page-break-after: auto; }
+
+    .page-bg {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0; pointer-events: none;
+    }
+
+    .page-bg img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    .content-area {
+      position: relative;
+      z-index: 1;
+      padding-top: 35mm;
+      padding-left: 12mm;
+      padding-right: 12mm;
+      padding-bottom: 30mm;
+      min-height: 279.4mm;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header-block { text-align: center; margin-bottom: 10px; line-height: 1.6; }
+    .header-block div { font-weight: 400; font-size: 12px; }
+
+    .fecha-line { text-align: right; font-size: 12px; margin-bottom: 8px; color: #333; }
+
+    .dest-block { margin-bottom: 8px; line-height: 1.6; }
+    .dest-block .dest-nombre,
+    .dest-block .presente { font-weight: 700; font-size: 12px; }
+
+    .pre-table { font-size: 12px; line-height: 1.7; margin-bottom: 8px; }
+
+    .table-wrap { margin-top: 6px; width: 100%; }
+
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+
+    thead th {
+      background: var(--thead); color: var(--thead-text); font-weight: 700;
+      border: 1px solid #000; padding: 6px 3px;
+      font-size: 10px; text-align: center; vertical-align: middle;
+      line-height: 1.3;
+    }
+
+    tbody td {
+      border: 1px solid #000; padding: 5px 5px; font-size: 11.5px;
+      background: #fff; vertical-align: top;
+      word-wrap: break-word; word-break: break-word; white-space: pre-line;
+    }
+
+    .center { text-align: center; }
+    .right  { text-align: right; }
+
+    th:nth-child(1), td:nth-child(1) { width: 7%; }
+    th:nth-child(2), td:nth-child(2) { width: 9%; }
+    th:nth-child(3), td:nth-child(3) { width: 41%; }
+    th:nth-child(4), td:nth-child(4) { width: 8%; }
+    th:nth-child(5), td:nth-child(5) { width: 7%; }
+    th:nth-child(6), td:nth-child(6) { width: 14%; }
+    th:nth-child(7), td:nth-child(7) { width: 14%; }
+
+    .footer-block { margin-top: 10px; display: flex; flex-direction: column; flex: 1; }
+
+    .totals-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-top: 8px; }
+    .cantidad-letra { font-size: 11px; font-weight: 700; flex: 1; line-height: 1.5; }
+    .totals-table-wrap { width: 230px; flex-shrink: 0; }
+    .totals-table { width: 100%; border-collapse: collapse; }
+    .totals-table td { padding: 5px 8px; border: 1px solid var(--line); font-size: 11px; background: #fff; }
+    .totals-table .t-label { font-weight: 700; white-space: nowrap; }
+    .totals-table .t-value { text-align: right; white-space: nowrap; }
+
+    .condiciones-block { margin-top: 10px; }
+    .condicion-line { font-size: 12px; margin-bottom: 4px; line-height: 1.5; }
+    .condicion-line strong { font-weight: 700; }
+
+    .firmante-block {
+      margin-top: auto; padding-top: 14px;
+      text-align: center; font-size: 12px; line-height: 1.65;
+    }
+    .firmante-block div { font-weight: 700; }
+
+    .continuacion-header { text-align: center; margin-bottom: 8px; font-size: 12px; }
+  </style>
+</head>
+<body>
+
+{{#if rows}}
+  {{#each (licitSmartChunk10 rows)}}
+  <div class="page-container">
+    <div class="page-bg"><img src="assets/emp10.png" alt="membrete"></div>
+    <div class="content-area">
+
+      {{#if (licit_eq @index 0)}}
+        <div class="header-block">
+          <div>Oficialía Mayor del Poder Ejecutivo del Estado de Hidalgo</div>
+          <div>Licitación Pública Nacional No. {{../numeroLicitacion}}</div>
+          <div>{{../tituloLicitacion}}</div>
+          <div>{{../documentoVI}}</div>
+          <div>{{../anexo}}</div>
+          <div>{{../tipoDocumento}}</div>
+        </div>
+        <div class="fecha-line">{{../lugar}}, a {{../fecha}}</div>
+        <div class="dest-block">
+          <div class="dest-nombre">{{../destinatario}}</div>
+          <div class="presente">{{../presente}}</div>
+        </div>
+        <div class="pre-table">
+          <div>Nombre del licitante: {{../nombreLicitante}}</div>
+          <div>Anexo No. {{../anexoNumero}}</div>
+          <div>Concepto: {{../conceptoResumen}}</div>
+          <div>Monto total de la cotización: {{licit_money ../montoTotal}}</div>
+        </div>
+      {{else}}
+        <div class="continuacion-header">
+          <div>Documento {{licit_roman @index}} - {{../anexo}}</div>
+        </div>
+      {{/if}}
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="center">CON-<br>CEPTO</th>
+              <th class="center">SUB-<br>CONCEPTO</th>
+              <th class="center">DESCRIPCIÓN COMPLETA DEL<br>NÚMERO DE SUBCONCEPTO</th>
+              <th class="center">UNIDA<br>DE<br>MEDIDA</th>
+              <th class="center">CANT.</th>
+              <th class="center">PRECIO<br>UNITARIO<br>SIN IVA</th>
+              <th class="right">SUBTOTALES</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each this}}
+            <tr>
+              {{#if this.isFirstInConcepto}}
+              <td class="center" rowspan="{{this.rowspan}}">{{this.concepto}}</td>
+              {{/if}}
+              <td class="center">{{this.subconcepto}}</td>
+              <td>{{this.descripcion}}</td>
+              <td class="center">{{this.unidad}}</td>
+              <td class="center">{{this.cantidad}}</td>
+              <td class="right">{{licit_money this.precioUnitario}}</td>
+              <td class="right">{{licit_money this.subtotal}}</td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+
+      {{#if @last}}
+        {{#if (licitNeedsSeparatePage10 ../rows)}}
+        {{else}}
+          <div class="footer-block">
+            <div>
+              <div class="totals-row">
+                <div class="cantidad-letra">Cantidad con letra: {{../totalEnLetra}}</div>
+                <div class="totals-table-wrap">
+                  <table class="totals-table">
+                    <tr><td class="t-label">Subtotales:</td><td class="t-value">{{licit_money ../subtotal}}</td></tr>
+                    <tr><td class="t-label">I.V.A.</td><td class="t-value">{{licit_money ../iva}}</td></tr>
+                    <tr><td class="t-label">Total:</td><td class="t-value">{{licit_money ../total}}</td></tr>
+                  </table>
+                </div>
+              </div>
+              <div class="condiciones-block">
+                <div class="condicion-line"><strong>Condiciones de pago:</strong> {{../condicionPago}}</div>
+                <div class="condicion-line"><strong>Vigencia de la cotización:</strong> {{../vigencia}}</div>
+                <div class="condicion-line"><strong>Plazo y condiciones de los bienes:</strong> {{../plazoCondiciones}}</div>
+                <div class="condicion-line"><strong>Lugar de entrega de los bienes:</strong> {{../lugarEntrega}}</div>
+              </div>
+            </div>
+            <div class="firmante-block">
+              {{#if ../firmanteNombre}}<div>{{../firmanteNombre}}</div>{{/if}}
+              {{#if ../firmanteCargo}}<div>{{../firmanteCargo}}</div>{{/if}}
+              <div>{{../firmanteEmpresa}}</div>
+            </div>
+          </div>
+        {{/if}}
+      {{/if}}
+
+    </div>
+  </div>
+  {{/each}}
+
+  {{#if (licitNeedsSeparatePage10 rows)}}
+  <div class="page-container">
+    <div class="page-bg"><img src="assets/emp10.png" alt="membrete"></div>
+    <div class="content-area">
+      <div class="footer-block">
+        <div>
+          <div class="totals-row">
+            <div class="cantidad-letra">Cantidad con letra: {{totalEnLetra}}</div>
+            <div class="totals-table-wrap">
+              <table class="totals-table">
+                <tr><td class="t-label">Subtotales:</td><td class="t-value">{{licit_money subtotal}}</td></tr>
+                <tr><td class="t-label">I.V.A.</td><td class="t-value">{{licit_money iva}}</td></tr>
+                <tr><td class="t-label">Total:</td><td class="t-value">{{licit_money total}}</td></tr>
+              </table>
+            </div>
+          </div>
+          <div class="condiciones-block">
+            <div class="condicion-line"><strong>Condiciones de pago:</strong> {{condicionPago}}</div>
+            <div class="condicion-line"><strong>Vigencia de la cotización:</strong> {{vigencia}}</div>
+            <div class="condicion-line"><strong>Plazo y condiciones de los bienes:</strong> {{plazoCondiciones}}</div>
+            <div class="condicion-line"><strong>Lugar de entrega de los bienes:</strong> {{lugarEntrega}}</div>
+          </div>
+        </div>
+        <div class="firmante-block">
+          {{#if firmanteNombre}}<div>{{firmanteNombre}}</div>{{/if}}
+          {{#if firmanteCargo}}<div>{{firmanteCargo}}</div>{{/if}}
+          <div>{{firmanteEmpresa}}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {{/if}}
+
+{{else}}
+  <div class="page-container">
+    <div class="page-bg"><img src="assets/emp10.png" alt="membrete"></div>
+    <div class="content-area">
+      <div style="text-align:center; padding-top:40px;"><h3>No hay ítems en esta licitación</h3></div>
+    </div>
+  </div>
+{{/if}}
+
+</body>
+</html>

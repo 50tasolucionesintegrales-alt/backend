@@ -81,8 +81,8 @@ function calculateFooterLines(condiciones?: string): number {
         return BASE_FOOTER;
     }
     
-    const condicionesLines = calculateTextLines(condiciones, 85);
-    return BASE_FOOTER + condicionesLines + 2;
+    const condicionesLines = calculateTextLines(condiciones, 80);
+    return BASE_FOOTER + condicionesLines + 3;
 }
 
 function isWithinPageLimits(pageIdx: number, lines: number): boolean {

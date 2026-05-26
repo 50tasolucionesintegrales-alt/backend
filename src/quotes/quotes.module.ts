@@ -56,6 +56,30 @@ import { HtmlPdfService9 } from 'src/pdf/e9_es/html-pdf.service';
 import { HtmlPdfService10 } from 'src/pdf/e10_jessica/html-pdf.service';
 import { HtmlPdfService11 } from 'src/pdf/e11_alamo/html-pdf.service';
 import { HtmlPdfService12 } from 'src/pdf/e12_hugo/html-pdf.service';
+import { LicitacionService1 } from 'src/pdf/e1_goltech/licitacion.service';
+import { LicitacionService2 } from 'src/pdf/e2_juan_angel/licitacion.service';  
+import { LicitacionService3 } from 'src/pdf/e3_giselle/licitacion.service';
+import { LicitacionService4 } from 'src/pdf/e4_orihuela/licitacion.service';
+import { LicitacionService5 } from 'src/pdf/e5_mariana/licitacion.service';
+import { LicitacionService6 } from 'src/pdf/e6_michelle/licitacion.service';
+import { LicitacionService7 } from 'src/pdf/e7_chalor/licitacion.service';
+import { LicitacionService8 } from 'src/pdf/e8_leyses/licitacion.service';
+import { LicitacionService9 } from 'src/pdf/e9_es/licitacion.service';
+import { LicitacionService10 } from 'src/pdf/e10_jessica/licitacion.service';
+import { LicitacionService11 } from 'src/pdf/e11_alamo/licitacion.service';
+import { LicitacionService12 } from 'src/pdf/e12_hugo/licitacion.service';
+import { HtmlLicitacionService1 } from 'src/pdf/e1_goltech/html-licitacion.service';
+import { HtmlLicitacionService2 } from 'src/pdf/e2_juan_angel/html-licitacion.service'; 
+import { HtmlLicitacionService3 } from 'src/pdf/e3_giselle/html-licitacion.service';
+import { HtmlLicitacionService4 } from 'src/pdf/e4_orihuela/html-licitacion.service';
+import { HtmlLicitacionService5 } from 'src/pdf/e5_mariana/html-licitacion.service';
+import { HtmlLicitacionService6 } from 'src/pdf/e6_michelle/html-licitacion.service';
+import { HtmlLicitacionService7 } from 'src/pdf/e7_chalor/html-licitacion.service';
+import { HtmlLicitacionService8 } from 'src/pdf/e8_leyses/html-licitacion.service';
+import { HtmlLicitacionService9 } from 'src/pdf/e9_es/html-licitacion.service';
+import { HtmlLicitacionService10 } from 'src/pdf/e10_jessica/html-licitacion.service';
+import { HtmlLicitacionService11 } from 'src/pdf/e11_alamo/html-licitacion.service';
+import { HtmlLicitacionService12 } from 'src/pdf/e12_hugo/html-licitacion.service';
 import { ExcelTemplateService } from './excel/excel-template.service';
 import { ExcelImportService } from './excel/excel-import.service';
 import { Category } from 'src/categories/entities/category.entity';
@@ -123,6 +147,30 @@ import { Category } from 'src/categories/entities/category.entity';
     HtmlPdfService10,
     HtmlPdfService11,
     HtmlPdfService12,
+    LicitacionService1,
+    LicitacionService2,
+    LicitacionService3,
+    LicitacionService4,
+    LicitacionService5, 
+    LicitacionService6, 
+    LicitacionService7,
+    LicitacionService8,
+    LicitacionService9,
+    LicitacionService10,
+    LicitacionService11,
+    LicitacionService12,
+    HtmlLicitacionService1,
+    HtmlLicitacionService2,
+    HtmlLicitacionService3,
+    HtmlLicitacionService4,
+    HtmlLicitacionService5,
+    HtmlLicitacionService6,
+    HtmlLicitacionService7,
+    HtmlLicitacionService8,
+    HtmlLicitacionService9,
+    HtmlLicitacionService10,
+    HtmlLicitacionService11,
+    HtmlLicitacionService12,
     ExcelTemplateService,
     ExcelImportService,
   ],

@@ -25,7 +25,6 @@ import { UpdateItemDto } from './dto/update-item.dto';
 import { IdValidationPipe } from 'src/common/pipes/id-validation/id-validation.pipe';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { Response } from 'express';
-import { PdfService1 } from 'src/pdf/e1_goltech/pdf.service';
 import { PdfServiciosService1 } from 'src/pdf/e1_goltech/pdf-servicios.service';
 import { PdfServiciosService2 } from 'src/pdf/e2_juan_angel/pdf-servicios.service';
 import { PdfServiciosService3 } from 'src/pdf/e3_giselle/pdf-servicios.service';
@@ -38,6 +37,20 @@ import { PdfServiciosService9 } from 'src/pdf/e9_es/pdf-servicios.service';
 import { PdfServiciosService10 } from 'src/pdf/e10_jessica/pdf-servicios.service';
 import { PdfServiciosService11 } from 'src/pdf/e11_alamo/pdf-servicios.service';
 import { PdfServiciosService12 } from 'src/pdf/e12_hugo/pdf-servicios.service';
+import { LicitacionService1 } from 'src/pdf/e1_goltech/licitacion.service';
+import { LicitacionService2 } from 'src/pdf/e2_juan_angel/licitacion.service';
+import { LicitacionService3 } from 'src/pdf/e3_giselle/licitacion.service';
+import { LicitacionService4 } from 'src/pdf/e4_orihuela/licitacion.service';
+import { LicitacionService5 } from 'src/pdf/e5_mariana/licitacion.service';
+import { LicitacionService6 } from 'src/pdf/e6_michelle/licitacion.service';
+import { LicitacionService7 } from 'src/pdf/e7_chalor/licitacion.service';
+import { LicitacionService8 } from 'src/pdf/e8_leyses/licitacion.service';
+import { LicitacionService9 } from 'src/pdf/e9_es/licitacion.service';
+import { LicitacionService10 } from 'src/pdf/e10_jessica/licitacion.service';
+import { LicitacionService11 } from 'src/pdf/e11_alamo/licitacion.service';
+import { LicitacionService12 } from 'src/pdf/e12_hugo/licitacion.service';
+import { GenerateLicitacionPdfDto } from './dto/generate-licitacion-pdf.dto';
+import { PdfService1 } from 'src/pdf/e1_goltech/pdf.service';
 import { PdfService2 } from 'src/pdf/e2_juan_angel/pdf.service';
 import { PdfService3 } from 'src/pdf/e3_giselle/pdf.service';
 import { PdfService4 } from 'src/pdf/e4_orihuela/pdf.service';
@@ -68,7 +81,6 @@ export class QuotesController {
     private readonly quotes: QuotesService,
     @InjectRepository(Template)
     private readonly templateRepo: Repository<Template>,
-    private readonly pdf1: PdfService1,
     private readonly pdfServicios1: PdfServiciosService1, 
     private readonly pdfServicios2: PdfServiciosService2,
     private readonly pdfServicios3: PdfServiciosService3,
@@ -81,6 +93,7 @@ export class QuotesController {
     private readonly pdfServicios10: PdfServiciosService10,
     private readonly pdfServicios11: PdfServiciosService11,
     private readonly pdfServicios12: PdfServiciosService12,
+    private readonly pdf1: PdfService1,
     private readonly pdf2: PdfService2,
     private readonly pdf3: PdfService3,
     private readonly pdf4: PdfService4,
@@ -92,6 +105,18 @@ export class QuotesController {
     private readonly pdf10: PdfService10,
     private readonly pdf11: PdfService11,
     private readonly pdf12: PdfService12,
+    private readonly licitacion1: LicitacionService1,
+    private readonly licitacion2: LicitacionService2, 
+    private readonly licitacion3: LicitacionService3,
+    private readonly licitacion4: LicitacionService4,
+    private readonly licitacion5: LicitacionService5,
+    private readonly licitacion6: LicitacionService6,
+    private readonly licitacion7: LicitacionService7,
+    private readonly licitacion8: LicitacionService8,
+    private readonly licitacion9: LicitacionService9,
+    private readonly licitacion10: LicitacionService10,
+    private readonly licitacion11: LicitacionService11,
+    private readonly licitacion12: LicitacionService12,
     private readonly excelTemplate: ExcelTemplateService,
     private readonly excelImport: ExcelImportService,
   ) {}
@@ -483,5 +508,71 @@ export class QuotesController {
       message: 'Plantilla actualizada correctamente',
       data: updated,
     };
+  }
+
+  @Post(':id/licitacion-pdf')
+  @Roles(Role.Admin, Role.Cotizador)
+  async buildLicitacion(
+    @Param('id', IdValidationPipe) id: string,
+    @Body() dto: GenerateLicitacionPdfDto,
+    @Res() res: Response,
+  ) {
+    const quote = await this.quotes.loadForPdf(id);
+
+    if (quote.status !== 'sent') {
+      return res.status(400).json({ message: 'La cotización debe estar enviada para generar una licitación' });
+    }
+
+    let pdfBuffer: Buffer;
+
+    switch (dto.empresa) {
+      case 1:
+        pdfBuffer = await this.licitacion1.generateBuffer(quote, dto);
+        break;
+      case 2: 
+        pdfBuffer = await this.licitacion2.generateBuffer(quote, dto);
+        break;
+      case 3: 
+        pdfBuffer = await this.licitacion3.generateBuffer(quote, dto); 
+        break;
+      case 4: 
+        pdfBuffer = await this.licitacion4.generateBuffer(quote, dto); 
+        break;
+      case 5: 
+        pdfBuffer = await this.licitacion5.generateBuffer(quote, dto); 
+        break;
+      case 6: 
+        pdfBuffer = await this.licitacion6.generateBuffer(quote, dto); 
+        break;  
+      case 7: 
+        pdfBuffer = await this.licitacion7.generateBuffer(quote, dto); 
+        break;
+      
+      case 8: 
+        pdfBuffer = await this.licitacion8.generateBuffer(quote, dto); 
+        break;
+      case 9: 
+        pdfBuffer = await this.licitacion9.generateBuffer(quote, dto); 
+        break;
+      case 10: 
+        pdfBuffer = await this.licitacion10.generateBuffer(quote, dto); 
+        break;
+      case 11: 
+        pdfBuffer = await this.licitacion11.generateBuffer(quote, dto); 
+        break;
+      case 12: 
+        pdfBuffer = await this.licitacion12.generateBuffer(quote, dto); 
+        break;
+      default:
+        throw new Error(`Empresa ${dto.empresa} no válida para licitación`);
+    }
+
+    const sufijoClean = dto.sufijoLicitacion.replace(/[^a-zA-Z0-9\-_]/g, '');
+    const tipo = dto.tipo === 'tecnica' ? 'T' : 'E';
+    const filename = `Licitacion${tipo}_EA-913003989-${sufijoClean}.pdf`;
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(pdfBuffer);
   }
 }
