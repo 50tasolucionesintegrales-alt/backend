@@ -177,7 +177,14 @@
     .col-subtotal {
       width: 13%;
     }
-    
+
+    .dest{ 
+      font-weight:800; 
+      line-height:1.45; 
+      color: var(--primary);
+      margin:12px 0 5px 0; 
+    }
+
     /* Texto en dos líneas para el encabezado de precio */
     .precio-header {
       display: flex;
@@ -313,6 +320,7 @@
       {{#if (eq @index 0)}}
       <div class="folio">{{../folio}}</div>
       <div class="fecha">{{../lugar}}, a {{../fecha}}</div>
+      <div class="dest">{{../destinatario}}</div>
       <div class="presente">{{../presente}}</div>
       <div class="intro">{{{../descripcion}}}</div>
       <div class="total-letra">MONTO TOTAL EN LETRA: {{../totalEnLetra}}</div>
