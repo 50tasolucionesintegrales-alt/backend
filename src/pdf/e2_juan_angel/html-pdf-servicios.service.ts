@@ -31,11 +31,11 @@ function calculateTextLines(text: string, maxCharsPerLine: number = 54): number 
     
     let adjustedCharsPerLine = maxCharsPerLine;
     if (upperCaseRatio > 0.75) {
-        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.72);
+        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.66);
     } else if (upperCaseRatio > 0.50) {
-        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.78);
+        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.72);
     } else if (upperCaseRatio > 0.25) {
-        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.82);
+        adjustedCharsPerLine = Math.floor(maxCharsPerLine * 0.74);
     }
     
     const lines = plainText.split(/\r?\n/);
@@ -69,9 +69,9 @@ function calculateTextLines(text: string, maxCharsPerLine: number = 54): number 
 }
 
 const MAX_FIRST_PAGE_LINES = 29;
-const MAX_OTHER_PAGES_LINES = 35;
+const MAX_OTHER_PAGES_LINES = 42;
 const ROW_BASE_LINES = 1;
-const MAX_PAGE_CAPACITY = 52;
+const MAX_PAGE_CAPACITY = 60;
 const MIN_LINES_TO_DIVIDE = 3;
 
 function calculateFooterLines(condiciones?: string): number {
@@ -81,8 +81,8 @@ function calculateFooterLines(condiciones?: string): number {
         return BASE_FOOTER;
     }
     
-    const condicionesLines = calculateTextLines(condiciones, 80);
-    return BASE_FOOTER + condicionesLines + 2;
+    const condicionesLines = calculateTextLines(condiciones, 70);
+    return BASE_FOOTER + condicionesLines + 3;
 }
 
 function canFitWithFooter(pageIdx: number, currentLines: number, additionalLines: number, footerLines: number): boolean {
