@@ -17,7 +17,7 @@ type MetaIn = {
 };
 
 const FIRMA_BY_EMPRESA: Record<Emp, string> = {
-  7: 'assets/firma_emp7.png'
+  7: 'assets/firma_emp5.png'
 };
 
 const FIRMA_FALLBACK = 'assets/firma.png';
